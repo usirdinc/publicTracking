@@ -1,0 +1,15 @@
+[Unit]
+Description=AAF Tracker check worker (one browser on display :99)
+After=network.target xvfb.service
+Requires=xvfb.service
+
+[Service]
+User=tracker
+WorkingDirectory=/home/tracker/publicTracking
+Environment=DISPLAY=:99
+ExecStart=/home/tracker/publicTracking/.venv/bin/python -m worker.run
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

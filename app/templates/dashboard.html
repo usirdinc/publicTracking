@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}My cases · AAF Tracker{% endblock %}
+{% block content %}
+{% if paused %}<div class="flash warn">Automatic checks are briefly paused for maintenance. Your cases will be checked as soon as they resume.</div>{% endif %}
+
+{% if not paid and not admin %}
+<section class="card">
+  <h2>Start your subscription</h2>
+  <p>$5 a month, cancel any time. Pay with the <strong>same email</strong> you signed up with (<strong>{{ user.email }}</strong>) so we can match your payment.</p>
+  {% if checkout_url %}<p><a class="btn" href="{{ checkout_url }}" rel="noopener">Subscribe with Square</a></p>{% endif %}
+  <p class="muted">After paying, refresh this page. Activation usually takes under a minute.</p>
+</section>
+{% endif %}
+
+<section>
+  <h1>My cases</h1>
+  {% if not cases %}<p class="muted">No cases yet.</p>{% endif %}
+  <div class="cases">
+  {% for c in cases %}
+    {% set t = status_text(c.status, c.amount) %}
+    <article class="case" data-case="{{ c.id }}">
+      <div class="case-head">
+        <h3>{{ c.label }}</h3>
+        <span class="muted">A-Number ending {{ c.a_last3 }} · receipt ending {{ c.receipt_last4 }}</span>
+      </div>
+      <p class="status tone-{{ t[1] }}" data-status>{{ t[0] }}</p>
+      <p class="muted small" data-checked>{% if c.checked_at %}Last checked {{ c.checked_at[:16].replace('T',' ') }} UTC{% endif %}{% if c.next_check_at %} · next check {{ c.next_check_at[:10] }}{% endif %}</p>
+      {% if c.status == 'DUE' %}<p class="small">Pay only on the official site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener">my.uscis.gov</a></p>{% endif %}
+      <div class="actions">
+        <form method="post" action="/cases/{{ c.id }}/check" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">Check now</button></form>
+        <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="Delete this case and its history?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete</button></form>
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>
+
+{% if paid or admin %}
+<section class="card">
+  <h2>Add a case</h2>
+  <form method="post" action="/cases">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Name for this case (optional) <input name="label" maxlength="60" placeholder="e.g. My family"></label>
+    <label>A-Number(s) <input name="a_numbers" required placeholder="A123456789" autocomplete="off">
+      <span class="hint">For a family on one I-589, enter every A-Number separated by commas. We try each one.</span></label>
+    <label>I-589 receipt number <input name="receipt" required placeholder="ZAR1234567890" autocomplete="off"></label>
+    <button class="btn">Add and check now</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="muted small">
+  <form method="post" action="/account/delete" class="inline" data-confirm="Delete your account and all case data? This cannot be undone."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete my account</button></form>
+  {% if admin %} · <a href="/admin">Admin</a>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Admin · AAF Tracker{% endblock %}
+{% block content %}
+<h1>Admin</h1>
+<section class="card">
+  <p>Jobs: {% for k, v in stats.items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+  <p>Checks in last 24 h: {% for r in last %}{{ r.status }} {{ r.n }}{% if not loop.last %} · {% endif %}{% else %}none{% endfor %}</p>
+  {% if paused_until %}<p class="tone-warn">Paused until {{ paused_until }}: {{ pause_reason }}</p>
+  <form method="post" action="/admin/resume"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small">Resume checks now</button></form>{% endif %}
+</section>
+<table class="grid">
+  <tr><th>ID</th><th>Email</th><th>Joined</th><th>Paid until</th><th>Square</th><th>Cases</th><th></th></tr>
+  {% for u in users %}
+  <tr><td>{{ u.id }}</td><td>{{ u.email }}</td><td>{{ u.created_at[:10] }}</td><td>{{ (u.paid_until or '')[:10] }}</td><td>{{ u.subscription_status or '' }}</td><td>{{ u.n_cases }}</td>
+    <td><form method="post" action="/admin/users/{{ u.id }}/grant" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="number" name="days" value="31" class="tiny"><button class="link">Grant days</button></form></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

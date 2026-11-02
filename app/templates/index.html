@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Know when your Annual Asylum Fee is due.</h1>
+  <p class="lead">Enter your A-Number and I-589 receipt once. We check the official USCIS page for you, show the result in under a minute, re-check every month, and email you when anything changes.</p>
+  <p><a class="btn" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start for $5 a month' }}</a></p>
+  <ul class="points">
+    <li><strong>Instant check</strong> when you add a case</li>
+    <li><strong>Monthly re-checks</strong>, weekly when a fee is due</li>
+    <li><strong>Email alert</strong> when your status changes</li>
+    <li>No USCIS password needed. Your numbers are encrypted.</li>
+  </ul>
+  <p class="muted">Immigration court (EOIR) hearing tracking is coming soon.</p>
+</section>
+{% endblock %}

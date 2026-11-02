@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign up · AAF Tracker{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Create your account</h1>
+  <form method="post" action="/signup">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Email <input type="email" name="email" required autocomplete="email"></label>
+    <label>Password (10+ characters) <input type="password" name="password" minlength="10" required autocomplete="new-password"></label>
+    <label class="check"><input type="checkbox" name="agree" value="1" required> I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</label>
+    <button class="btn">Create account</button>
+  </form>
+  <p class="muted">Already have an account? <a href="/login">Log in</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}AAF Tracker{% endblock %}</title>
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">AAF Tracker <span class="beta">beta</span></a>
+  <nav>
+    {% if user %}
+      <a href="/app">My cases</a>
+      <form method="post" action="/logout" class="inline"><button class="link">Log out</button></form>
+    {% else %}
+      <a href="/login">Log in</a>
+      <a class="btn small" href="/signup">Sign up</a>
+    {% endif %}
+  </nav>
+</header>
+<main>
+{% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+{% block content %}{% endblock %}
+</main>
+<footer>
+  <p>Not affiliated with USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+  <p><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></p>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
