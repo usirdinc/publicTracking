@@ -38,6 +38,8 @@
           <p class="muted">USCIS case status: checking…</p>
         {% endif %}
       </div>
+      {% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}
+      {% if c.nationality %}<p class="small uscis"><strong>Immigration court:</strong> {{ e or "We'll check this soon." }}{% if c.eoir_checked_at %} <span class="muted">(checked {{ c.eoir_checked_at[:10] }})</span>{% endif %}</p>{% endif %}
       {% if c.status == 'DUE' %}<p class="small">Pay only on the official site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener">my.uscis.gov</a></p>{% endif %}
       <div class="actions">
         <form method="post" action="/cases/{{ c.id }}/check" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">Check now</button></form>
@@ -56,6 +58,8 @@
     <label>Name for this case (optional) <input name="label" maxlength="60" placeholder="e.g. My family"></label>
     <label>A-Number(s) <input name="a_numbers" required placeholder="A123456789" autocomplete="off">
       <span class="hint">For a family on one I-589, enter every A-Number separated by commas. We try each one.</span></label>
+    <label>Country of nationality <input name="nationality" maxlength="60" placeholder="e.g. Burma" autocomplete="off">
+      <span class="hint">Needed for immigration court (EOIR) updates. Use the country shown on your court papers.</span></label>
     <label>I-589 receipt number <input name="receipt" required placeholder="ZAR1234567890" autocomplete="off"></label>
     <button class="btn">Add and check now</button>
   </form>

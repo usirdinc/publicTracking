@@ -1,5 +1,7 @@
 """Web app: sign-up, cases, instant AAF check, Square webhook, admin."""
+import json
 import logging
+import re
 import time
 from collections import defaultdict
 from datetime import timedelta
@@ -218,7 +220,7 @@ def _can_use(u) -> bool:
 
 @app.post("/cases")
 def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...),
-             receipt: str = Form(...), csrf: str = Form("")):
+             receipt: str = Form(...), nationality: str = Form(""), csrf: str = Form("")):
     cn = get_db()
     u = current_user(request, cn)
     if not u:
@@ -242,10 +244,11 @@ def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...)
         return redirect("/app", "You have added the most cases allowed today. Try again tomorrow.", request)
     with db.tx(cn):
         cur = cn.execute(
-            "INSERT INTO cases(user_id,label,a_numbers_enc,receipt_enc,a_last3,receipt_last4,created_at) "
-            "VALUES(?,?,?,?,?,?,?)",
+            "INSERT INTO cases(user_id,label,a_numbers_enc,receipt_enc,a_last3,receipt_last4,created_at,nationality) "
+            "VALUES(?,?,?,?,?,?,?,?)",
             (u["id"], (label or "My case").strip()[:60], security.encrypt(";".join(anums)),
-             security.encrypt(rcpt), anums[0][-3:], rcpt[-4:], db.iso(db.now())))
+             security.encrypt(rcpt), anums[0][-3:], rcpt[-4:], db.iso(db.now()),
+             re.sub(r"[^A-Za-z ()'.-]", "", nationality).strip()[:60] or None))
         db.enqueue(cn, cur.lastrowid, "new")
     return redirect("/app", "Case added. Checking with USCIS now; this usually takes under a minute.", request)
 
@@ -380,3 +383,100 @@ def admin_resume(request: Request, csrf: str = Form("")):
         return redirect("/login")
     db.set_setting(cn, "paused_until", None)
     return redirect("/admin", "Checks resumed.", request)
+
+
+# ---------------- EOIR: staff-assisted lookups ----------------
+# ACIS rejects captchas solved in an automated browser, so a staff member looks
+# each case up by hand and pastes the result page here; we parse and store it.
+EOIR_RECHECK_DAYS = 30
+
+
+def _eoir_due(cn, limit=50):
+    rows = cn.execute(
+        "SELECT c.*, u.email, u.paid_until FROM cases c JOIN users u ON u.id=c.user_id "
+        "WHERE c.nationality IS NOT NULL AND (c.eoir_next_at IS NULL OR c.eoir_next_at<=?) "
+        "ORDER BY c.eoir_next_at IS NOT NULL, c.eoir_next_at, c.id LIMIT ?",
+        (db.iso(db.now()), limit)).fetchall()
+    return [r for r in rows if db.is_paid(r) or r["email"] in config.ADMIN_EMAILS]
+
+
+def eoir_summary(status, fields_json):
+    if not status:
+        return None
+    if status == "NO_CASE":
+        return "No immigration court case found for this A-Number."
+    f = json.loads(fields_json or "{}")
+    parts = []
+    if f.get("hearing_date"):
+        h = f"Next hearing {f['hearing_date']}"
+        if f.get("hearing_time"):
+            h += f" at {f['hearing_time']}"
+        if f.get("hearing_format"):
+            h += f" ({f['hearing_format'].lower()})"
+        parts.append(h)
+    elif f.get("hearing"):
+        parts.append(f["hearing"])
+    if f.get("judge"):
+        parts.append(f"Judge {f['judge']}")
+    if f.get("decision"):
+        parts.append(f"Decision: {f['decision']}")
+    return ". ".join(parts) or "Case found in immigration court."
+
+
+templates.env.globals["eoir_summary"] = eoir_summary
+
+
+@app.get("/admin/eoir", response_class=HTMLResponse)
+def admin_eoir(request: Request):
+    cn = get_db()
+    u = current_user(request, cn)
+    if not is_admin(u):
+        return redirect("/login")
+    due = []
+    for c in _eoir_due(cn):
+        due.append({"id": c["id"], "label": c["label"], "email": c["email"], "nationality": c["nationality"],
+                    "a_number": security.decrypt(c["a_numbers_enc"]).split(";")[0],
+                    "last": eoir_summary(c["eoir_status"], c["eoir_fields"])})
+    resp = render(request, "admin_eoir.html", user=u, due=due, flash=request.session.pop("flash", None))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.post("/admin/eoir/{case_id}")
+def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), action: str = Form("save"),
+                    csrf: str = Form("")):
+    from tracker.eoir import NO_CASE_TEXT, extract_fields
+    from app import mailer
+    cn = get_db()
+    u = current_user(request, cn)
+    if not is_admin(u) or not security.csrf_ok(request.session, csrf):
+        return redirect("/login")
+    c = cn.execute("SELECT c.*, u.email FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
+                   (case_id,)).fetchone()
+    if not c:
+        return redirect("/admin/eoir", "Case not found.", request)
+    if action == "skip":
+        cn.execute("UPDATE cases SET eoir_next_at=? WHERE id=?", (db.in_(days=1), case_id))
+        return redirect("/admin/eoir", f"Skipped case {case_id} until tomorrow.", request)
+    text = page_text.strip()
+    if NO_CASE_TEXT.lower() in text.lower():
+        status, fields = "NO_CASE", {}
+    else:
+        fields = extract_fields(text)
+        if not fields:
+            return redirect("/admin/eoir", "Couldn't read that. Paste the whole result page (Ctrl+A, Ctrl+C).", request)
+        status = "CASE_FOUND"
+    fields.pop("name", None)  # not needed for alerts
+    old = eoir_summary(c["eoir_status"], c["eoir_fields"])
+    new_json = json.dumps(fields, sort_keys=True)
+    cn.execute("UPDATE cases SET eoir_status=?, eoir_fields=?, eoir_checked_at=?, eoir_next_at=? WHERE id=?",
+               (status, new_json, db.iso(db.now()), db.in_(days=EOIR_RECHECK_DAYS), case_id))
+    new = eoir_summary(status, new_json)
+    if old != new:
+        mailer.send(c["email"], f"Immigration court update for {c['label']}",
+                    f"The immigration court (EOIR) information for \"{c['label']}\" "
+                    f"(A-Number ending {c['a_last3']}) {'changed' if old else 'is now available'}.\n\n"
+                    f"Now: {new}\n" + (f"Before: {old}\n" if old else "") +
+                    f"\nSee details: {config.BASE_URL}/app\n\n"
+                    "Always confirm with the court or your attorney. This is not legal advice.\n")
+    return redirect("/admin/eoir", f"Saved case {case_id}: {new}", request)

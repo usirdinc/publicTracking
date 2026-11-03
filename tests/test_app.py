@@ -179,3 +179,30 @@ def test_status_not_busy_after_check(client, monkeypatch):
     # the queued monthly job must not block "Check now"
     r = client.post(f"/cases/{c['id']}/check", data={"csrf": csrf(client, "/app")})
     assert "Checking now" in r.text
+
+
+def test_eoir_staff_queue(client, monkeypatch):
+    import app.mailer as mailer
+    sent = []
+    monkeypatch.setattr(mailer, "send", lambda to, subj, body: sent.append(subj))
+    signup(client, "admin@example.com")
+    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890",
+                                "nationality": "Burma", "csrf": csrf(client, "/app")})
+    q = client.get("/admin/eoir")
+    assert "A123456789" in q.text and q.headers["cache-control"] == "no-store"
+    cid = db.connect().execute("SELECT id FROM cases").fetchone()["id"]
+    tok = csrf(client, "/admin/eoir")
+    page = ("Name: DOE, JOHN | A-Number: 123-456-789\nYour next MASTER hearing is IN PERSON on "
+            "March 3, 2027 at 8:30 AM\nJUDGE\nSmith, Jane\nThis case is pending")
+    r = client.post(f"/admin/eoir/{cid}", data={"page_text": page, "csrf": tok})
+    assert "Next hearing March 3, 2027" in r.text
+    c = db.connect().execute("SELECT * FROM cases").fetchone()
+    assert c["eoir_status"] == "CASE_FOUND" and "DOE" not in c["eoir_fields"] and c["eoir_next_at"]
+    assert sent and "Immigration court" in sent[0]
+    assert "A123456789" not in client.get("/admin/eoir").text   # not due again for 30 days
+    assert "Next hearing March 3, 2027" in client.get("/app").text
+
+
+def test_eoir_queue_admin_only(client):
+    signup(client)
+    assert client.get("/admin/eoir", follow_redirects=False).status_code == 303

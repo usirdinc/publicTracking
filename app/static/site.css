@@ -23,3 +23,4 @@ footer{max-width:760px;margin:32px auto;padding:16px;color:var(--muted);font-siz
 .grid{width:100%;border-collapse:collapse;font-size:14px}.grid td,.grid th{border-bottom:1px solid var(--line);padding:6px;text-align:left}.tiny{width:60px}
 .prose h2{margin-top:24px;font-size:18px}
 .uscis{border-top:1px solid #e5e7eb;margin-top:10px;padding-top:6px}.uscis p{margin:2px 0}.uscis details{margin:2px 0}
+textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;margin:6px 0}
