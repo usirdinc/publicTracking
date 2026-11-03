@@ -276,7 +276,7 @@ def test_redesign_keeps_public_pages_self_contained_and_legal_acceptance_explici
 
 
 def test_redesigned_login_handles_error_then_authenticated_redirect(client):
-    signup(client, "login@example.com")
+    signup(client, "login@example.com"); make_paid("login@example.com")
     client.post("/logout")
     bad = client.post("/login", data={"email": "login@example.com", "password": "incorrect example", "csrf": csrf(client, "/login")})
     assert "Email or password is not correct" in bad.text
@@ -284,3 +284,26 @@ def test_redesigned_login_handles_error_then_authenticated_redirect(client):
     good = client.post("/login", data={"email": "login@example.com", "password": "correct horse battery", "csrf": csrf(client, "/login")}, follow_redirects=False)
     assert good.status_code == 303 and good.headers["location"] == "/app"
     assert "login@example.com" in client.get("/app").text
+
+
+def test_signup_goes_to_subscribe_and_app_is_locked_until_paid(client):
+    r = signup(client)
+    assert r.headers["location"] == "/subscribe"
+    page = client.get("/subscribe")
+    assert "a@example.com" in page.text and "Start your subscription" in page.text
+    r = client.get("/app", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/subscribe"
+    assert client.get("/account/paid").json() == {"paid": False}
+    make_paid("a@example.com")
+    assert client.get("/account/paid").json() == {"paid": True}
+    r = client.get("/subscribe", follow_redirects=False)
+    assert r.headers["location"] == "/app"
+    assert client.get("/app").status_code == 200
+
+
+def test_login_unpaid_goes_to_subscribe(client):
+    signup(client)
+    client.post("/logout", data={})
+    r = client.post("/login", data={"email": "a@example.com", "password": "correct horse battery",
+                                    "csrf": csrf(client, "/login")}, follow_redirects=False)
+    assert r.headers["location"] == "/subscribe"

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}
+  Start your subscription · USIRD Case Tracker
+{% endblock %}
+{% block content %}
+  <section class="auth-layout" aria-labelledby="subscribe-heading">
+    <div class="auth-intro">
+      <span class="eyebrow">{{ 'Renew' if lapsed else 'Step 2 of 3' }}</span><h1 id="subscribe-heading">{{ 'Renew your subscription.' if lapsed else 'Start your subscription.' }}</h1>
+      <p class="lead">{{ 'Your subscription has ended. Renew to keep your cases checked every day.' if lapsed else 'Your account turns on as soon as your payment goes through.' }}</p>
+      <ol class="onboarding-list">
+        <li class="done"><span>01</span>
+        <div>
+          <strong>Create your account</strong><p>Done.</p>
+        </div>
+        </li><li class="current"><span>02</span>
+        <div>
+          <strong>Start your monthly subscription</strong><p>{{ price }} per month through Square. Cancel anytime.</p>
+        </div>
+        </li><li><span>03</span>
+        <div>
+          <strong>Add your cases</strong><p>Use your A-Number and I-589 receipt number.</p>
+        </div>
+        </li>
+      </ol>
+    </div>
+    <div class="auth-panel" data-subscribe>
+      <span class="eyebrow">Subscription</span>
+      <div class="plan">
+        <div><strong>USIRD Case Tracker</strong><span>Daily asylum fee and USCIS case checks, with email alerts</span></div>
+        <div class="plan-price">{{ price }}<span>/month</span></div>
+      </div>
+      <div class="pay-email">
+        <span class="pay-email-label">Pay with this email</span>
+        <strong>{{ user.email }}</strong>
+        <span class="hint">We match your payment to your account by email. Use exactly this address at checkout.</span>
+      </div>
+      {% if checkout_url %}
+        <a class="btn lg block" href="{{ checkout_url }}" target="_blank" rel="noopener" data-pay>Continue to secure payment {{ icon('arrow') }}</a>
+      {% else %}
+        <p class="muted small">Subscription checkout is not available yet. Please check back shortly.</p>
+      {% endif %}
+      <div class="waiting" data-waiting hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Waiting for your payment. This page opens your dashboard automatically once it goes through.</span>
+      </div>
+      <p class="muted small mt">Billed monthly by Square. Cancel anytime.</p>
+      <div class="subscribe-foot">
+        <form method="post" action="/logout" class="inline"><button class="link" type="submit">Log out</button></form>
+        <form method="post" action="/account/delete" class="inline" data-confirm="Delete your account and all case data? This cannot be undone."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" type="submit">Delete my account</button></form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

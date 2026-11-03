@@ -193,7 +193,7 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
                      (email, security.hash_password(password), db.iso(db.now())))
     request.session.clear()
     request.session["uid"] = cur.lastrowid
-    return redirect("/app")
+    return redirect("/subscribe")
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -213,7 +213,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...), c
         return redirect("/login", "Email or password is not correct.", request)
     request.session.clear()
     request.session["uid"] = u["id"]
-    return redirect("/app")
+    return redirect("/app" if _can_use(u) else "/subscribe")
 
 
 @app.post("/logout")
@@ -229,11 +229,34 @@ def dashboard(request: Request):
     u = current_user(request, cn)
     if not u:
         return redirect("/login")
+    if not _can_use(u):
+        return redirect("/subscribe")
     cases = cn.execute("SELECT * FROM cases WHERE user_id=? ORDER BY id", (u["id"],)).fetchall()
     flash = request.session.pop("flash", None)
     return render(request, "dashboard.html", user=u, cases=cases, paid=db.is_paid(u),
                   checkout_url=config.SQUARE_CHECKOUT_URL, flash=flash,
                   paused=_paused(cn), admin=is_admin(u))
+
+
+@app.get("/subscribe", response_class=HTMLResponse)
+def subscribe(request: Request):
+    """Step 2 of sign-up: an account can't be used until the subscription is paid."""
+    cn = get_db()
+    u = current_user(request, cn)
+    if not u:
+        return redirect("/login")
+    if _can_use(u):
+        return redirect("/app")
+    flash = request.session.pop("flash", None)
+    return render(request, "subscribe.html", user=u, checkout_url=config.SQUARE_CHECKOUT_URL,
+                  lapsed=bool(u["paid_until"]), flash=flash)
+
+
+@app.get("/account/paid")
+def account_paid(request: Request):
+    cn = get_db()
+    u = current_user(request, cn)
+    return {"paid": bool(u and _can_use(u))}
 
 
 def _paused(cn) -> bool:

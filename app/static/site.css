@@ -452,3 +452,20 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .history-timeline li:last-child { padding-bottom: 0; }
 .history-date { color: var(--muted); font-size: 12px; font-weight: 600; }
 .history-timeline .uscis-description { margin-top: 4px; }
+
+/* subscribe step (sign-up step 2) */
+.onboarding-list li.done > span, .onboarding-list li.done strong { color: var(--muted); }
+.onboarding-list li.current strong { color: var(--primary); }
+.plan { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 14px; }
+.plan strong { display: block; }
+.plan > div > span { display: block; font-size: 13px; color: var(--muted); }
+.plan-price { font-size: 26px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+.plan-price span { display: inline; font-size: 13px; font-weight: 600; color: var(--muted); }
+.pay-email { background: var(--surface-2); border-left: 3px solid var(--primary); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
+.pay-email-label { display: block; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.pay-email strong { display: block; font-size: 16px; word-break: break-all; margin: 2px 0 2px; }
+.waiting { display: flex; gap: 12px; align-items: center; margin-top: 16px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); font-size: 14px; }
+.waiting[hidden] { display: none; }
+.spinner { flex: none; display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--primary); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.subscribe-foot { display: flex; gap: 20px; border-top: 1px solid var(--line); padding-top: 16px; margin-top: 8px; font-size: 14px; }

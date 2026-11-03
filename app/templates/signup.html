@@ -24,7 +24,7 @@
       </ol>
     </div>
     <div class="auth-panel">
-      <span class="eyebrow">Create account</span><h2>A clearer view of your case</h2><p class="muted">Create your account first. Subscribe from your dashboard to begin tracking.</p>
+      <span class="eyebrow">Create account</span><h2>A clearer view of your case</h2><p class="muted">Next you'll start your {{ price }}/month subscription. Your account turns on once it's paid.</p>
       <form method="post" action="/signup">
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
@@ -34,7 +34,7 @@
         </div>
         <p class="hint" id="password-hint">Use at least 10 characters.</p>
         <label class="check"><input type="checkbox" name="agree" value="1" required> <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</span></label>
-        <button class="btn lg block" type="submit">Create account {{ icon('arrow') }}</button>
+        <button class="btn lg block" type="submit">Continue to payment {{ icon('arrow') }}</button>
       </form>
       <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
     </div>

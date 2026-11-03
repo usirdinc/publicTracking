@@ -54,6 +54,20 @@
   paintTimes(); paintDates();
   setInterval(paintTimes, 30000);
 
+  // ---- subscribe page: after the payment tab opens, wait for the webhook to turn the account on
+  var sub = document.querySelector('[data-subscribe]');
+  if (sub) {
+    var waitBox = sub.querySelector('[data-waiting]'), waiting = false;
+    var check = function () {
+      fetch('/account/paid', { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+        .then(function (d) { if (d.paid) location.href = '/app'; else setTimeout(check, 4000); })
+        .catch(function () { setTimeout(check, 8000); });
+    };
+    var startWaiting = function () { if (waiting) return; waiting = true; if (waitBox) waitBox.hidden = false; check(); };
+    var pay = sub.querySelector('[data-pay]');
+    if (pay) pay.addEventListener('click', startWaiting);
+  }
+
   // ---- progress stepper (shared by the dashboard and the landing page demo)
   var STOPS = [0, 25, 45, 75, 90];
   function stepperAt(p) {           // 0..1 along the line, step to step
