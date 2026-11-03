@@ -6,7 +6,8 @@ emails on change. Runs on one VPS: FastAPI web app + one-browser worker + SQLite
 
 ```
 app/       web app (accounts, cases, Square webhook, admin)
-worker/    check worker: job queue, pacing, block/error circuit breakers
+worker/    run.py: AAF browser worker (job queue, pacing, block/error circuit breakers)
+           uscis_run.py: USCIS case status via the official API (no browser), daily + on Check now
 tracker/   AAF form fill + result parsing (ported from usird v2 aaf_check.py)
 scripts/   aaf_batch_test.py (CSV test run against known answers)
 deploy/    systemd units + install.sh

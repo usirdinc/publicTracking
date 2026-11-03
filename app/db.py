@@ -92,8 +92,27 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     return cn
 
 
+# Columns added after launch; init() adds any that are missing.
+MIGRATIONS = {
+    "cases": [
+        ("uscis_status", "TEXT"), ("uscis_desc", "TEXT"), ("uscis_form", "TEXT"),
+        ("uscis_modified", "TEXT"), ("uscis_checked_at", "TEXT"), ("uscis_next_at", "TEXT"),
+        ("uscis_error", "TEXT"),
+    ],
+}
+
+
 def init(cn: sqlite3.Connection) -> None:
     cn.executescript(SCHEMA)
+    for table, cols in MIGRATIONS.items():
+        have = {r["name"] for r in cn.execute(f"PRAGMA table_info({table})")}
+        for name, typ in cols:
+            if name not in have:
+                try:
+                    cn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {typ}")
+                except sqlite3.OperationalError as e:  # another process added it first
+                    if "duplicate column" not in str(e):
+                        raise
 
 
 @contextmanager

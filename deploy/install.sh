@@ -9,10 +9,10 @@ chmod 600 .env
 pip install -q -r requirements.txt
 python -m playwright install chromium >/dev/null
 python -m pytest -q
-sudo cp deploy/tracker-web.service deploy/tracker-worker.service /etc/systemd/system/
+sudo cp deploy/tracker-web.service deploy/tracker-worker.service deploy/tracker-uscis.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable tracker-web tracker-worker
-sudo systemctl restart tracker-web tracker-worker
+sudo systemctl enable tracker-web tracker-worker tracker-uscis
+sudo systemctl restart tracker-web tracker-worker tracker-uscis
 sleep 2
 curl -fsS http://127.0.0.1:8000/healthz && echo
-echo "Web + worker running. Logs: journalctl -u tracker-web -u tracker-worker -f"
+echo "Web + worker running. Logs: journalctl -u tracker-web -u tracker-worker -u tracker-uscis -f"

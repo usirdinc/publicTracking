@@ -278,7 +278,9 @@ def check_now(request: Request, case_id: int, csrf: str = Form("")):
                       (case_id, since)).fetchone()["c"]
     if used >= config.INSTANT_CHECKS_PER_CASE_PER_DAY and not is_admin(u):
         return redirect("/app", "You can run one instant check per case per day. We also check automatically.", request)
-    db.enqueue(cn, case_id, "instant")
+    with db.tx(cn):
+        db.enqueue(cn, case_id, "instant")
+        cn.execute("UPDATE cases SET uscis_next_at=NULL WHERE id=?", (case_id,))
     return redirect("/app", "Checking now…", request)
 
 

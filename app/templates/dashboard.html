@@ -25,6 +25,19 @@
       </div>
       <p class="status tone-{{ t[1] }}" data-status>{{ t[0] }}</p>
       <p class="muted small" data-checked>{% if c.checked_at %}Last checked {{ c.checked_at[:16].replace('T',' ') }} UTC{% endif %}{% if c.next_check_at %} · next check {{ c.next_check_at[:10] }}{% endif %}</p>
+      <div class="uscis small">
+        {% if c.uscis_status and c.uscis_status != 'NOT_FOUND' %}
+          <p><strong>USCIS case status:</strong> {{ c.uscis_status }}{% if c.uscis_form %} ({{ c.uscis_form }}){% endif %}</p>
+          {% if c.uscis_desc %}<details><summary>Details</summary><p>{{ c.uscis_desc }}</p></details>{% endif %}
+          <p class="muted">{% if c.uscis_modified %}USCIS updated {{ c.uscis_modified[:10] }} · {% endif %}checked {{ c.uscis_checked_at[:16].replace('T',' ') }} UTC</p>
+        {% elif c.uscis_status == 'NOT_FOUND' %}
+          <p class="muted">USCIS case status: no case found for this receipt number.</p>
+        {% elif c.uscis_error %}
+          <p class="muted">USCIS case status: temporarily unavailable, we'll try again soon.</p>
+        {% else %}
+          <p class="muted">USCIS case status: checking…</p>
+        {% endif %}
+      </div>
       {% if c.status == 'DUE' %}<p class="small">Pay only on the official site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener">my.uscis.gov</a></p>{% endif %}
       <div class="actions">
         <form method="post" action="/cases/{{ c.id }}/check" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">Check now</button></form>
