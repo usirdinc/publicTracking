@@ -84,12 +84,27 @@ def fill_field(page, sel, value, masked=False, tries=4):
             return True
     return False
 
+# Optional progress callback: fn(percent:int, stage:str). Set by the worker.
+progress_hook = None
+
+
+def _step(pct, stage):
+    if progress_hook:
+        try:
+            progress_hook(pct, stage)
+        except Exception:
+            pass
+
+
 def _attempt(page, a_digits, receipt):
+    _step(25, "Opening the USCIS fee page")
     page.goto(URL, wait_until="domcontentloaded", timeout=45000)
     page.wait_for_selector(A_SEL, timeout=20000)
+    _step(45, "Entering A-Number")
     if not fill_field(page, A_SEL, a_digits, masked=True):
         return ("__INCOMPLETE__", "", "anum_fill")
     page.locator(A_SEL).press("Tab")               # commit mask / React state
+    _step(60, "Entering receipt number")
     if not fill_field(page, R_SEL, receipt, masked=False):
         return ("__INCOMPLETE__", "", "receipt_fill")
     page.locator(R_SEL).press("Tab")
@@ -97,12 +112,14 @@ def _attempt(page, a_digits, receipt):
     # Filling the receipt can blur/clear the masked A-Number — re-verify.
     if _digits(a_digits) not in _digits(page.locator(A_SEL).input_value() or ""):
         return ("__INCOMPLETE__", "", "anum_lost")
+    _step(75, "Submitting to USCIS")
     page.click(CONTINUE)
     try:
         page.wait_for_load_state("networkidle", timeout=15000)
     except PWTimeout:
         pass
     page.wait_for_timeout(1200)
+    _step(90, "Reading the result")
     return classify(page)
 
 def check_one(page, a_digits, receipt, debug_prefix=None):

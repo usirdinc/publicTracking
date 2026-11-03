@@ -2,11 +2,11 @@
 {% block content %}
 <section class="hero">
   <h1>Know when your Annual Asylum Fee is due, and when your USCIS case changes.</h1>
-  <p class="lead">Enter your A-Number and I-589 receipt once. We check your asylum fee status and your USCIS case status for you, show the result in under a minute, re-check every month, and email you when anything changes.</p>
+  <p class="lead">Enter your A-Number and I-589 receipt once. We check your asylum fee status and your USCIS case status for you, show the result in under a minute, re-check every day, and email you when anything changes.</p>
   <p><a class="btn" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start for ' ~ price ~ ' a month' }}</a></p>
   <ul class="points">
     <li><strong>Instant check</strong> when you add a case</li>
-    <li><strong>Monthly re-checks</strong>, weekly when a fee is due</li>
+    <li><strong>Daily re-checks</strong> of your asylum fee status</li>
     <li><strong>USCIS case status</strong> checked daily</li>
     <li><strong>Email alert</strong> when anything changes</li>
     <li>No USCIS password needed. Your numbers are encrypted.</li>

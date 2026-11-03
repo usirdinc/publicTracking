@@ -101,6 +101,7 @@ MIGRATIONS = {
         ("nationality", "TEXT"), ("eoir_status", "TEXT"), ("eoir_fields", "TEXT"),
         ("eoir_checked_at", "TEXT"), ("eoir_next_at", "TEXT"),
     ],
+    "jobs": [("progress", "INTEGER"), ("stage", "TEXT")],
 }
 
 

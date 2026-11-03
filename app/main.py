@@ -305,15 +305,28 @@ def cases_status(request: Request):
     u = current_user(request, cn)
     if not u:
         return JSONResponse({"error": "login"}, status_code=401)
-    rows = cn.execute(
-        "SELECT c.id, c.status, c.amount, c.checked_at, "
-        f"(SELECT COUNT(*) FROM jobs j WHERE j.case_id=c.id AND {ACTIVE_JOB}) AS busy "
-        "FROM cases c WHERE c.user_id=?", (u["id"],)).fetchall()
+    rows = cn.execute("SELECT id, status, amount, checked_at FROM cases WHERE user_id=?", (u["id"],)).fetchall()
     out = []
     for r in rows:
         text, tone = status_text(r["status"], r["amount"])
-        out.append({"id": r["id"], "busy": bool(r["busy"]), "text": "Checking…" if r["busy"] else text,
-                    "tone": "pending" if r["busy"] else tone, "checked_at": r["checked_at"]})
+        item = {"id": r["id"], "busy": False, "text": text, "tone": tone, "checked_at": r["checked_at"]}
+        j = cn.execute(f"SELECT * FROM jobs WHERE case_id=? AND {ACTIVE_JOB} ORDER BY state='running' DESC, id LIMIT 1",
+                       (r["id"],)).fetchone()
+        if j:
+            if j["state"] == "running":
+                pct, stage = j["progress"] or 10, j["stage"] or "Checking with USCIS"
+            else:
+                ahead = cn.execute(
+                    "SELECT COUNT(*) n FROM jobs WHERE state='running' OR (state='queued' AND run_after<=? "
+                    "AND (priority<? OR (priority=? AND (run_after<? OR (run_after=? AND id<?)))))",
+                    (db.iso(db.now()), j["priority"], j["priority"], j["run_after"], j["run_after"], j["id"])
+                ).fetchone()["n"]
+                if j["run_after"] > db.iso(db.now()):
+                    pct, stage = 5, "Retrying shortly"
+                else:
+                    pct, stage = 5, ("Waiting in line" + (f" ({ahead} ahead of you)" if ahead else ""))
+            item.update(busy=True, text=f"Checking… {pct}%", tone="pending", progress=pct, stage=stage)
+        out.append(item)
     return {"cases": out}
 
 

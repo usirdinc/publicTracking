@@ -62,3 +62,4 @@ USCIS_RECHECK_HOURS = float(get("USCIS_RECHECK_HOURS", "24"))
 
 # EOIR court lookups (staff-assisted). Off until the team is ready to run the queue.
 EOIR_ENABLED = get("EOIR_ENABLED", "0") == "1"
+AAF_RECHECK_HOURS = float(get("AAF_RECHECK_HOURS", "24"))   # automatic AAF re-check interval

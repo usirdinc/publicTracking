@@ -14,9 +14,17 @@ document.querySelectorAll('form[data-confirm]').forEach(function (f) {
         var s = el.querySelector('[data-status]');
         s.textContent = c.text;
         s.className = 'status tone-' + c.tone;
+        var pg = el.querySelector('[data-progress]');
+        if (pg) {
+          pg.hidden = !c.busy;
+          if (c.busy) {
+            pg.querySelector('.bar span').style.width = (c.progress || 5) + '%';
+            pg.querySelector('[data-stage]').textContent = c.stage || '';
+          }
+        }
         if (c.busy) busy = true;
       });
-      if (busy && tries++ < 60) setTimeout(poll, 4000);
+      if (busy && tries++ < 150) setTimeout(poll, 1500);
       else if (tries > 0 && !busy) location.reload();
     }).catch(function () {});
   }

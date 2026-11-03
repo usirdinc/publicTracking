@@ -219,3 +219,23 @@ def test_eoir_hidden_when_disabled(client):
     assert "nationality" not in client.get("/app").text.lower()
     assert "/admin/eoir" not in client.get("/admin").text
     assert client.get("/admin/eoir", follow_redirects=False).status_code == 303
+
+
+def test_status_reports_progress(client):
+    signup(client); make_paid("a@example.com")
+    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    c = client.get("/cases/status").json()["cases"][0]
+    assert c["busy"] and c["progress"] == 5 and c["stage"].startswith("Waiting in line")
+    cn = db.connect()
+    cn.execute("UPDATE jobs SET state='running', progress=45, stage='Entering A-Number'")
+    c = client.get("/cases/status").json()["cases"][0]
+    assert c["progress"] == 45 and c["stage"] == "Entering A-Number" and c["text"] == "Checking… 45%"
+
+
+def test_aaf_rechecks_daily(client):
+    signup(client); make_paid("a@example.com")
+    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    cn = db.connect()
+    worker.process(cn, worker.claim(cn), lambda a, r: ("NOT_DUE", "", "", a[0]))
+    nxt = db.parse(cn.execute("SELECT next_check_at FROM cases").fetchone()["next_check_at"])
+    assert timedelta(hours=23) < nxt - db.now() <= timedelta(hours=24)

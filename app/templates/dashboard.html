@@ -24,6 +24,7 @@
         <span class="muted">A-Number ending {{ c.a_last3 }} · receipt ending {{ c.receipt_last4 }}</span>
       </div>
       <p class="status tone-{{ t[1] }}" data-status>{{ t[0] }}</p>
+      <div class="progress" data-progress hidden><div class="bar"><span></span></div><p class="small muted" data-stage></p></div>
       <p class="muted small" data-checked>{% if c.checked_at %}Last checked {{ c.checked_at[:16].replace('T',' ') }} UTC{% endif %}{% if c.next_check_at %} · next check {{ c.next_check_at[:10] }}{% endif %}</p>
       <div class="uscis small">
         {% if c.uscis_status and c.uscis_status != 'NOT_FOUND' %}

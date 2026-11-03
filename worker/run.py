@@ -15,7 +15,6 @@ from app import config, db, mailer, security
 
 log = logging.getLogger("worker")
 
-NEXT_CHECK_DAYS = {"DUE": 7, "NOT_DUE": 30, "EXPIRED": 30, "NOT_PENDING": 30, "NOT_FOUND": 30}
 MAX_ATTEMPTS = 3
 RESTART_BROWSER_EVERY = 50
 IDLE_CLOSE_SECONDS = 30
@@ -27,7 +26,8 @@ def claim(cn):
                        "ORDER BY priority, run_after, id LIMIT 1", (db.iso(db.now()),)).fetchone()
         if not j:
             return None
-        cn.execute("UPDATE jobs SET state='running', started_at=?, attempts=attempts+1 WHERE id=?",
+        cn.execute("UPDATE jobs SET state='running', started_at=?, attempts=attempts+1, "
+                   "progress=10, stage='Starting secure browser' WHERE id=?",
                    (db.iso(db.now()), j["id"]))
     return cn.execute("SELECT * FROM jobs WHERE id=?", (j["id"],)).fetchone()
 
@@ -71,6 +71,8 @@ def process(cn, job, checker) -> str:
     anums = security.decrypt(case["a_numbers_enc"]).split(";")
     receipt = security.decrypt(case["receipt_enc"])
     try:
+        if hasattr(checker, "current"):
+            checker.current["job"] = job["id"]   # so progress updates land on this job
         status, amount, note, _matched = checker(anums, receipt)
     except Exception as e:  # browser crash etc.
         status, amount, note = "ERROR/exception", "", str(e)[:160]
@@ -99,11 +101,11 @@ def process(cn, job, checker) -> str:
     with db.tx(cn):
         cn.execute("INSERT INTO checks(case_id,status,amount,note,checked_at) VALUES(?,?,?,?,?)",
                    (case["id"], status, amount, note[:160], t))
-        nxt = db.in_(days=NEXT_CHECK_DAYS.get(status, 30))
+        nxt = db.in_(hours=config.AAF_RECHECK_HOURS)
         cn.execute("UPDATE cases SET status=?, amount=?, note=?, checked_at=?, next_check_at=? WHERE id=?",
                    (status, amount, note[:160], t, nxt, case["id"]))
-        cn.execute("UPDATE jobs SET state='done', finished_at=?, result_status=? WHERE id=?",
-                   (t, status, job["id"]))
+        cn.execute("UPDATE jobs SET state='done', finished_at=?, result_status=?, progress=100, stage='Done' "
+                   "WHERE id=?", (t, status, job["id"]))
         _schedule_next(cn, case["id"], nxt)
     known_old = old if old and not old.startswith("ERROR") else None
     if (known_old and known_old != status) or (known_old is None and status == "DUE"):
@@ -126,12 +128,20 @@ def paused(cn) -> bool:
     return bool(pu and pu > db.now())
 
 
-def make_checker(page):
+def make_checker(page, cn=None):
+    from tracker import aaf
     from tracker.aaf import check
+    current = {"job": None}
+
+    def hook(pct, stage):
+        if cn is not None and current["job"]:
+            cn.execute("UPDATE jobs SET progress=?, stage=? WHERE id=?", (pct, stage, current["job"]))
+    aaf.progress_hook = hook
 
     def _check(anums, receipt):
         r = check(page, anums, receipt)
         return r.status, r.amount, r.note, r.matched_a_number
+    _check.current = current
     return _check
 
 
@@ -150,7 +160,7 @@ def main():
         done = 0
         idle_since = time.monotonic()
         with browser_page(headful=config.get("HEADLESS", "0") != "1") as page:
-            checker = make_checker(page)
+            checker = make_checker(page, cn)
             while done < RESTART_BROWSER_EVERY:
                 if paused(cn):
                     break
