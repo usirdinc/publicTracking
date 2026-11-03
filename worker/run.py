@@ -18,6 +18,7 @@ log = logging.getLogger("worker")
 NEXT_CHECK_DAYS = {"DUE": 7, "NOT_DUE": 30, "EXPIRED": 30, "NOT_PENDING": 30, "NOT_FOUND": 30}
 MAX_ATTEMPTS = 3
 RESTART_BROWSER_EVERY = 50
+IDLE_CLOSE_SECONDS = 30
 
 
 def claim(cn):
@@ -115,6 +116,11 @@ def _schedule_next(cn, case_id, when):
     db.enqueue(cn, case_id, "scheduled", when)
 
 
+def has_work(cn) -> bool:
+    return cn.execute("SELECT 1 FROM jobs WHERE state='queued' AND run_after<=? LIMIT 1",
+                      (db.iso(db.now()),)).fetchone() is not None
+
+
 def paused(cn) -> bool:
     pu = db.parse(db.get_setting(cn, "paused_until"))
     return bool(pu and pu > db.now())
@@ -135,17 +141,23 @@ def main():
     cn = db.connect()
     db.init(cn)
     cn.execute("UPDATE jobs SET state='queued', attempts=MAX(attempts-1,0) WHERE state='running'")
+    consecutive_err = 0
     while True:
-        consecutive_err = 0
+        # Keep the screen clear: open the browser only when there is work.
+        if paused(cn) or not has_work(cn):
+            time.sleep(5)
+            continue
         done = 0
+        idle_since = time.monotonic()
         with browser_page(headful=config.get("HEADLESS", "0") != "1") as page:
             checker = make_checker(page)
             while done < RESTART_BROWSER_EVERY:
                 if paused(cn):
-                    time.sleep(60)
-                    continue
+                    break
                 job = claim(cn)
                 if not job:
+                    if time.monotonic() - idle_since > IDLE_CLOSE_SECONDS:
+                        break  # queue empty for a while: close the browser
                     time.sleep(2)
                     continue
                 status = process(cn, job, checker)
@@ -163,6 +175,7 @@ def main():
                     log.warning("browser error; relaunching the browser")
                     break  # page/browser likely dead (e.g. screen restarted): start fresh
                 time.sleep(random.uniform(config.MIN_DELAY, config.MAX_DELAY))
+                idle_since = time.monotonic()
 
 
 if __name__ == "__main__":
