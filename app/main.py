@@ -256,7 +256,8 @@ def subscribe(request: Request):
 def account_paid(request: Request):
     cn = get_db()
     u = current_user(request, cn)
-    return {"paid": bool(u and _can_use(u))}
+    return JSONResponse({"paid": bool(u and _can_use(u))},
+                        headers={"Cache-Control": "no-store, private"})
 
 
 def _paused(cn) -> bool:

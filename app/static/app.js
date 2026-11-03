@@ -59,13 +59,15 @@
   if (sub) {
     var waitBox = sub.querySelector('[data-waiting]'), waiting = false;
     var check = function () {
-      fetch('/account/paid', { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+      fetch('/account/paid', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); })
         .then(function (d) { if (d.paid) location.href = '/app'; else setTimeout(check, 4000); })
         .catch(function () { setTimeout(check, 8000); });
     };
-    var startWaiting = function () { if (waiting) return; waiting = true; if (waitBox) waitBox.hidden = false; check(); };
+    var startWaiting = function () { if (waiting) return; waiting = true; if (waitBox) waitBox.hidden = false; };
     var pay = sub.querySelector('[data-pay]');
     if (pay) pay.addEventListener('click', startWaiting);
+    // Also confirm on page load: Square can return before its signed webhook arrives.
+    check();
   }
 
   // ---- progress stepper (shared by the dashboard and the landing page demo)

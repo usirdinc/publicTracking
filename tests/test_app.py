@@ -307,3 +307,24 @@ def test_login_unpaid_goes_to_subscribe(client):
     r = client.post("/login", data={"email": "a@example.com", "password": "correct horse battery",
                                     "csrf": csrf(client, "/login")}, follow_redirects=False)
     assert r.headers["location"] == "/subscribe"
+
+
+def test_square_confirmation_controls_registration_return(client, monkeypatch):
+    signup(client)
+    assert client.get('/app', follow_redirects=False).headers['location'] == '/subscribe'
+    monkeypatch.setattr(square, 'customer_email', lambda cid: 'a@example.com')
+    subscription = {'event_id':'signup-sub', 'type':'subscription.created',
+                    'data':{'object':{'subscription':{'customer_id':'C-signup','status':'ACTIVE'}}}}
+    body = json.dumps(subscription).encode()
+    client.post('/webhooks/square', content=body, headers={'x-square-hmacsha256-signature':_sign(body)})
+    assert client.get('/account/paid').json() == {'paid':False}
+    event = {'event_id':'signup-payment', 'type':'invoice.payment_made',
+             'data':{'object':{'invoice':{'primary_recipient':{'customer_id':'C-signup'}}}}}
+    body = json.dumps(event).encode()
+    assert client.post('/webhooks/square', content=body, headers={'x-square-hmacsha256-signature':'invalid'}).status_code == 403
+    assert client.get('/account/paid').json() == {'paid':False}
+    client.post('/webhooks/square', content=body, headers={'x-square-hmacsha256-signature':_sign(body)})
+    response = client.get('/account/paid')
+    assert response.json() == {'paid':True} and 'no-store' in response.headers['cache-control']
+    assert client.get('/subscribe', follow_redirects=False).headers['location'] == '/app'
+    assert client.get('/app').status_code == 200
