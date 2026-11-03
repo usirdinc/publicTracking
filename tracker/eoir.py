@@ -33,10 +33,28 @@ def profile_dir() -> str:
     return os.environ.get("OPERATOR_PROFILE", os.path.join(root, "data", "operator-profile"))
 
 
+def _lock_alive(lock: str) -> bool:
+    """SingletonLock is a symlink to '<host>-<pid>'. True if that Chrome still runs."""
+    try:
+        pid = int(os.readlink(lock).rsplit("-", 1)[1])
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError, IndexError):
+        return False
+
+
 def _check_profile(path: str):
     if not os.path.isdir(path):
         raise RuntimeError(f"Operator profile not found at {path}. Run scripts/operator_browser.sh and sign in first.")
-    if os.path.lexists(os.path.join(path, "SingletonLock")):
+    lock = os.path.join(path, "SingletonLock")
+    if os.path.lexists(lock) and not _lock_alive(lock):
+        # Left behind when Chrome was killed; Chrome would refuse to start otherwise.
+        for f in ("SingletonLock", "SingletonSocket", "SingletonCookie"):
+            try:
+                os.unlink(os.path.join(path, f))
+            except FileNotFoundError:
+                pass
+    if os.path.lexists(lock):
         raise RuntimeError("The operator Chrome window is still open. Close it (or run: pkill -f operator-profile) and try again.")
     for ext in BLOCKED_EXTENSION_IDS:
         if os.path.isdir(os.path.join(path, "Default", "Extensions", ext)):
