@@ -17,7 +17,7 @@ ACIS_URL = "https://acis.eoir.justice.gov/en/"
 NO_CASE_TEXT = "No case found for this A-Number."
 CAPTCHA_TIMEOUT = int(os.environ.get("EOIR_CAPTCHA_TIMEOUT", "180"))
 # Known captcha-solver extension; refuse to run if it is active in the profile.
-# BLOCKED_EXTENSION_IDS = {"dknlfmjaanfblgfdfebhijalfmhmjjjo"}
+BLOCKED_EXTENSION_IDS = {"dknlfmjaanfblgfdfebhijalfmhmjjjo"}
 
 
 @dataclass
@@ -56,9 +56,9 @@ def _check_profile(path: str):
                 pass
     if os.path.lexists(lock):
         raise RuntimeError("The operator Chrome window is still open. Close it (or run: pkill -f operator-profile) and try again.")
-#    for ext in BLOCKED_EXTENSION_IDS:
-#        if os.path.isdir(os.path.join(path, "Default", "Extensions", ext)):
-#            raise RuntimeError(f"Captcha-solver extension {ext} is installed in the profile. Remove it first.")
+    for ext in BLOCKED_EXTENSION_IDS:
+        if os.path.isdir(os.path.join(path, "Default", "Extensions", ext)):
+            raise RuntimeError(f"Captcha-solver extension {ext} is installed in the profile. Remove it first.")
 
 
 @contextmanager
@@ -152,6 +152,15 @@ def _outcome(page):
     return None
 
 
+def _captcha_token(page) -> bool:
+    try:
+        return bool(page.evaluate(
+            "() => [...document.querySelectorAll('textarea[name=\"h-captcha-response\"],"
+            " textarea[name=\"g-recaptcha-response\"]')].some(t => t.value && t.value.length > 20)"))
+    except Exception:
+        return False
+
+
 def _captcha_showing(page) -> bool:
     return bool(page.locator('iframe[title*="hCaptcha challenge"], div[class*="challenge"]').count()
                 or page.locator('text="Please complete the security check"').count())
@@ -198,23 +207,20 @@ def check(page, a_number: str, nationality: str = "Burma", on_captcha=None) -> E
         except Exception:
             pass
         end = time.monotonic() + CAPTCHA_TIMEOUT
-        resubmitted = False
+        last_submit = 0.0
         while time.monotonic() < end:
-            page.wait_for_timeout(500)
+            page.wait_for_timeout(700)
             r = _outcome(page)
             if r:
                 r.captcha = True
                 return r
-            if not _captcha_showing(page) and not resubmitted:
-                page.wait_for_timeout(2000)
-                r = _outcome(page)
-                if r:
-                    r.captcha = True
-                    return r
+            # Solved = hCaptcha wrote its response token. Then press Submit for the person.
+            if _captcha_token(page) and time.monotonic() - last_submit > 6:
                 btn = page.locator('button:has-text("Submit")')
                 if btn.count():
-                    btn.click(); resubmitted = True
-                    page.wait_for_timeout(3000)
+                    btn.first.click()
+                    last_submit = time.monotonic()
+                    page.wait_for_timeout(2500)
         return EoirResult("CAPTCHA_TIMEOUT", note="captcha not solved in time", captcha=True)
     except Exception as e:
         return EoirResult("ERROR", note=f"{type(e).__name__}: {str(e)[:150]}")
