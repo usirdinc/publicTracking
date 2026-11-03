@@ -1,32 +1,40 @@
-<!doctype html>
+{% from "_icons.html" import icon %}<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}AAF Tracker{% endblock %}</title>
-<link rel="stylesheet" href="/static/site.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5bff">
+<title>{% block title %}USIRD Case Tracker{% endblock %}</title>
+<meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
+<link rel="stylesheet" href="/static/site.css?v=2">
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="/">AAF Tracker <span class="beta">beta</span></a>
-  <nav>
-    {% if user %}
-      <a href="/app">My cases</a>
-      <form method="post" action="/logout" class="inline"><button class="link">Log out</button></form>
-    {% else %}
-      <a href="/login">Log in</a>
-      <a class="btn small" href="/signup">Sign up</a>
-    {% endif %}
-  </nav>
+  <div class="wrap">
+    <a class="brand" href="/"><span class="logo">{{ icon('shield') }}</span><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span><span class="tag">Beta</span></a>
+    <nav>
+      {% if user %}
+        <a href="/app">My cases</a>
+        <form method="post" action="/logout" class="inline"><button class="link">Log out</button></form>
+      {% else %}
+        <a href="/login">Log in</a>
+        <a class="btn small" href="/signup">Get started</a>
+      {% endif %}
+    </nav>
+  </div>
 </header>
-<main>
-{% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+{% if flash %}<div class="toast" role="status">{{ flash }}</div>{% endif %}
+<main class="wrap">
 {% block content %}{% endblock %}
 </main>
 <footer>
-  <p>Not affiliated with USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
-  <p><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></p>
+  <div class="wrap">
+    <div>
+      <p><strong>USIRD Case Tracker</strong> is an independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+    </div>
+    <p><a href="/terms">Terms</a> &nbsp; <a href="/privacy">Privacy</a></p>
+  </div>
 </footer>
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=2"></script>
 </body>
 </html>

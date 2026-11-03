@@ -43,7 +43,30 @@ def status_text(status, amount=None):
     return text, tone
 
 
+AAF_BADGE = {"DUE": ("Fee due", "due"), "NOT_DUE": ("Not due", "ok"), "EXPIRED": ("Expired", "warn"),
+             "NOT_FOUND": ("Not found", "warn"), "NOT_PENDING": ("Not needed", "ok")}
+
+
+def aaf_badge(status):
+    if not status:
+        return ("Checking", "pending")
+    if status.startswith("ERROR"):
+        return ("Retrying", "warn")
+    return AAF_BADGE.get(status, ("Status", "pending"))
+
+
+def uscis_badge(text):
+    t = (text or "").lower()
+    if any(w in t for w in ("denied", "rejected", "terminated", "revoked", "returned", "evidence was requested")):
+        return "warn"
+    if any(w in t for w in ("approved", "card was", "produced", "delivered", "mailed", "oath")):
+        return "ok"
+    return "pending"
+
+
 templates.env.globals["status_text"] = status_text
+templates.env.globals["aaf_badge"] = aaf_badge
+templates.env.globals["uscis_badge"] = uscis_badge
 templates.env.globals["price"] = config.PRICE
 
 
@@ -262,8 +285,20 @@ def _own_case(cn, u, case_id):
     return cn.execute("SELECT * FROM cases WHERE id=? AND user_id=?", (case_id, u["id"])).fetchone()
 
 
+def _wants_json(request: Request) -> bool:
+    return "application/json" in request.headers.get("accept", "")
+
+
 @app.post("/cases/{case_id}/check")
 def check_now(request: Request, case_id: int, csrf: str = Form("")):
+    resp = _check_now(request, case_id, csrf)
+    if _wants_json(request) and isinstance(resp, RedirectResponse):
+        msg = request.session.pop("flash", None)
+        return JSONResponse({"ok": msg == "Checking now…", "message": msg})
+    return resp
+
+
+def _check_now(request: Request, case_id: int, csrf: str):
     cn = get_db()
     u = current_user(request, cn)
     if not u:
@@ -284,7 +319,7 @@ def check_now(request: Request, case_id: int, csrf: str = Form("")):
         return redirect("/app", "You can run one instant check per case per day. We also check automatically.", request)
     with db.tx(cn):
         db.enqueue(cn, case_id, "instant")
-        cn.execute("UPDATE cases SET uscis_next_at=NULL WHERE id=?", (case_id,))
+        cn.execute("UPDATE cases SET uscis_next_at=NULL, uscis_error=NULL WHERE id=?", (case_id,))
     return redirect("/app", "Checking now…", request)
 
 

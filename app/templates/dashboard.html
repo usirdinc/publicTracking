@@ -1,74 +1,118 @@
 {% extends "base.html" %}
-{% block title %}My cases · AAF Tracker{% endblock %}
+{% block title %}My cases · USIRD Case Tracker{% endblock %}
 {% block content %}
-{% if paused %}<div class="flash warn">Automatic checks are briefly paused for maintenance. Your cases will be checked as soon as they resume.</div>{% endif %}
+{% if paused %}<div class="banner">{{ icon('clock') }} <span>Automatic checks are paused for a short time. Your cases will be checked as soon as they resume.</span></div>{% endif %}
 
 {% if not paid and not admin %}
-<section class="card">
-  <h2>Start your subscription</h2>
-  <p>{{ price }} a month, cancel any time. Pay with the <strong>same email</strong> you signed up with (<strong>{{ user.email }}</strong>) so we can match your payment.</p>
-  {% if checkout_url %}<p><a class="btn" href="{{ checkout_url }}" rel="noopener">Subscribe with Square</a></p>{% endif %}
-  <p class="muted">After paying, refresh this page. Activation usually takes under a minute.</p>
+<section class="card sub-card">
+  <div>
+    <h2>Start your subscription</h2>
+    <p>{{ price }} a month, cancel anytime. Pay with <strong>{{ user.email }}</strong> so we can match your payment. Your account turns on within a minute.</p>
+  </div>
+  {% if checkout_url %}<a class="btn lg" href="{{ checkout_url }}" rel="noopener">Subscribe</a>{% endif %}
 </section>
 {% endif %}
 
-<section>
-  <h1>My cases</h1>
-  {% if not cases %}<p class="muted">No cases yet.</p>{% endif %}
-  <div class="cases">
-  {% for c in cases %}
-    {% set t = status_text(c.status, c.amount) %}
-    <article class="case" data-case="{{ c.id }}">
-      <div class="case-head">
+<div class="page-head">
+  <div><h1>My cases</h1><p>We check every case automatically each day.</p></div>
+  {% if (paid or admin) and cases %}<a class="btn" href="#add" data-open-add>{{ icon('plus') }} Add case</a>{% endif %}
+</div>
+
+{% if not cases %}
+<div class="card empty">
+  <div class="ico">{{ icon('doc') }}</div>
+  <h2>No cases yet</h2>
+  <p class="muted">Add your A-Number and I-589 receipt number to start tracking.</p>
+</div>
+{% endif %}
+
+<div class="cases">
+{% for c in cases %}
+  {% set t = status_text(c.status, c.amount) %}
+  {% set b = aaf_badge(c.status) %}
+  <article class="case" data-case="{{ c.id }}">
+    <div class="case-top">
+      <div>
         <h3>{{ c.label }}</h3>
-        <span class="muted">A-Number ending {{ c.a_last3 }} · receipt ending {{ c.receipt_last4 }}</span>
+        <div class="chips"><span class="chip">A-Number •••{{ c.a_last3 }}</span><span class="chip">Receipt •••{{ c.receipt_last4 }}</span></div>
       </div>
-      <p class="status tone-{{ t[1] }}" data-status>{{ t[0] }}</p>
-      <div class="progress" data-progress hidden><div class="bar"><span></span></div><p class="small muted" data-stage></p></div>
-      <p class="muted small" data-checked>{% if c.checked_at %}Last checked {{ c.checked_at[:16].replace('T',' ') }} UTC{% endif %}{% if c.next_check_at %} · next check {{ c.next_check_at[:10] }}{% endif %}</p>
-      <div class="uscis small">
+    </div>
+
+    <div class="live" aria-live="polite">
+      <div class="live-top"><span class="live-stage" data-stage>Getting ready</span><span class="live-pct" data-pct>0%</span></div>
+      <div class="bar"><span data-bar></span></div>
+      <div class="timeline"><span data-at="0">Queue</span><span data-at="25">Open</span><span data-at="45">Enter</span><span data-at="75">Submit</span><span data-at="90">Result</span></div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">{{ icon('cash') }} Asylum fee</div>
+        <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
+        <div class="tile-value">{{ t[0] if c.status else "Getting your fee status" }}</div>
+        <div class="tile-sub">{% if c.checked_at %}Checked <time data-rel datetime="{{ c.checked_at }}">{{ c.checked_at[:10] }}</time>{% else %}First check in progress{% endif %}</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">{{ icon('doc') }} USCIS case</div>
         {% if c.uscis_status and c.uscis_status != 'NOT_FOUND' %}
-          <p><strong>USCIS case status:</strong> {{ c.uscis_status }}{% if c.uscis_form %} ({{ c.uscis_form }}){% endif %}</p>
-          {% if c.uscis_desc %}<details><summary>Details</summary><p>{{ c.uscis_desc }}</p></details>{% endif %}
-          <p class="muted">{% if c.uscis_modified %}USCIS updated {{ c.uscis_modified[:10] }} · {% endif %}checked {{ c.uscis_checked_at[:16].replace('T',' ') }} UTC</p>
+          {% set ub = uscis_badge(c.uscis_status) %}
+          <span class="badge tone-{{ ub }}">{{ c.uscis_form or 'Case status' }}</span>
+          <div class="tile-value">{{ c.uscis_status }}</div>
+          {% if c.uscis_desc %}<details><summary>What this means</summary><p>{{ c.uscis_desc }}</p></details>{% endif %}
+          <div class="tile-sub">{% if c.uscis_modified %}USCIS updated <time data-date datetime="{{ c.uscis_modified }}">{{ c.uscis_modified[:10] }}</time>{% else %}Checked <time data-rel datetime="{{ c.uscis_checked_at }}">{{ c.uscis_checked_at[:10] }}</time>{% endif %}</div>
         {% elif c.uscis_status == 'NOT_FOUND' %}
-          <p class="muted">USCIS case status: no case found for this receipt number.</p>
+          <span class="badge tone-warn">Not found</span>
+          <div class="tile-value">No case found for this receipt</div>
+          <div class="tile-sub">Check the receipt number</div>
         {% elif c.uscis_error %}
-          <p class="muted">USCIS case status: temporarily unavailable, we'll try again soon.</p>
+          <span class="badge tone-warn">Retrying</span>
+          <div class="tile-value">USCIS is not responding</div>
+          <div class="tile-sub">We'll try again shortly</div>
         {% else %}
-          <p class="muted">USCIS case status: checking…</p>
+          <span class="badge tone-pending">Checking</span>
+          <div class="tile-value">Getting your case status</div>
+          <div class="tile-sub">Usually a few seconds</div>
         {% endif %}
       </div>
-      {% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}
-      {% if eoir_enabled and c.nationality %}<p class="small uscis"><strong>Immigration court:</strong> {{ e or "We'll check this soon." }}{% if c.eoir_checked_at %} <span class="muted">(checked {{ c.eoir_checked_at[:10] }})</span>{% endif %}</p>{% endif %}
-      {% if c.status == 'DUE' %}<p class="small">Pay only on the official site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener">my.uscis.gov</a></p>{% endif %}
-      <div class="actions">
-        <form method="post" action="/cases/{{ c.id }}/check" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">Check now</button></form>
+    </div>
+
+    {% if eoir_enabled and c.nationality %}{% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}<p class="pay-note">Immigration court: {{ e or "We'll check this soon." }}</p>{% endif %}
+    {% if c.status == 'DUE' %}<p class="pay-note"><strong>Your fee is due.</strong> Pay only on the official USCIS site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener" target="_blank">my.uscis.gov</a></p>{% endif %}
+
+    <div class="case-foot">
+      <span class="when">{% if c.next_check_at %}Next automatic check <time data-rel datetime="{{ c.next_check_at }}">{{ c.next_check_at[:10] }}</time>{% endif %}</span>
+      <div class="acts">
         <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="Delete this case and its history?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete</button></form>
+        <form method="post" action="/cases/{{ c.id }}/check" class="inline" data-check><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} Check now</button></form>
       </div>
-    </article>
-  {% endfor %}
-  </div>
-</section>
+    </div>
+  </article>
+{% endfor %}
+</div>
 
 {% if paid or admin %}
-<section class="card">
-  <h2>Add a case</h2>
-  <form method="post" action="/cases">
-    <input type="hidden" name="csrf" value="{{ csrf }}">
-    <label>Name for this case (optional) <input name="label" maxlength="60" placeholder="e.g. My family"></label>
-    <label>A-Number(s) <input name="a_numbers" required placeholder="A123456789" autocomplete="off">
-      <span class="hint">For a family on one I-589, enter every A-Number separated by commas. We try each one.</span></label>
-    {% if eoir_enabled %}<label>Country of nationality <input name="nationality" maxlength="60" placeholder="e.g. Burma" autocomplete="off">
-      <span class="hint">Needed for immigration court (EOIR) updates. Use the country shown on your court papers.</span></label>{% endif %}
-    <label>I-589 receipt number <input name="receipt" required placeholder="ZAR1234567890" autocomplete="off"></label>
-    <button class="btn">Add and check now</button>
-  </form>
-</section>
+<details class="add" id="add" {% if not cases %}open{% endif %}>
+  <summary></summary>
+  <section class="card">
+    <h2>Add a case</h2>
+    <p class="muted">We check it right away, then every day.</p>
+    <form method="post" action="/cases">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Name for this case <input name="label" maxlength="60" placeholder="e.g. My family"></label>
+      <div class="form-row">
+        <label>A-Number <input name="a_numbers" required placeholder="A123456789" autocomplete="off" inputmode="text">
+          <span class="hint">Family on one I-589? Add every A-Number, separated by commas.</span></label>
+        <label>I-589 receipt number <input name="receipt" required placeholder="ZAR1234567890" autocomplete="off">
+          <span class="hint">Starts with 3 letters, like ZAR or ZLA.</span></label>
+      </div>
+      {% if eoir_enabled %}<label>Country of nationality <input name="nationality" maxlength="60" placeholder="e.g. Burma" autocomplete="off"></label>{% endif %}
+      <button class="btn lg">Add and check now</button>
+    </form>
+  </section>
+</details>
 {% endif %}
 
-<section class="muted small">
+<div class="account-row muted">
   <form method="post" action="/account/delete" class="inline" data-confirm="Delete your account and all case data? This cannot be undone."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete my account</button></form>
-  {% if admin %} · <a href="/admin">Admin</a>{% endif %}
-</section>
+  {% if admin %}<a href="/admin">Admin</a>{% endif %}
+</div>
 {% endblock %}

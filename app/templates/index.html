@@ -1,15 +1,78 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="hero">
-  <h1>Know when your Annual Asylum Fee is due, and when your USCIS case changes.</h1>
-  <p class="lead">Enter your A-Number and I-589 receipt once. We check your asylum fee status and your USCIS case status for you, show the result in under a minute, re-check every day, and email you when anything changes.</p>
-  <p><a class="btn" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start for ' ~ price ~ ' a month' }}</a></p>
-  <ul class="points">
-    <li><strong>Instant check</strong> when you add a case</li>
-    <li><strong>Daily re-checks</strong> of your asylum fee status</li>
-    <li><strong>USCIS case status</strong> checked daily</li>
-    <li><strong>Email alert</strong> when anything changes</li>
-    <li>No USCIS password needed. Your numbers are encrypted.</li>
-  </ul>
+  <div>
+    <span class="eyebrow">For asylum seekers and families</span>
+    <h1>Never miss an <span class="accent">asylum fee</span> or a USCIS update.</h1>
+    <p class="lead">Add your A-Number and I-589 receipt once. We check your Annual Asylum Fee and your USCIS case status every day, and email you the moment anything changes.</p>
+    <div class="cta-row">
+      <a class="btn lg" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start tracking for ' ~ price ~ '/month' }}</a>
+      {% if not user %}<a class="btn lg ghost" href="#how">How it works</a>{% endif %}
+    </div>
+    <div class="trust">
+      <span>{{ icon('check') }} Cancel anytime</span>
+      <span>{{ icon('check') }} No USCIS password</span>
+      <span>{{ icon('check') }} Encrypted case numbers</span>
+    </div>
+  </div>
+  <div class="mock" aria-hidden="true">
+    <div class="glow"></div>
+    <div class="case">
+      <div class="case-top"><div><h3>My family</h3><div class="chips"><span class="chip">A-•••-•••-421</span><span class="chip">ZAR ••••7731</span></div></div></div>
+      <div class="tiles">
+        <div class="tile"><div class="tile-label">{{ icon('cash') }} Asylum fee</div><span class="badge tone-ok">Not due</span><div class="tile-value">No payment needed right now</div><div class="tile-sub">Checked today</div></div>
+        <div class="tile"><div class="tile-label">{{ icon('doc') }} USCIS case</div><span class="badge tone-pending">I-589</span><div class="tile-value">Case Was Received</div><div class="tile-sub">Updated Oct 28</div></div>
+      </div>
+      <div class="live show"><div class="live-top"><span class="live-stage">Submitting to USCIS</span><span class="live-pct">78%</span></div><div class="bar"><span class="w78"></span></div></div>
+      <div class="case-foot"><span class="when">Next automatic check tomorrow</span><span class="btn small ghost">{{ icon('refresh') }} Check now</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="section-head"><span class="eyebrow">How it works</span><h2>Set it up in two minutes</h2></div>
+  <div class="grid-3 steps">
+    <div class="card step"><h3>Create an account</h3><p>Sign up with your email and start your monthly plan.</p></div>
+    <div class="card step"><h3>Add your case</h3><p>Enter your A-Number and I-589 receipt number. Families can add every A-Number.</p></div>
+    <div class="card step"><h3>Get alerts</h3><p>We check every day and email you when your fee or case status changes.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><span class="eyebrow">What you get</span><h2>Peace of mind, every day</h2></div>
+  <div class="grid-3">
+    <div class="card feature"><div class="ico">{{ icon('cash') }}</div><h3>Asylum fee alerts</h3><p>Know as soon as your Annual Asylum Fee is due, and how much.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('doc') }}</div><h3>USCIS case status</h3><p>Your latest case status from USCIS, with the full description.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('bell') }}</div><h3>Email alerts</h3><p>We email you the moment something changes. No need to keep checking.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('bolt') }}</div><h3>Check anytime</h3><p>Tap Check now and watch the result arrive in under a minute.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to 5 cases on one account.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('lock') }}</div><h3>Private and secure</h3><p>Your numbers are encrypted and never shared. Delete everything anytime.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card price">
+    <span class="eyebrow">Simple pricing</span>
+    <div><span class="amount">{{ price }}</span> <span class="per">/ month</span></div>
+    <ul class="checks">
+      <li>{{ icon('check') }} Daily asylum fee and USCIS case checks</li>
+      <li>{{ icon('check') }} Email alerts when anything changes</li>
+      <li>{{ icon('check') }} Instant checks from your dashboard</li>
+      <li>{{ icon('check') }} Up to 5 cases per account</li>
+    </ul>
+    <a class="btn lg block" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Get started' }}</a>
+    <p class="muted small mt">Cancel anytime. Billed securely by Square.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Questions</h2></div>
+  <div class="faq">
+    <details><summary>Where does the information come from?</summary><p>The asylum fee status comes from the official USCIS Annual Asylum Fee page. The case status comes from the official USCIS case status service. We check them for you and show the result.</p></details>
+    <details><summary>Do you pay the fee for me?</summary><p>No. We tell you when a fee is due. You pay only on the official USCIS website.</p></details>
+    <details><summary>Do I need my USCIS account password?</summary><p>No. We only need your A-Number and I-589 receipt number.</p></details>
+    <details><summary>Is this legal advice?</summary><p>No. USIRD Case Tracker is an information service. For advice about your case, talk to an immigration attorney or accredited representative.</p></details>
+    <details><summary>How do I cancel?</summary><p>Cancel your Square subscription anytime. You can also delete your account and all case data from your dashboard.</p></details>
+  </div>
 </section>
 {% endblock %}
