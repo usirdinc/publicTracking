@@ -249,6 +249,11 @@ def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...)
     return redirect("/app", "Case added. Checking with USCIS now; this usually takes under a minute.", request)
 
 
+# A check counts as "in progress" while it runs or waits to run now. The next
+# monthly check also sits in the queue, but it is not in progress.
+ACTIVE_JOB = "(state='running' OR (state='queued' AND kind<>'scheduled'))"
+
+
 def _own_case(cn, u, case_id):
     return cn.execute("SELECT * FROM cases WHERE id=? AND user_id=?", (case_id, u["id"])).fetchone()
 
@@ -265,7 +270,7 @@ def check_now(request: Request, case_id: int, csrf: str = Form("")):
     if not c or not _can_use(u):
         return redirect("/app")
     since = db.iso(db.now() - timedelta(days=1))
-    pending = cn.execute("SELECT COUNT(*) c FROM jobs WHERE case_id=? AND state IN ('queued','running')",
+    pending = cn.execute(f"SELECT COUNT(*) c FROM jobs WHERE case_id=? AND {ACTIVE_JOB}",
                          (case_id,)).fetchone()["c"]
     if pending:
         return redirect("/app", "A check for this case is already in progress.", request)
@@ -296,7 +301,7 @@ def cases_status(request: Request):
         return JSONResponse({"error": "login"}, status_code=401)
     rows = cn.execute(
         "SELECT c.id, c.status, c.amount, c.checked_at, "
-        "(SELECT COUNT(*) FROM jobs j WHERE j.case_id=c.id AND j.state IN ('queued','running')) AS busy "
+        f"(SELECT COUNT(*) FROM jobs j WHERE j.case_id=c.id AND {ACTIVE_JOB}) AS busy "
         "FROM cases c WHERE c.user_id=?", (u["id"],)).fetchall()
     out = []
     for r in rows:

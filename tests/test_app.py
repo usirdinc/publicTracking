@@ -167,3 +167,15 @@ def test_unpaid_scheduled_job_skipped(client):
 def test_admin_requires_admin(client):
     signup(client)
     assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
+def test_status_not_busy_after_check(client, monkeypatch):
+    cn = _setup_case(client)
+    monkeypatch.setattr(worker.mailer, "send", lambda *a: None)
+    assert client.get("/cases/status").json()["cases"][0]["busy"] is True
+    worker.process(cn, worker.claim(cn), lambda a, r: ("NOT_DUE", "", "", a[0]))
+    c = client.get("/cases/status").json()["cases"][0]
+    assert c["busy"] is False and c["text"] == "Not due right now"
+    # the queued monthly job must not block "Check now"
+    r = client.post(f"/cases/{c['id']}/check", data={"csrf": csrf(client, "/app")})
+    assert "Checking now" in r.text
