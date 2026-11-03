@@ -61,6 +61,9 @@ def process(cn, case, client) -> str:
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    # httpx logs each request URL, which contains the receipt number. Keep it out of the journal.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     from tracker.uscis_api import NotConfigured, RateLimited, from_config
     cn = db.connect()
     db.init(cn)
