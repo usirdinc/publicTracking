@@ -40,8 +40,7 @@
 
     <div class="live" aria-live="polite">
       <div class="live-top"><span class="live-stage" data-stage>Getting ready</span><span class="live-pct" data-pct>0%</span></div>
-      <div class="bar"><span data-bar></span></div>
-      <div class="timeline"><span data-at="0">Queue</span><span data-at="25">Open</span><span data-at="45">Enter</span><span data-at="75">Submit</span><span data-at="90">Result</span></div>
+      {{ stepper() }}
     </div>
 
     <div class="tiles">

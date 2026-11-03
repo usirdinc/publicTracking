@@ -38,6 +38,58 @@
   paintTimes(); paintDates();
   setInterval(paintTimes, 30000);
 
+  // ---- progress stepper (shared by the dashboard and the landing page demo)
+  var STOPS = [0, 25, 45, 75, 90];
+  function stepperAt(p) {           // 0..1 along the line, step to step
+    for (var i = STOPS.length - 1; i >= 0; i--) {
+      if (p >= STOPS[i]) {
+        if (i === STOPS.length - 1) return 1;
+        return (i + (p - STOPS[i]) / (STOPS[i + 1] - STOPS[i])) / (STOPS.length - 1);
+      }
+    }
+    return 0;
+  }
+  function paintStepper(root, p, complete) {
+    var st = root.querySelector('[data-stepper]'); if (!st) return;
+    var f = stepperAt(p);
+    st.querySelector('[data-fill]').style.transform = 'scaleX(' + f.toFixed(4) + ')';
+    st.querySelector('[data-dot]').style.left = (f * 100).toFixed(2) + '%';
+    var items = st.querySelectorAll('li'), active = 0;
+    items.forEach(function (li, i) { if (p >= Number(li.dataset.at)) active = i; });
+    items.forEach(function (li, i) {
+      var done = complete || i < active;
+      li.classList.toggle('done', done);
+      li.classList.toggle('active', !done && i === active);
+    });
+  }
+
+  // Landing page: loop a sample check so visitors see what Check now looks like.
+  var demo = document.querySelector('[data-demo]');
+  if (demo) {
+    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var DSTAGES = [[0, 'Waiting in line'], [25, 'Opening the USCIS fee page'], [45, 'Entering A-Number'],
+                   [60, 'Entering receipt number'], [75, 'Submitting to USCIS'], [90, 'Reading the result'], [100, 'Done']];
+    var dShow = function (p) {
+      var label = DSTAGES[0][1];
+      DSTAGES.forEach(function (s) { if (p >= s[0]) label = s[1]; });
+      demo.querySelector('[data-stage]').textContent = label;
+      demo.querySelector('[data-pct]').textContent = Math.round(p) + '%';
+      paintStepper(demo, p, p >= 100);
+      demo.closest('.case').classList.toggle('done', p >= 100);
+    };
+    if (calm) dShow(78);
+    else {
+      var t0 = null, RUN = 6500, HOLD = 1800;
+      var dTick = function (ts) {
+        if (t0 === null) t0 = ts;
+        var e = (ts - t0) % (RUN + HOLD), x = Math.min(1, e / RUN);
+        dShow(100 * (1 - Math.pow(1 - x, 1.6)));   // quick start, gentle finish
+        requestAnimationFrame(dTick);
+      };
+      requestAnimationFrame(dTick);
+    }
+  }
+
   // ---- live progress
   if (!document.querySelector('[data-case]')) return;
   var MILESTONES = [5, 10, 25, 45, 60, 75, 90, 100];
@@ -66,12 +118,9 @@
   function render(id) {
     var el = card(id), L = live[id]; if (!el || !L) return;
     var p = Math.min(100, L.shown);
-    el.querySelector('[data-bar]').style.width = p.toFixed(1) + '%';
     el.querySelector('[data-pct]').textContent = Math.round(p) + '%';
     el.querySelector('[data-stage]').textContent = L.stage || 'Checking with USCIS';
-    el.querySelectorAll('.timeline span').forEach(function (s) {
-      s.classList.toggle('on', p >= Number(s.dataset.at));
-    });
+    paintStepper(el, p, p >= 99.9);
   }
 
   function tick() {

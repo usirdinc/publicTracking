@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="hero">
-  <div>
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-copy">
     <span class="eyebrow">For asylum seekers and families</span>
     <h1>Never miss an <span class="accent">asylum fee</span> or a USCIS update.</h1>
     <p class="lead">Add your A-Number and I-589 receipt once. We check your Annual Asylum Fee and your USCIS case status every day, and email you the moment anything changes.</p>
@@ -17,13 +18,21 @@
   </div>
   <div class="mock" aria-hidden="true">
     <div class="glow"></div>
+    <div class="mail">
+      <div class="mail-head"><span class="logo">{{ icon('shield') }}</span><div><strong>USIRD Case Tracker</strong><span>to me · just now</span></div></div>
+      <div class="mail-subj">Your USCIS case status changed</div>
+      <p>New status: <strong>Interview Was Scheduled</strong></p>
+    </div>
     <div class="case">
-      <div class="case-top"><div><h3>My family</h3><div class="chips"><span class="chip">A-•••-•••-421</span><span class="chip">ZAR ••••7731</span></div></div></div>
+      <div class="case-top"><div><h3>My family</h3><div class="chips"><span class="chip">A-Number •••421</span><span class="chip">Receipt •••7731</span></div></div></div>
+      <div class="live show" data-demo>
+        <div class="live-top"><span class="live-stage" data-stage>Submitting to USCIS</span><span class="live-pct" data-pct>78%</span></div>
+        {{ stepper() }}
+      </div>
       <div class="tiles">
         <div class="tile"><div class="tile-label">{{ icon('cash') }} Asylum fee</div><span class="badge tone-ok">Not due</span><div class="tile-value">No payment needed right now</div><div class="tile-sub">Checked today</div></div>
         <div class="tile"><div class="tile-label">{{ icon('doc') }} USCIS case</div><span class="badge tone-pending">I-589</span><div class="tile-value">Case Was Received</div><div class="tile-sub">Updated Oct 28</div></div>
       </div>
-      <div class="live show"><div class="live-top"><span class="live-stage">Submitting to USCIS</span><span class="live-pct">78%</span></div><div class="bar"><span class="w78"></span></div></div>
       <div class="case-foot"><span class="when">Next automatic check tomorrow</span><span class="btn small ghost">{{ icon('refresh') }} Check now</span></div>
     </div>
   </div>
