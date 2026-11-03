@@ -1,4 +1,8 @@
-"""EOIR ACIS court case lookup (acis.eoir.justice.gov), ported from USIRD v2
+"""NOTE: ACIS rejects captchas solved in a script-driven browser, so subscriber
+EOIR checks are staff-assisted (/admin/eoir); only extract_fields() and
+NO_CASE_TEXT are used in production. The browser code below is kept for reference.
+
+EOIR ACIS court case lookup (acis.eoir.justice.gov), ported from USIRD v2
 automation/eoir/eoir_check.py (sync Playwright).
 
 hCaptcha is solved by a person watching the VPS screen through noVNC. We never
