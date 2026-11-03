@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import config, db, security, square
+from app.uscis_display import description_html, case_history
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("web")
@@ -67,6 +68,8 @@ def uscis_badge(text):
 templates.env.globals["status_text"] = status_text
 templates.env.globals["aaf_badge"] = aaf_badge
 templates.env.globals["uscis_badge"] = uscis_badge
+templates.env.filters["uscis_description"] = description_html
+templates.env.globals["case_history"] = case_history
 templates.env.globals["price"] = config.PRICE
 templates.env.globals["max_cases"] = config.MAX_CASES_PER_USER
 

@@ -440,3 +440,15 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Official USCIS narratives and history share the existing restrained design. */
+.uscis-description { color: var(--fg-2); font-size: 14px; line-height: 1.85; overflow-wrap: anywhere; margin-top: 12px; }
+.uscis-description a { text-decoration: underline; font-weight: 550; }
+.tile .source-note { color: var(--muted); font-size: 11px; margin: 14px 0 0; }
+.case-history { border-top: 1px solid var(--line); padding: 16px 24px; }
+.case-history > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary); }
+.history-timeline { list-style: none; padding: 0 0 0 16px; margin: 20px 0 8px; border-left: 2px solid var(--line); }
+.history-timeline li { padding: 0 0 22px 8px; }
+.history-timeline li:last-child { padding-bottom: 0; }
+.history-date { color: var(--muted); font-size: 12px; font-weight: 600; }
+.history-timeline .uscis-description { margin-top: 4px; }

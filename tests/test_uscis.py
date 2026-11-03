@@ -130,3 +130,39 @@ def test_init_migrates_old_db(tmp_path):
     db.init(old)
     cols = {r["name"] for r in old.execute("PRAGMA table_info(cases)")}
     assert {"uscis_status", "uscis_next_at"} <= cols
+
+
+def test_description_allows_official_links_but_not_executable_html():
+    from app.uscis_display import description_html
+    result = str(description_html('First<br><br>Second <a href="https://www.uscis.gov/notice.pdf" onclick="bad()">Notice</a><script>alert(1)</script><img src=x onerror=bad()><a href="javascript:bad()">bad</a><a href="https://uscis.gov.evil.test/">evil</a>'))
+    assert 'First<br><br>Second' in result
+    assert 'href="https://www.uscis.gov/notice.pdf"' in result
+    assert 'rel="noopener noreferrer"' in result
+    for unsafe in ('onclick', '<script', '<img', 'javascript:', 'evil.test', 'alert(1)'):
+        assert unsafe not in result
+
+
+def test_official_history_parsing():
+    body = ok_body()
+    body['case_status']['hist_case_status'] = [{'date':'2024-01-02','completed_text_en':'Case Was Received','receiptNumber':'do not retain'}, {'date':'2024-01-02','completed_text_en':'Case Was Received'}, None, {'date':'x'}]
+    def h(req):
+        if 'oauth' in req.url.path:
+            return httpx.Response(200,json={'access_token':'T'})
+        return httpx.Response(200,json=body)
+    result = make_client(h).case_status('ZAR1234567890')
+    assert result.history == [{'date':'2024-01-02','text':'Case Was Received'}]
+
+
+def test_worker_encrypts_history_and_preserves_it_when_api_omits_it(cn):
+    from tracker.uscis_api import CaseStatus
+    from app.uscis_display import case_history
+    events = [{'date':'2024-01-02','text':'Case Was Received'}]
+    case = uscis_run.due_cases(cn)[0]
+    uscis_run.process(cn, case, FakeClient([CaseStatus(True,'Case Was Received',history=events)]))
+    stored = cn.execute('SELECT * FROM cases').fetchone()
+    assert 'Case Was Received' not in stored['uscis_history_enc']
+    assert case_history(stored['uscis_history_enc']) == events
+    cn.execute("UPDATE cases SET uscis_next_at=NULL")
+    refreshed = uscis_run.due_cases(cn)[0]
+    uscis_run.process(cn, refreshed, FakeClient([CaseStatus(True,'Case Was Received')]))
+    assert cn.execute('SELECT uscis_history_enc FROM cases').fetchone()[0] == stored['uscis_history_enc']

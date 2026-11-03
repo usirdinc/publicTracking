@@ -7,6 +7,7 @@ Looks up each case's receipt once a day (USCIS_RECHECK_HOURS), right away for
 new cases and "Check now", and emails the user when the status text changes.
 Runs beside the AAF browser worker; it never touches my.uscis.gov.
 """
+import json
 import logging
 import time
 from datetime import timedelta
@@ -51,8 +52,9 @@ def process(cn, case, client) -> str:
     else:
         nxt = db.in_(days=NOT_FOUND_RECHECK_DAYS)
     cn.execute("UPDATE cases SET uscis_status=?, uscis_desc=?, uscis_form=?, uscis_modified=?, "
-               "uscis_checked_at=?, uscis_next_at=?, uscis_error=NULL WHERE id=?",
-               (r.status[:200], r.desc[:2000], r.form[:40], r.modified[:40], t, nxt, case["id"]))
+               "uscis_checked_at=?, uscis_next_at=?, uscis_history_enc=COALESCE(?,uscis_history_enc), uscis_error=NULL WHERE id=?",
+               (r.status[:200], r.desc[:2000], r.form[:40], r.modified[:40], t, nxt,
+                security.encrypt(json.dumps(r.history)) if r.history is not None else None, case["id"]))
     old = case["uscis_status"]
     if r.ok and old and old != "NOT_FOUND" and old != r.status:
         notify_change(case, old, r.status, r.desc)

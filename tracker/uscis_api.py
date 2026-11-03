@@ -32,6 +32,7 @@ class CaseStatus:
     modified: str = ""
     http_code: int = 0
     error: str = ""          # set when the lookup failed (try again later)
+    history: list[dict] | None = None
 
 
 class UscisClient:
@@ -97,7 +98,8 @@ class UscisClient:
                 form=(cs.get("formType") or "").strip(),
                 submitted=(cs.get("submittedDate") or "").strip(),
                 modified=(cs.get("modifiedDate") or "").strip(),
-                http_code=code)
+                http_code=code,
+                history=normalize_history(cs.get("hist_case_status")))
         if code in (400, 404, 422):
             # USCIS has no case for this receipt (or the format is rejected)
             msg = body.get("message") or body.get("error") or ""
@@ -109,3 +111,23 @@ def from_config() -> UscisClient:
     from app import config
     return UscisClient(config.USCIS_CLIENT_ID, config.USCIS_CLIENT_SECRET, config.USCIS_DEMO_ID,
                        config.USCIS_TOKEN_URL, config.USCIS_API_BASE_URL)
+
+
+def normalize_history(value):
+    if not isinstance(value, list):
+        return None
+    result = []
+    seen = set()
+    for item in value[:200]:
+        if not isinstance(item, dict):
+            continue
+        text = item.get('completed_text_en')
+        date = item.get('date')
+        if not isinstance(text, str) or not text.strip():
+            continue
+        entry = {'date': date[:80] if isinstance(date,str) else '', 'text': text.strip()[:4000]}
+        key = (entry['date'],entry['text'])
+        if key not in seen:
+            result.append(entry)
+            seen.add(key)
+    return result
