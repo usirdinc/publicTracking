@@ -6,7 +6,7 @@
 {% if not paid and not admin %}
 <section class="card">
   <h2>Start your subscription</h2>
-  <p>$5 a month, cancel any time. Pay with the <strong>same email</strong> you signed up with (<strong>{{ user.email }}</strong>) so we can match your payment.</p>
+  <p>{{ price }} a month, cancel any time. Pay with the <strong>same email</strong> you signed up with (<strong>{{ user.email }}</strong>) so we can match your payment.</p>
   {% if checkout_url %}<p><a class="btn" href="{{ checkout_url }}" rel="noopener">Subscribe with Square</a></p>{% endif %}
   <p class="muted">After paying, refresh this page. Activation usually takes under a minute.</p>
 </section>

@@ -42,6 +42,7 @@ def status_text(status, amount=None):
 
 
 templates.env.globals["status_text"] = status_text
+templates.env.globals["price"] = config.PRICE
 
 
 def get_db():

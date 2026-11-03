@@ -1,5 +1,6 @@
 """Settings from environment (.env on the VPS, never committed)."""
 import os
+import re
 from pathlib import Path
 
 
@@ -11,6 +12,7 @@ def _load_dotenv(path: Path) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
+        v = re.split(r"\s+#", v, maxsplit=1)[0]   # drop inline " # comment"
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
@@ -29,7 +31,8 @@ BASE_URL = get("BASE_URL", "http://localhost:8000").rstrip("/")
 BETA_CAP = int(get("BETA_CAP", "200"))
 ADMIN_EMAILS = {e.strip().lower() for e in get("ADMIN_EMAILS").split(",") if e.strip()}
 
-SQUARE_CHECKOUT_URL = get("SQUARE_CHECKOUT_URL")          # payment link for the $5/month plan
+SQUARE_CHECKOUT_URL = get("SQUARE_CHECKOUT_URL")          # Square payment link for the monthly plan
+PRICE = get("PRICE", "$10")                                # shown on the site; must match the Square plan
 SQUARE_ACCESS_TOKEN = get("SQUARE_ACCESS_TOKEN")
 SQUARE_WEBHOOK_SIGNATURE_KEY = get("SQUARE_WEBHOOK_SIGNATURE_KEY")
 SQUARE_ENV = get("SQUARE_ENV", "production")               # or sandbox
