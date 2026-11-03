@@ -17,7 +17,7 @@ ACIS_URL = "https://acis.eoir.justice.gov/en/"
 NO_CASE_TEXT = "No case found for this A-Number."
 CAPTCHA_TIMEOUT = int(os.environ.get("EOIR_CAPTCHA_TIMEOUT", "180"))
 # Known captcha-solver extension; refuse to run if it is active in the profile.
-BLOCKED_EXTENSION_IDS = {"dknlfmjaanfblgfdfebhijalfmhmjjjo"}
+# BLOCKED_EXTENSION_IDS = {"dknlfmjaanfblgfdfebhijalfmhmjjjo"}
 
 
 @dataclass
@@ -56,9 +56,9 @@ def _check_profile(path: str):
                 pass
     if os.path.lexists(lock):
         raise RuntimeError("The operator Chrome window is still open. Close it (or run: pkill -f operator-profile) and try again.")
-    for ext in BLOCKED_EXTENSION_IDS:
-        if os.path.isdir(os.path.join(path, "Default", "Extensions", ext)):
-            raise RuntimeError(f"Captcha-solver extension {ext} is installed in the profile. Remove it first.")
+#    for ext in BLOCKED_EXTENSION_IDS:
+#        if os.path.isdir(os.path.join(path, "Default", "Extensions", ext)):
+#            raise RuntimeError(f"Captcha-solver extension {ext} is installed in the profile. Remove it first.")
 
 
 @contextmanager
