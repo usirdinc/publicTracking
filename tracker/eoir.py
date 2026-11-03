@@ -61,25 +61,56 @@ def _check_profile(path: str):
             raise RuntimeError(f"Captcha-solver extension {ext} is installed in the profile. Remove it first.")
 
 
+def _chrome_binary() -> str:
+    import shutil
+    for name in ("google-chrome", "google-chrome-stable"):
+        path = shutil.which(name)
+        if path:
+            return path
+    raise RuntimeError("Google Chrome is not installed: sudo .venv/bin/python -m playwright install --with-deps chrome")
+
+
 @contextmanager
-def operator_page():
-    """Real Chrome with the signed-in operator profile, on display :99."""
+def operator_page(port: int = 9222):
+    """Start the real Google Chrome ourselves (same as opening it by hand) with the
+    signed-in operator profile on display :99, then attach to it. Playwright does
+    not launch the browser, so none of its automation flags are set."""
+    import subprocess
+    import urllib.request
     from playwright.sync_api import sync_playwright
-    os.environ.setdefault("DISPLAY", ":99")
     path = profile_dir()
     _check_profile(path)
-    with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(
-            user_data_dir=path, channel="chrome", headless=False,
-            viewport={"width": 1400, "height": 900},
-            args=["--disable-blink-features=AutomationControlled", "--disable-dev-shm-usage"],
-            # Behave like normal Chrome so Google keeps the sign-in.
-            ignore_default_args=["--enable-automation", "--disable-sync", "--disable-extensions"])
-        try:
+    env = dict(os.environ, DISPLAY=os.environ.get("DISPLAY", ":99"))
+    proc = subprocess.Popen(
+        [_chrome_binary(), f"--user-data-dir={path}", f"--remote-debugging-port={port}",
+         "--remote-debugging-address=127.0.0.1", "--no-first-run", "--no-default-browser-check",
+         "--disable-dev-shm-usage", "--start-maximized", ACIS_URL],
+        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(60):
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=1).read()
+                break
+            except Exception:
+                if proc.poll() is not None:
+                    raise RuntimeError("Chrome exited on start (is the profile already open?)")
+                time.sleep(0.5)
+        else:
+            raise RuntimeError("Chrome did not open its control port")
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(f"http://127.0.0.1:{port}")
+            ctx = browser.contexts[0]
             page = ctx.pages[0] if ctx.pages else ctx.new_page()
-            yield page
-        finally:
-            ctx.close()
+            try:
+                yield page
+            finally:
+                browser.close()
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(10)
+        except Exception:
+            proc.kill()
 
 
 def _dismiss_accept(page, wait_ms=8000):
