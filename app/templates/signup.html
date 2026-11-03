@@ -1,18 +1,42 @@
 {% extends "base.html" %}
-{% block title %}Create account · USIRD Case Tracker{% endblock %}
+{% block title %}
+  Create account · USIRD Case Tracker
+{% endblock %}
 {% block content %}
-<section class="auth">
-  <div class="card">
-    <h1>Create your account</h1>
-    <p class="sub">Start tracking your asylum fee and USCIS case in minutes.</p>
-    <form method="post" action="/signup">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <label>Email <input type="email" name="email" required autocomplete="email" placeholder="you@example.com"></label>
-      <label>Password <input type="password" name="password" minlength="10" required autocomplete="new-password" placeholder="At least 10 characters"></label>
-      <label class="check"><input type="checkbox" name="agree" value="1" required> <span>I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</span></label>
-      <button class="btn lg block">Create account</button>
-    </form>
-  </div>
-  <p class="center muted mt">Already have an account? <a href="/login">Log in</a></p>
-</section>
+  <section class="auth-layout" aria-labelledby="signup-heading">
+    <div class="auth-intro">
+      <span class="eyebrow">Get started</span><h1 id="signup-heading">Stay informed.<br>One case at a time.</h1>
+      <p class="lead">Daily asylum fee and USCIS case checks, with updates sent to your email.</p>
+      <ol class="onboarding-list">
+        <li><span>01</span>
+        <div>
+          <strong>Create your account</strong><p>Start with your email and a secure password.</p>
+        </div>
+        </li><li><span>02</span>
+        <div>
+          <strong>Start your monthly subscription</strong><p>{{ price }} per month through Square. Cancel anytime.</p>
+        </div>
+        </li><li><span>03</span>
+        <div>
+          <strong>Add your cases</strong><p>Use your A-Number and I-589 receipt number.</p>
+        </div>
+        </li>
+      </ol>
+    </div>
+    <div class="auth-panel">
+      <span class="eyebrow">Create account</span><h2>A clearer view of your case</h2><p class="muted">Create your account first. Subscribe from your dashboard to begin tracking.</p>
+      <form method="post" action="/signup">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input id="password" type="password" name="password" minlength="10" required autocomplete="new-password" aria-describedby="password-hint"><button type="button" class="password-toggle" data-password-toggle aria-controls="password" aria-pressed="false">Show</button>
+        </div>
+        <p class="hint" id="password-hint">Use at least 10 characters.</p>
+        <label class="check"><input type="checkbox" name="agree" value="1" required> <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</span></label>
+        <button class="btn lg block" type="submit">Create account {{ icon('arrow') }}</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+  </section>
 {% endblock %}

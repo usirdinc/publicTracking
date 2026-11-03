@@ -68,6 +68,7 @@ templates.env.globals["status_text"] = status_text
 templates.env.globals["aaf_badge"] = aaf_badge
 templates.env.globals["uscis_badge"] = uscis_badge
 templates.env.globals["price"] = config.PRICE
+templates.env.globals["max_cases"] = config.MAX_CASES_PER_USER
 
 
 def get_db():

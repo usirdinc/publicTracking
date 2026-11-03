@@ -1,19 +1,83 @@
 {% extends "base.html" %}
-{% block title %}Admin · USIRD Case Tracker{% endblock %}
+{% block title %}
+  Admin · USIRD Case Tracker
+{% endblock %}
 {% block content %}
-<h1>Admin</h1>
-{% if eoir_enabled %}<p><a class="btn small" href="/admin/eoir">EOIR lookup queue</a></p>{% endif %}
-<section class="card">
-  <p>Jobs: {% for k, v in stats.items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
-  <p>Checks in last 24 h: {% for r in last %}{{ r.status }} {{ r.n }}{% if not loop.last %} · {% endif %}{% else %}none{% endfor %}</p>
-  {% if paused_until %}<p class="tone-warn">Paused until {{ paused_until }}: {{ pause_reason }}</p>
-  <form method="post" action="/admin/resume"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small">Resume checks now</button></form>{% endif %}
-</section>
-<table class="grid">
-  <tr><th>ID</th><th>Email</th><th>Joined</th><th>Paid until</th><th>Square</th><th>Cases</th><th></th></tr>
-  {% for u in users %}
-  <tr><td>{{ u.id }}</td><td>{{ u.email }}</td><td>{{ u.created_at[:10] }}</td><td>{{ (u.paid_until or '')[:10] }}</td><td>{{ u.subscription_status or '' }}</td><td>{{ u.n_cases }}</td>
-    <td><form method="post" action="/admin/users/{{ u.id }}/grant" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="number" name="days" value="31" class="tiny"><button class="link">Grant days</button></form></td></tr>
-  {% endfor %}
-</table>
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Staff workspace</span><h1>Administration</h1><p>Review checking jobs and manage account access.</p>
+    </div>
+    <a class="btn ghost" href="/app">Back to my cases</a>
+  </div>
+  {% if eoir_enabled %}
+    <p><a class="btn small" href="/admin/eoir">EOIR lookup queue</a></p>
+  {% endif %}
+  {% if paused_until %}
+    <div class="banner">
+      <div>
+        <strong>Checks are paused</strong><p>Until {{ paused_until }}: {{ pause_reason }}</p>
+        <form method="post" action="/admin/resume">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small">Resume checks now</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+  <section class="panel jobs-panel" aria-labelledby="jobs-heading">
+    <div class="panel-heading">
+      <h2 id="jobs-heading">Checking jobs</h2><span class="muted small">Current queue</span>
+    </div>
+    <dl class="job-stats">
+      {% for k,v in stats.items() %}
+        <div>
+          <dt>{{ k|replace('_',' ')|capitalize }}</dt><dd>{{ v }}</dd>
+        </div>
+      {% else %}
+        <div>
+          <dt>Jobs</dt><dd>0</dd>
+        </div>
+      {% endfor %}
+    </dl>
+    <div class="recent-checks">
+      <strong>Results in the last 24 hours</strong>
+      <div>
+        {% for r in last %}
+          <span class="result-count">{{ r.status }} <strong>{{ r.n }}</strong></span>
+        {% else %}
+          <span class="muted">No checks recorded.</span>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  <section class="panel users-panel" aria-labelledby="users-heading">
+    <div class="panel-heading">
+      <div>
+        <h2 id="users-heading">Accounts</h2><p class="muted small">{{ users|length }} accounts · Access dates and payment status</p>
+      </div>
+    </div>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Accounts table, scroll horizontally on small screens">
+      <table class="grid">
+        <caption class="sr-only">Account access and subscription management</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th><th scope="col">Email</th><th scope="col">Joined</th><th scope="col">Paid until</th><th scope="col">Square status</th><th scope="col">Cases</th><th scope="col">Grant access</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td class="mono">{{ u.id }}</td><th scope="row" class="email-cell">{{ u.email }}</th><td>{{ u.created_at[:10] }}</td><td>{{ (u.paid_until or '')[:10] or '—' }}</td><td>{{ u.subscription_status or '—' }}</td><td>{{ u.n_cases }}</td><td>
+              <form method="post" action="/admin/users/{{ u.id }}/grant" class="grant-form">
+                <input type="hidden" name="csrf" value="{{ csrf }}"><label class="sr-only" for="days-{{ u.id }}">Days to grant {{ u.email }}</label><input id="days-{{ u.id }}" type="number" name="days" value="31" class="tiny"><button class="btn ghost small">Grant days</button>
+              </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7">No accounts yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 {% endblock %}

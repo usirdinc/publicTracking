@@ -239,3 +239,48 @@ def test_aaf_rechecks_daily(client):
     worker.process(cn, worker.claim(cn), lambda a, r: ("NOT_DUE", "", "", a[0]))
     nxt = db.parse(cn.execute("SELECT next_check_at FROM cases").fetchone()["next_check_at"])
     assert timedelta(hours=23) < nxt - db.now() <= timedelta(hours=24)
+
+
+def test_redesign_keeps_case_privacy_and_post_contracts(client):
+    cn = _setup_case(client)
+    cid = cn.execute("SELECT id FROM cases").fetchone()["id"]
+    cn.execute("UPDATE cases SET label=?, a_numbers_enc=?, receipt_enc=?",
+               ('<script>alert("example")</script>', security.encrypt("A987654321"), security.encrypt("ZLA9876543210")))
+    response = client.get("/app")
+    html = response.text
+    assert response.status_code == 200
+    assert "A987654321" not in html and "ZLA9876543210" not in html
+    assert "&lt;script&gt;" in html and '<script>alert("example")</script>' not in html
+    assert f'data-case="{cid}"' in html and 'data-stepper' in html
+    for action in ("/cases", f"/cases/{cid}/check", f"/cases/{cid}/delete", "/account/delete"):
+        form = re.search(r'<form\b[^>]*action="' + re.escape(action) + r'"[^>]*>.*?</form>', html, re.S)
+        assert form, action
+        assert 'method="post"' in form.group() and 'name="csrf"' in form.group()
+    assert "'unsafe-inline'" not in response.headers["content-security-policy"]
+    assert not re.search(r'\s(?:style|onclick|onsubmit)=', html, re.I)
+
+
+def test_redesign_keeps_public_pages_self_contained_and_legal_acceptance_explicit(client):
+    for path in ("/", "/login", "/signup", "/terms", "/privacy"):
+        response = client.get(path)
+        assert response.status_code == 200
+        html = response.text
+        assert '<html lang="en"' in html
+        assert not re.search(r'<(?:script|link)\b[^>]*(?:src|href)="https?://', html)
+        assert not re.search(r'\s(?:style|onclick|onsubmit)=', html, re.I)
+    signup_html = client.get("/signup").text
+    consent = re.search(r'<input\b[^>]*name="agree"[^>]*>', signup_html).group()
+    assert "required" in consent and "checked" not in consent
+    assert 'autocomplete="new-password"' in signup_html
+    assert 'autocomplete="current-password"' in client.get("/login").text
+
+
+def test_redesigned_login_handles_error_then_authenticated_redirect(client):
+    signup(client, "login@example.com")
+    client.post("/logout")
+    bad = client.post("/login", data={"email": "login@example.com", "password": "incorrect example", "csrf": csrf(client, "/login")})
+    assert "Email or password is not correct" in bad.text
+    assert "data-dismiss-notice" in bad.text
+    good = client.post("/login", data={"email": "login@example.com", "password": "correct horse battery", "csrf": csrf(client, "/login")}, follow_redirects=False)
+    assert good.status_code == 303 and good.headers["location"] == "/app"
+    assert "login@example.com" in client.get("/app").text
