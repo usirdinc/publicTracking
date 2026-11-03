@@ -159,6 +159,9 @@ def main():
                     consecutive_err = 0
                 if status == "__BLOCKED__":
                     break
+                if status == "ERROR/exception":
+                    log.warning("browser error; relaunching the browser")
+                    break  # page/browser likely dead (e.g. screen restarted): start fresh
                 time.sleep(random.uniform(config.MIN_DELAY, config.MAX_DELAY))
 
 

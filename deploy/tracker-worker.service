@@ -7,6 +7,8 @@ Requires=xvfb.service
 User=tracker
 WorkingDirectory=/home/tracker/publicTracking
 Environment=DISPLAY=:99
+# wait until the virtual screen is up before opening the browser
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do [ -e /tmp/.X11-unix/X99 ] && exit 0; sleep 1; done; exit 1'
 ExecStart=/home/tracker/publicTracking/.venv/bin/python -m worker.run
 Restart=always
 RestartSec=15
