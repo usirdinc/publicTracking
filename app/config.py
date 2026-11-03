@@ -59,3 +59,6 @@ USCIS_TOKEN_URL = get("USCIS_TOKEN_URL", "https://api.uscis.gov/oauth/accesstoke
 USCIS_API_BASE_URL = get("USCIS_API_BASE_URL", "https://api.uscis.gov/case-status/")
 USCIS_DELAY = float(get("USCIS_DELAY", "2"))               # seconds between lookups
 USCIS_RECHECK_HOURS = float(get("USCIS_RECHECK_HOURS", "24"))
+
+# EOIR court lookups (staff-assisted). Off until the team is ready to run the queue.
+EOIR_ENABLED = get("EOIR_ENABLED", "0") == "1"

@@ -182,6 +182,10 @@ def test_status_not_busy_after_check(client, monkeypatch):
 
 
 def test_eoir_staff_queue(client, monkeypatch):
+    from app import config
+    monkeypatch.setattr(config, "EOIR_ENABLED", True)
+    import app.main as m
+    m.templates.env.globals["eoir_enabled"] = True
     import app.mailer as mailer
     sent = []
     monkeypatch.setattr(mailer, "send", lambda to, subj, body: sent.append(subj))
@@ -205,4 +209,13 @@ def test_eoir_staff_queue(client, monkeypatch):
 
 def test_eoir_queue_admin_only(client):
     signup(client)
+    assert client.get("/admin/eoir", follow_redirects=False).status_code == 303
+
+
+def test_eoir_hidden_when_disabled(client):
+    import app.main as m
+    m.templates.env.globals["eoir_enabled"] = False
+    signup(client, "admin@example.com")
+    assert "nationality" not in client.get("/app").text.lower()
+    assert "/admin/eoir" not in client.get("/admin").text
     assert client.get("/admin/eoir", follow_redirects=False).status_code == 303

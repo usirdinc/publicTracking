@@ -248,7 +248,7 @@ def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...)
             "VALUES(?,?,?,?,?,?,?,?)",
             (u["id"], (label or "My case").strip()[:60], security.encrypt(";".join(anums)),
              security.encrypt(rcpt), anums[0][-3:], rcpt[-4:], db.iso(db.now()),
-             re.sub(r"[^A-Za-z ()'.-]", "", nationality).strip()[:60] or None))
+             (re.sub(r"[^A-Za-z ()'.-]", "", nationality).strip()[:60] or None) if config.EOIR_ENABLED else None))
         db.enqueue(cn, cur.lastrowid, "new")
     return redirect("/app", "Case added. Checking with USCIS now; this usually takes under a minute.", request)
 
@@ -424,6 +424,7 @@ def eoir_summary(status, fields_json):
 
 
 templates.env.globals["eoir_summary"] = eoir_summary
+templates.env.globals["eoir_enabled"] = config.EOIR_ENABLED
 
 
 @app.get("/admin/eoir", response_class=HTMLResponse)
@@ -432,6 +433,8 @@ def admin_eoir(request: Request):
     u = current_user(request, cn)
     if not is_admin(u):
         return redirect("/login")
+    if not config.EOIR_ENABLED:
+        return redirect("/admin", "EOIR lookups are turned off (EOIR_ENABLED=0).", request)
     due = []
     for c in _eoir_due(cn):
         due.append({"id": c["id"], "label": c["label"], "email": c["email"], "nationality": c["nationality"],
@@ -451,6 +454,8 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
     u = current_user(request, cn)
     if not is_admin(u) or not security.csrf_ok(request.session, csrf):
         return redirect("/login")
+    if not config.EOIR_ENABLED:
+        return redirect("/admin")
     c = cn.execute("SELECT c.*, u.email FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
                    (case_id,)).fetchone()
     if not c:

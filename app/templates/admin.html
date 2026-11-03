@@ -2,7 +2,7 @@
 {% block title %}Admin · AAF Tracker{% endblock %}
 {% block content %}
 <h1>Admin</h1>
-<p><a class="btn small" href="/admin/eoir">EOIR lookup queue</a></p>
+{% if eoir_enabled %}<p><a class="btn small" href="/admin/eoir">EOIR lookup queue</a></p>{% endif %}
 <section class="card">
   <p>Jobs: {% for k, v in stats.items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
   <p>Checks in last 24 h: {% for r in last %}{{ r.status }} {{ r.n }}{% if not loop.last %} · {% endif %}{% else %}none{% endfor %}</p>
