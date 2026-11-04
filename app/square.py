@@ -15,6 +15,10 @@ log = logging.getLogger("square")
 SQUARE_VERSION = "2024-10-17"
 
 
+class PaymentDeferred(Exception):
+    """Retry a payment notification once the subscription ID is persisted."""
+
+
 def api_base() -> str:
     return ("https://connect.squareupsandbox.com" if config.SQUARE_ENV == "sandbox"
             else "https://connect.squareup.com")
@@ -75,6 +79,19 @@ def handle_event(cn, event: dict, lookup=None) -> str:
         if not u:
             log.warning("payment for unknown customer %s", cid)
             return "unmatched"
+        enrollment = cn.execute('SELECT * FROM billing_enrollments WHERE user_id=?', (u['id'],)).fetchone()
+        if enrollment:
+            # Native billing must match a completely paid invoice for this subscription.
+            if inv.get('status') != 'PAID' or not inv.get('subscription_id') or not inv.get('id'):
+                return 'ignored-invoice'
+            if not enrollment['subscription_id']:
+                raise PaymentDeferred()
+            if inv['subscription_id'] != enrollment['subscription_id']:
+                return 'unrelated-invoice'
+            if cn.execute('SELECT 1 FROM billing_invoices WHERE invoice_id=?', (inv['id'],)).fetchone():
+                return 'duplicate-invoice'
+            cn.execute('INSERT INTO billing_invoices(invoice_id,received_at) VALUES(?,?)', (inv['id'], db.iso(db.now())))
+            cn.execute("UPDATE billing_enrollments SET state=CASE WHEN state='ended' THEN state ELSE 'paid' END,updated_at=? WHERE user_id=?", (db.iso(db.now()), u['id']))
         base = max(db.now(), db.parse(u["paid_until"]) or db.now())
         until = base + timedelta(days=config.PAID_DAYS_PER_PAYMENT)
         cn.execute("UPDATE users SET paid_until=?, subscription_status='ACTIVE' WHERE id=?",
@@ -86,6 +103,9 @@ def handle_event(cn, event: dict, lookup=None) -> str:
         u = _find_user(cn, sub.get("customer_id"), lookup)
         if not u:
             return "unmatched"
+        enrollment = cn.execute('SELECT * FROM billing_enrollments WHERE user_id=?', (u['id'],)).fetchone()
+        if enrollment and enrollment['subscription_id'] == sub.get('id') and sub.get('status') in ('CANCELED', 'DEACTIVATED'):
+            cn.execute("UPDATE billing_enrollments SET state='ended',updated_at=? WHERE user_id=?", (db.iso(db.now()), u['id']))
         cn.execute("UPDATE users SET subscription_status=? WHERE id=?", (sub.get("status"), u["id"]))
         return f"status:{u['id']}:{sub.get('status')}"
 

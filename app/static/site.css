@@ -469,3 +469,14 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .spinner { flex: none; display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--primary); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .subscribe-foot { display: flex; gap: 20px; border-top: 1px solid var(--line); padding-top: 16px; margin-top: 8px; font-size: 14px; }
+
+/* Square owns the secure card inputs. Keep the surrounding checkout quiet. */
+.checkout-note { max-width: 390px; margin-top: 32px; }
+.card-field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+#card-container { min-height: 92px; color-scheme: light; }
+.payment-message { font-size: 14px; line-height: 1.6; color: var(--fg); }
+.payment-message:empty { display: none; }
+.payment-security { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; }
+.payment-security svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+.payment-pending h2 { font-size: 21px; margin-bottom: 12px; }
+.payment-pending p { font-size: 14px; line-height: 1.7; }

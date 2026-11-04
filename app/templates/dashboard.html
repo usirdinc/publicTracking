@@ -218,7 +218,16 @@
           </div>
         </dl>
         <p class="hint">Case numbers are encrypted and shown only by their last digits.</p>
-        <details class="account-options"><summary>Account options</summary><p class="hint">Deleting your account removes your cases and their history. Manage your subscription through Square.</p>
+        <details class="account-options"><summary>Account options</summary><p class="hint">Deleting your account removes your cases and their history. {% if billing_row and billing_row.subscription_id %}Your Square subscription will also be canceled.{% else %}Manage your subscription through Square.{% endif %}</p>
+        {% if billing_row and billing_row.subscription_id %}
+          {% if billing_row.cancel_scheduled or billing_row.state == 'ended' %}
+            <p class="hint">Subscription cancellation requested. Your paid access remains available.</p>
+          {% else %}
+            <form method="post" action="/billing/cancel" data-confirm="Cancel monthly renewal? You keep access through the paid period.">
+              <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Cancel subscription</button>
+            </form>
+          {% endif %}
+        {% endif %}
         <form method="post" action="/account/delete" data-confirm="Delete your account and all case data? This cannot be undone.">
           <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete my account</button>
         </form>

@@ -28,13 +28,17 @@ DB_PATH = get("DB_PATH", str(ROOT / "data" / "tracker.sqlite3"))
 SECRET_KEY = get("SECRET_KEY")              # session signing, 32+ random chars
 DATA_KEY = get("DATA_KEY")                  # Fernet key for A-Numbers/receipts
 BASE_URL = get("BASE_URL", "http://localhost:8000").rstrip("/")
-BETA_CAP = int(get("BETA_CAP", "200"))
+ACCOUNT_CAP = int(get("ACCOUNT_CAP", get("BETA_CAP", "200")))  # legacy env name remains supported
 ADMIN_EMAILS = {e.strip().lower() for e in get("ADMIN_EMAILS").split(",") if e.strip()}
 
 SQUARE_CHECKOUT_URL = get("SQUARE_CHECKOUT_URL")          # Square payment link for the monthly plan
 PRICE = get("PRICE", "$10")                                # shown on the site; must match the Square plan
 SQUARE_ACCESS_TOKEN = get("SQUARE_ACCESS_TOKEN")
 SQUARE_WEBHOOK_SIGNATURE_KEY = get("SQUARE_WEBHOOK_SIGNATURE_KEY")
+SQUARE_NATIVE_CHECKOUT = get("SQUARE_NATIVE_CHECKOUT", "0") == "1"
+SQUARE_APPLICATION_ID = get("SQUARE_APPLICATION_ID")
+SQUARE_LOCATION_ID = get("SQUARE_LOCATION_ID")
+SQUARE_PLAN_VARIATION_ID = get("SQUARE_PLAN_VARIATION_ID")
 SQUARE_ENV = get("SQUARE_ENV", "production")               # or sandbox
 PAID_DAYS_PER_PAYMENT = int(get("PAID_DAYS_PER_PAYMENT", "35"))
 

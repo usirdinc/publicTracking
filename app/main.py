@@ -5,6 +5,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -12,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import config, db, security, square
+from app import billing, config, db, security, square
 from app.uscis_display import description_html, case_history
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -95,6 +96,18 @@ async def security_headers(request: Request, call_next):
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "same-origin"
     resp.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'"
+    if request.url.path == '/subscribe' and billing.enabled():
+        cdn = 'https://sandbox.web.squarecdn.com' if config.SQUARE_ENV == 'sandbox' else 'https://web.squarecdn.com'
+        pci = 'https://pci-connect.squareupsandbox.com' if config.SQUARE_ENV == 'sandbox' else 'https://pci-connect.squareup.com'
+        resp.headers['Content-Security-Policy'] = (
+            "default-src 'self'; script-src 'self' " + cdn + "; frame-src 'self' " + cdn +
+            "; connect-src 'self' " + cdn + " " + pci + " https://o160250.ingest.sentry.io; "
+            "style-src 'self' 'unsafe-inline' " + cdn + "; font-src 'self' "
+            "https://square-fonts-production-f.squarecdn.com https://d1g145x70srn7h.cloudfront.net; "
+            "img-src 'self' data: " + cdn + "; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        )
+    if request.url.path in ('/subscribe', '/app') or request.url.path.startswith('/billing/'):
+        resp.headers['Cache-Control'] = 'no-store, private'
     return resp
 
 
@@ -185,8 +198,8 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
         return redirect("/signup", "Please accept the Terms and Privacy Policy.", request)
     cn = get_db()
     n = cn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
-    if n >= config.BETA_CAP:
-        return redirect("/", "The beta is full. Please check back soon.", request)
+    if n >= config.ACCOUNT_CAP:
+        return redirect("/", "We are not accepting new registrations right now. Please check back soon.", request)
     if cn.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
         return redirect("/login", "That email already has an account. Please log in.", request)
     cur = cn.execute("INSERT INTO users(email,pw_hash,created_at) VALUES(?,?,?)",
@@ -235,7 +248,7 @@ def dashboard(request: Request):
     flash = request.session.pop("flash", None)
     return render(request, "dashboard.html", user=u, cases=cases, paid=db.is_paid(u),
                   checkout_url=config.SQUARE_CHECKOUT_URL, flash=flash,
-                  paused=_paused(cn), admin=is_admin(u))
+                  paused=_paused(cn), admin=is_admin(u), billing_row=billing.enrollment(cn, u["id"]))
 
 
 @app.get("/subscribe", response_class=HTMLResponse)
@@ -249,7 +262,75 @@ def subscribe(request: Request):
         return redirect("/app")
     flash = request.session.pop("flash", None)
     return render(request, "subscribe.html", user=u, checkout_url=config.SQUARE_CHECKOUT_URL,
-                  lapsed=bool(u["paid_until"]), flash=flash)
+                  lapsed=bool(u["paid_until"]), flash=flash, native=billing.enabled(),
+                  billing_row=billing.enrollment(cn, u['id']),
+                  square_app=config.SQUARE_APPLICATION_ID, square_location=config.SQUARE_LOCATION_ID,
+                  square_sdk=('https://sandbox.web.squarecdn.com/v1/square.js' if config.SQUARE_ENV == 'sandbox'
+                              else 'https://web.squarecdn.com/v1/square.js'))
+
+
+@app.post('/billing/subscribe')
+def native_subscribe(request: Request, csrf: str = Form(''), consent: str = Form(''),
+                     source_id: str = Form(''), cardholder: str = Form('')):
+    cn = get_db()
+    try:
+        u = current_user(request, cn)
+        if not u:
+            return JSONResponse({'message': 'Please log in again.'}, status_code=401)
+        if not security.csrf_ok(request.session, csrf):
+            return JSONResponse({'message': 'Your session expired. Refresh this page and try again.'}, status_code=403)
+        if not billing.enabled():
+            return JSONResponse({'message': 'Card checkout is temporarily unavailable.'}, status_code=503)
+        row = billing.enrollment(cn, u['id'])
+        # Recovery reuses an already authorized attempt; it cannot create a new subscription.
+        recovery = row and row['state'] in ('uncertain', 'processing')
+        if consent != '1' and not recovery:
+            return JSONResponse({'message': 'Please authorize the monthly subscription before continuing.'}, status_code=400)
+        if (not row or row['state'] in ('failed', 'ended')) and throttled('billing:' + str(u['id']), limit=8):
+            return JSONResponse({'message': 'Too many payment attempts. Please wait 15 minutes and try again.'}, status_code=429)
+        with billing.SquareBilling() as provider:
+            state = provider.subscribe(cn, u, source_id.strip(), cardholder.strip())
+        return {'state': state}
+    except billing.BillingError as error:
+        return JSONResponse({'message': str(error)}, status_code=400)
+    finally:
+        cn.close()
+
+
+@app.get('/billing/invoice')
+def native_invoice(request: Request):
+    cn = get_db()
+    try:
+        u = current_user(request, cn)
+        if not u:
+            return redirect('/login')
+        with billing.SquareBilling() as provider:
+            url = provider.invoice_url(cn, u['id'])
+        parsed = urlparse(url or '')
+        host = parsed.hostname or ''
+        if parsed.scheme == 'https' and (host == 'squareup.com' or host.endswith('.squareup.com')) and not parsed.username and not parsed.password:
+            return redirect(url)
+        return redirect('/subscribe', 'Square has not issued an outstanding invoice yet. Please wait for confirmation or contact USIRD.', request)
+    except (billing.BillingError, KeyError, TypeError):
+        return redirect('/subscribe', 'The invoice is temporarily unavailable. Please try again shortly.', request)
+    finally:
+        cn.close()
+
+
+@app.post('/billing/cancel')
+def native_cancel(request: Request, csrf: str = Form('')):
+    cn = get_db()
+    try:
+        u = current_user(request, cn)
+        if not u or not security.csrf_ok(request.session, csrf):
+            return redirect('/app')
+        with billing.SquareBilling() as provider:
+            provider.cancel(cn, u['id'])
+        return redirect('/app', 'Cancellation requested. Access continues through your paid period.', request)
+    except billing.BillingError:
+        return redirect('/app', 'Square could not confirm cancellation. Please try again or contact USIRD.', request)
+    finally:
+        cn.close()
 
 
 @app.get("/account/paid")
@@ -399,9 +480,29 @@ def delete_account(request: Request, csrf: str = Form("")):
     u = current_user(request, cn)
     if not u or not security.csrf_ok(request.session, csrf):
         return redirect("/app")
-    cn.execute("DELETE FROM users WHERE id=?", (u["id"],))
+    with db.tx(cn):
+        row = billing.enrollment(cn, u['id'])
+        if row and row['state'] in ('processing', 'uncertain'):
+            return redirect('/subscribe', 'Please finish confirming your subscription before deleting your account, so billing can be stopped safely.', request)
+        needs_cancel = bool(row and row['subscription_id'] and row['state'] != 'ended' and not row['cancel_scheduled'])
+        if not needs_cancel:
+            cn.execute('DELETE FROM users WHERE id=?', (u['id'],))
+    if needs_cancel:
+        try:
+            with billing.SquareBilling() as provider:
+                provider.cancel(cn, u['id'])
+        except billing.BillingError:
+            return redirect('/app', 'Square could not confirm cancellation. Please try again before deleting your account.', request)
+        with db.tx(cn):
+            row = billing.enrollment(cn, u['id'])
+            if row and row['state'] in ('processing', 'uncertain'):
+                return redirect('/subscribe', 'Please finish confirming your subscription before deleting your account.', request)
+            cn.execute('DELETE FROM users WHERE id=?', (u['id'],))
     request.session.clear()
-    return redirect("/", "Your account and all case data were deleted. Cancel your Square subscription to stop billing.", request)
+    message = 'Your account and all case data were deleted.'
+    if not row:
+        message += ' Cancel any existing Square subscription to stop billing.'
+    return redirect('/', message, request)
 
 
 # ---------------- Square webhook ----------------
@@ -414,8 +515,14 @@ async def square_webhook(request: Request):
         log.warning("square webhook: bad signature")
         return Response(status_code=403)
     cn = get_db()
-    with db.tx(cn):
-        outcome = square.handle_event(cn, square.parse_body(raw))
+    try:
+        with db.tx(cn):
+            outcome = square.handle_event(cn, square.parse_body(raw))
+    except square.PaymentDeferred:
+        # Roll back deduplication too: Square must retry after creation completes.
+        return Response(status_code=503)
+    finally:
+        cn.close()
     log.info("square webhook: %s", outcome)
     return {"ok": True}
 

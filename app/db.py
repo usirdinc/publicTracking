@@ -16,6 +16,24 @@ CREATE TABLE IF NOT EXISTS users (
   square_customer_id TEXT,
   subscription_status TEXT
 );
+CREATE TABLE IF NOT EXISTS billing_enrollments (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  request_id TEXT NOT NULL UNIQUE,
+  authorized_at TEXT NOT NULL,
+  consent_version TEXT NOT NULL DEFAULT 'monthly-10-usd-v1',
+  state TEXT NOT NULL,
+  location_id TEXT NOT NULL,
+  plan_id TEXT NOT NULL,
+  customer_id TEXT,
+  card_enc TEXT,
+  subscription_id TEXT,
+  cancel_scheduled INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS billing_invoices (
+  invoice_id TEXT PRIMARY KEY,
+  received_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS cases (
   id INTEGER PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

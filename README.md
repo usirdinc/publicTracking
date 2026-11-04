@@ -17,7 +17,7 @@ deploy/    systemd units + install.sh
 - One browser, 3-8 s between checks. Block page: all checks pause 6 h + admin email.
   6 errors in a row: pause 1 h.
 - A-Numbers and receipts encrypted at rest (Fernet, `DATA_KEY`); only last digits shown.
-- Instant checks: 1 per case per day; 3 new cases per day; 5 cases per account; beta cap 200.
+- Instant checks: 1 per case per day; 3 new cases per day; 5 cases per account; account capacity 200.
 - No USCIS passwords, no operator Google profile.
 
 ## Deploy (VPS, user `tracker`)
@@ -31,3 +31,11 @@ with events `invoice.payment_made`, `subscription.created`, `subscription.update
 
 ## Tests
     python -m pytest -q
+
+### Embedded subscription checkout
+
+Set `SQUARE_NATIVE_CHECKOUT=1` with the matching Square application, location and fixed-price plan variation IDs. The plan must have exactly one static $10 USD MONTHLY phase. The server token and signed `invoice.payment_made` webhook must already be configured. Leave the flag off to retain the hosted checkout link.
+
+Square Web Payments SDK collects card details in its iframe on `/subscribe`. Only a single-use token reaches this server. Card-on-file IDs are encrypted with the existing DATA_KEY. Creating a subscription never grants access; a signed, fully paid invoice for that subscription does. Persistent attempt IDs prevent duplicate subscriptions, and ambiguous subscription responses must resume the same request. Account options allow cancellation; deleting an account first requests cancellation. Do not delete a pending/uncertain enrollment manually.
+
+Only the checkout page permits Square's documented script, frame, connection and font origins and inline SDK styles. Other pages keep the original strict CSP. No card numbers, tokens or provider bodies should be logged. Run `python -m pytest -q` before release; use Sandbox for an actual test charge. Production form-mount verification does not authorize a real payment.

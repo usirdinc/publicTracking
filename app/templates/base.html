@@ -11,13 +11,13 @@
 {% endblock %}
 </title>
 <meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
-<link rel="stylesheet" href="/static/site.css?v=20261103b">
+<link rel="stylesheet" href="/static/site.css?v=20261103-native-card">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><span class="logo">{{ icon('shield') }}</span><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span><span class="tag">Beta</span></a>
+    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><span class="logo">{{ icon('shield') }}</span><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span></a>
     <nav aria-label="Main navigation">
       {% if user %}
         <a href="/app"
@@ -61,7 +61,7 @@
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div>
-      <a class="footer-brand" href="/">USIRD Case Tracker <span class="tag">Beta</span></a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+      <a class="footer-brand" href="/">USIRD Case Tracker </a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
     </div>
     <nav aria-label="Footer navigation">
       <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a>
@@ -69,5 +69,6 @@
   </div>
 </footer>
 <script src="/static/app.js?v=20261103-payment-return" defer></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>
