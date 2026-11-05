@@ -4,9 +4,11 @@ import logging
 import re
 import time
 from collections import defaultdict
+from contextlib import closing
 from datetime import timedelta
 from urllib.parse import urlparse
 
+from cryptography.fernet import InvalidToken
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -396,6 +398,59 @@ def _own_case(cn, u, case_id):
 
 def _wants_json(request: Request) -> bool:
     return "application/json" in request.headers.get("accept", "")
+
+
+@app.get("/cases/{case_id}/ice", response_class=HTMLResponse)
+@app.post("/cases/{case_id}/ice", response_class=HTMLResponse)
+def ice_lookup(request: Request, case_id: int, person: int = Form(-1),
+               country: str = Form(""), csrf: str = Form(""), action: str = Form("")):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not user:
+            return redirect("/login")
+        if not _can_use(user):
+            return redirect("/subscribe")
+        case = _own_case(cn, user, case_id)
+        if not case:
+            return Response(status_code=404)
+        if request.method == "POST" and not security.csrf_ok(request.session, csrf):
+            return Response(status_code=403)
+        prepared = None
+        message = None
+        try:
+            numbers = list(dict.fromkeys(security.decrypt(case["a_numbers_enc"]).split(";")))
+            if request.method == "POST":
+                country = " ".join(country.split())
+                if not 0 <= person < len(numbers) or len(country) > 100 or action not in ("save", "prepare"):
+                    return Response("Invalid ICE lookup details.", status_code=400)
+                if action == "prepare" and not country:
+                    return Response("Enter the country of birth before preparing a lookup.", status_code=400)
+                with db.tx(cn):
+                    current = _own_case(cn, user, case_id)
+                    if not current:
+                        return Response(status_code=404)
+                    encrypted = current["ice_birth_countries_enc"]
+                    countries = json.loads(security.decrypt(encrypted)) if encrypted else {}
+                    if country:
+                        countries[numbers[person]] = country
+                    else:
+                        countries.pop(numbers[person], None)
+                    cn.execute("UPDATE cases SET ice_birth_countries_enc=? WHERE id=? AND user_id=?",
+                               (security.encrypt(json.dumps(countries)) if countries else None, case_id, user["id"]))
+                message = "Country of birth saved." if country else "Country of birth cleared."
+                if action == "prepare":
+                    prepared = {"number": numbers[person].removeprefix("A"), "country": country}
+            else:
+                encrypted = case["ice_birth_countries_enc"]
+                countries = json.loads(security.decrypt(encrypted)) if encrypted else {}
+        except (InvalidToken, ValueError):
+            return Response("Saved lookup details are temporarily unavailable.", status_code=503)
+        people = [{"last3": number[-3:], "country": countries.get(number, "")} for number in numbers]
+        response = render(request, "ice_lookup.html", user=user, case=case, people=people,
+                          prepared=prepared, message=message, admin=is_admin(user))
+        response.headers["Cache-Control"] = "no-store, private"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        return response
 
 
 @app.post("/cases/{case_id}/check")

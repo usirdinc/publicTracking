@@ -116,6 +116,7 @@ MIGRATIONS = {
         ("uscis_status", "TEXT"), ("uscis_desc", "TEXT"), ("uscis_form", "TEXT"),
         ("uscis_modified", "TEXT"), ("uscis_checked_at", "TEXT"), ("uscis_next_at", "TEXT"),
         ("uscis_error", "TEXT"), ("uscis_history_enc", "TEXT"),
+        ("ice_birth_countries_enc", "TEXT"),
         ("nationality", "TEXT"), ("eoir_status", "TEXT"), ("eoir_fields", "TEXT"),
         ("eoir_checked_at", "TEXT"), ("eoir_next_at", "TEXT"),
     ],

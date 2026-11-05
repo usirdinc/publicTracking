@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}ICE detention lookup · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>ICE detention lookup</h1><p>{{ case.label }}</p></div>
+  <a class="btn small ghost" href="/app">Back to my cases</a>
+</div>
+<div class="case-views">
+  {% if message %}<p role="status">{{ message }}</p>{% endif %}
+  {% if prepared %}
+    <section class="panel tracking-view" aria-labelledby="prepared-heading">
+      <h2 id="prepared-heading">Details for the official locator</h2>
+      <p>A-Number <code>{{ prepared.number }}</code></p>
+      <p>Country of birth <strong>{{ prepared.country }}</strong></p>
+      <a class="btn small" href="https://locator.ice.gov/odls/" target="_blank" rel="noopener noreferrer">Open ICE detainee locator (new tab)</a>
+      <p class="hint">Enter the details on ICE’s site and complete its verification there.</p>
+    </section>
+  {% endif %}
+  {% for person in people %}
+    <section class="panel tracking-view">
+      <h3>Person {{ loop.index }} · A-Number ending in {{ person.last3 }}</h3>
+      <form action="/cases/{{ case.id }}/ice" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="person" value="{{ loop.index0 }}">
+        <label for="country-{{ loop.index }}">Country of birth</label>
+        <input id="country-{{ loop.index }}" name="country" value="{{ person.country }}" maxlength="100" autocomplete="off">
+        <div class="tracking-actions">
+          <button class="btn small ghost" name="action" value="save">Save country</button>
+          <button class="btn small" name="action" value="prepare">Prepare lookup</button>
+        </div>
+      </form>
+    </section>
+  {% endfor %}
+  <p class="hint">Use the country where the person was born. To clear a saved country, leave the field blank and choose Save country. ICE lookup is manual and its locator cannot search for minors.</p>
+</div>
+{% endblock %}
