@@ -170,15 +170,8 @@ label.check input { width: 18px; height: 18px; flex: none; margin: 2px 0 0; acce
 .case-top h2, .case-top h3 { font-size: 18px; margin: 0 0 6px; overflow-wrap: anywhere; }
 .chips { display: flex; gap: 6px 14px; flex-wrap: wrap; }
 .chip { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); margin: 0; padding: 16px 20px; gap: 0; }
-.tile { min-width: 0; padding: 6px 20px 0 0; display: flex; flex-direction: column; gap: 10px; }
-.tile + .tile { border-left: 1px solid var(--line); padding: 6px 0 0 22px; }
-.tile-label { display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
-.tile-label svg { width: 13px; height: 13px; }
 .tile-value { font-size: 17px; font-weight: 620; line-height: 1.5; letter-spacing: -.015em; overflow-wrap: anywhere; }
-.tile-sub { color: var(--muted); font-size: 12px; margin-top: auto; padding-top: 4px; }
-.tile details summary { color: var(--primary); cursor: pointer; font-size: 12px; }
-.tile details p { font-size: 12px; line-height: 1.8; color: var(--fg-2); margin: 8px 0; }
+.tile-sub { color: var(--muted); font-size: 12px; padding-top: 4px; }
 .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; padding: 3px 8px; width: fit-content; max-width: 100%; font-size: 12px; font-weight: 600; }
 .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .tone-ok { color: var(--ok); }.badge.tone-ok { background: var(--ok-soft); }
@@ -304,9 +297,6 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 
   .workspace-grid { grid-template-columns: minmax(0,1fr) 290px; gap: 20px; }
   .case-top { padding-inline: 18px; }
-  .tiles { padding-inline: 18px; }
-  .tile + .tile { padding-left: 15px; }
-  .tile { padding-right: 15px; }
   .case-foot { padding-inline: 18px; }
   .live, .pay-note { margin-inline: 18px; }
   .pricing-section { gap: 50px; }
@@ -378,13 +368,8 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
   .case-top h2 { font-size: 17px; }
   .case-mark { width: 32px; height: 36px; }
   .chip { font-size: 11px; }
-  .tiles { grid-template-columns: 1fr; gap: 12px; padding: 14px 18px; }
-  .tile { padding-right: 12px; gap: 8px; }
-  .tile + .tile { border-left: 0; border-top: 1px solid var(--line); padding: 12px 0 0; }
   .tile-value { font-size: 14px; }
-  .tile-label { font-size: 10px; gap: 5px; }
   .tile-sub { font-size: 11px; }
-  .tile-label svg { width: 12px; height: 12px; }
   .case-foot { padding: 12px 18px; }
   .case-foot .when { width: 100%; }
   .case-foot .acts { width: 100%; justify-content: space-between; }
@@ -427,9 +412,6 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 /* Official USCIS narratives and history share the existing restrained design. */
 .uscis-description { color: var(--fg-2); font-size: 14px; line-height: 1.85; overflow-wrap: anywhere; margin-top: 12px; }
 .uscis-description a { text-decoration: underline; font-weight: 550; }
-.tile .source-note { color: var(--muted); font-size: 11px; margin: 14px 0 0; }
-.case-history { border-top: 1px solid var(--line); padding: 16px 24px; }
-.case-history > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary); }
 .history-timeline { list-style: none; padding: 0 0 0 16px; margin: 20px 0 8px; border-left: 2px solid var(--line); }
 .history-timeline li { padding: 0 0 22px 8px; }
 .history-timeline li:last-child { padding-bottom: 0; }
@@ -463,3 +445,28 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .payment-security svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
 .payment-pending h2 { font-size: 21px; margin-bottom: 12px; }
 .payment-pending p { font-size: 14px; line-height: 1.7; }
+
+/* Independent tracking views within each case. */
+.case-views { display: grid; gap: 12px; padding: 14px; }
+.tracking-view { min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+.tracking-view[hidden], .case-tablist[hidden] { display: none; }
+.tracking-view h3 { margin: 0 0 10px; font-size: 15px; }
+.tracking-view h3 svg { width: 15px; height: 15px; margin-right: 4px; color: var(--muted); }
+.tracking-view .tile-value { margin-top: 6px; }
+.tracking-view .pay-note { margin: 12px 0 0; border: 1px solid var(--line); }
+.tracking-view .source-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
+.uscis-explanation { margin-top: 10px; }
+.uscis-explanation summary { cursor: pointer; color: var(--primary); font-size: 13px; }
+.tracking-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
+.tracking-actions .when { margin-right: auto; }
+.tracking-future p { margin: 0; }
+.case-management { justify-content: flex-end; }
+.case-tablist { display: flex; flex-wrap: wrap; gap: 0 8px; padding: 0 12px; border-bottom: 1px solid var(--line); }
+.case-tablist button { min-height: 40px; padding: 6px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+.case-tablist button:hover { background: var(--surface-2); color: var(--fg); }
+.case-tablist button:focus-visible { outline-offset: -3px; }
+.case-tablist button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--primary); font-weight: 650; }
+.case-tab-due { margin-left: 5px; color: var(--due); font-size: 11px; }
+.case-tabbed .case-views { padding: 0; }
+.case-tabbed .tracking-view { border: 0; border-radius: 0; }
+.case-tabbed .tracking-view:focus-visible { outline-offset: -4px; }

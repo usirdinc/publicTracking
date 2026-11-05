@@ -68,11 +68,16 @@
               </div>
               {{ stepper() }}
             </div>
-            <div class="tiles">
-              <div class="tile">
-                <div class="tile-label">
-                  {{ icon('cash') }} Asylum fee
-                </div>
+            {% if cases|length > 1 %}
+              <div class="case-tablist" role="tablist" aria-label="Tracking views for {{ c.label }}" hidden>
+                {% for key, name in [('aaf', 'AAF'), ('status', 'Case status'), ('history', 'Case history'), ('eoir', 'EOIR'), ('ice', 'ICE detention')] %}
+                  <button type="button" role="tab" id="tab-{{ c.id }}-{{ key }}" aria-controls="view-{{ c.id }}-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-case-tab="{{ key }}">{{ name }}{% if key == 'aaf' and c.status == 'DUE' %} <span class="case-tab-due">Fee due</span>{% endif %}</button>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="case-views">
+              <section class="tracking-view" id="view-{{ c.id }}-aaf" data-case-view="aaf">
+                <h3>{{ icon('cash') }} Annual Asylum Fee</h3>
                 <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
                 <div class="tile-value">
                   {{ t[0] if c.status else "Getting your fee status" }}
@@ -84,11 +89,19 @@
                     First check in progress
                   {% endif %}
                 </div>
-              </div>
-              <div class="tile">
-                <div class="tile-label">
-                  {{ icon('doc') }} USCIS case
+                {% if c.status == 'DUE' %}
+                  <p class="pay-note"><strong>Your fee is due.</strong> Pay only on the official USCIS site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener" target="_blank">my.uscis.gov</a></p>
+                {% endif %}
+                <div class="tracking-actions">
+                  <span class="when">
+                  {% if c.next_check_at %}
+                    Next automatic check <time data-rel datetime="{{ c.next_check_at }}">{{ c.next_check_at[:10] }}</time>
+                  {% endif %}
+                  </span>
                 </div>
+              </section>
+              <section class="tracking-view" id="view-{{ c.id }}-status" data-case-view="status">
+                <h3>{{ icon('doc') }} USCIS case status</h3>
                 {% if c.uscis_status and c.uscis_status != 'NOT_FOUND' %}
                   {% set ub = uscis_badge(c.uscis_status) %}
                   <span class="badge tone-{{ ub }}">{{ c.uscis_form or 'Case status' }}</span>
@@ -130,41 +143,45 @@
                     Usually a few seconds
                   </div>
                 {% endif %}
-              </div>
+              </section>
+              <section class="tracking-view" id="view-{{ c.id }}-history" data-case-view="history">
+                <h3>USCIS case history</h3>
+                {% set history = case_history(c.uscis_history_enc) %}
+                {% if history %}
+                  <p class="hint">History returned by USCIS. Some earlier events may not be available.</p>
+                  <ol class="history-timeline">
+                    {% for event in history %}
+                      <li><span class="history-date">{{ event.date or 'Date not provided' }}</span><div class="uscis-description">{{ event.text | uscis_description }}</div></li>
+                    {% endfor %}
+                  </ol>
+                {% else %}
+                  <p class="hint">No history has been retrieved yet. Your next USCIS check will request it; USCIS may not provide history for every case.</p>
+                {% endif %}
+              </section>
+              <section class="tracking-view tracking-future" id="view-{{ c.id }}-eoir" data-case-view="eoir">
+                <h3>Immigration court (EOIR)</h3>
+                {% if eoir_enabled and c.nationality %}
+                  {% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}
+                  <p>{{ e or "We'll check this soon." }}</p>
+                {% else %}
+                  <p class="muted">Coming soon.</p>
+                {% endif %}
+              </section>
+              <section class="tracking-view" id="view-{{ c.id }}-ice" data-case-view="ice">
+                <h3>ICE detention lookup</h3>
+                <p>Open the official locator and search with the person’s nine-digit A-Number and country of birth. For a family case, search for each person separately.</p>
+                <a class="btn small ghost" href="https://locator.ice.gov/odls/" target="_blank" rel="noopener noreferrer">Open ICE detainee locator (new tab)</a>
+                <p class="hint">Manual lookup. The locator does not show records for minors, and a missing result does not establish that someone is out of custody.</p>
+              </section>
             </div>
-            {% if eoir_enabled and c.nationality %}
-              {% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}<p class="pay-note">Immigration court: {{ e or "We'll check this soon." }}</p>
-            {% endif %}
-            {% if c.status == 'DUE' %}
-              <p class="pay-note"><strong>Your fee is due.</strong> Pay only on the official USCIS site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener" target="_blank">my.uscis.gov</a></p>
-            {% endif %}
-            <details class="case-history" open>
-      <summary>Case history</summary>
-      {% set history = case_history(c.uscis_history_enc) %}
-      {% if history %}
-        <p class="hint">History returned by USCIS. Some earlier events may not be available.</p>
-        <ol class="history-timeline">
-          {% for event in history %}
-            <li><span class="history-date">{{ event.date or 'Date not provided' }}</span><div class="uscis-description">{{ event.text | uscis_description }}</div></li>
-          {% endfor %}
-        </ol>
-      {% else %}
-        <p class="hint">No history has been retrieved yet. Your next USCIS check will request it; USCIS may not provide history for every case.</p>
-      {% endif %}
-    </details>
-    <div class="case-foot">
-              <span class="when">
-              {% if c.next_check_at %}
-                Next automatic check <time data-rel datetime="{{ c.next_check_at }}">{{ c.next_check_at[:10] }}</time>
-              {% endif %}
-              </span>
+            <div class="case-foot case-management">
               <div class="acts">
                 <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="Delete this case and its history?">
                   <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" aria-label="Delete case {{ c.label }}">Delete</button>
                 </form>
-                <form method="post" action="/cases/{{ c.id }}/check" class="inline" data-check>
-                  <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} Check now</button>
-                </form>
+                  <form method="post" action="/cases/{{ c.id }}/check" class="inline" data-check>
+                    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} Check now</button>
+                  </form>
               </div>
             </div>
           </article>

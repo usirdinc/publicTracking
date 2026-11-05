@@ -160,8 +160,15 @@
         delete live[id];
         if (!fresh) { location.reload(); return; }
         fresh.classList.add('reveal');
+        var selected = el.querySelector('[role="tab"][aria-selected="true"]');
+        var focusedTab = el.contains(document.activeElement) && document.activeElement.matches('[data-case-tab]');
         el.replaceWith(fresh);
-        wire(fresh); paintTimes(fresh); paintDates(fresh);
+        wire(fresh, selected && selected.dataset.caseTab);
+        if (focusedTab) {
+          var activeTab = fresh.querySelector('[role="tab"][aria-selected="true"]');
+          if (activeTab) activeTab.focus({ preventScroll: true });
+        }
+        paintTimes(fresh); paintDates(fresh);
       }).catch(function () { location.reload(); });
     }, 650);
   }
@@ -180,7 +187,49 @@
   }
   function ensurePolling() { if (!timer) timer = setTimeout(poll, 300); }
 
-  function wire(root) {
+  function wireCaseTabs(tablist, selected) {
+    var tabs = Array.from(tablist.querySelectorAll('[data-case-tab]'));
+    var caseCard = tablist.closest('[data-case]');
+    var panels = tabs.map(function (tab) {
+      return caseCard.querySelector('#' + tab.getAttribute('aria-controls'));
+    });
+    if (panels.some(function (panel) { return !panel; })) return;
+
+    function activate(index, moveFocus) {
+      tabs.forEach(function (tab, i) {
+        var active = i === index;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        panels[i].hidden = !active;
+      });
+      if (moveFocus) tabs[index].focus();
+    }
+
+    tabs.forEach(function (tab, i) {
+      panels[i].setAttribute('role', 'tabpanel');
+      panels[i].setAttribute('aria-labelledby', tab.id);
+      panels[i].tabIndex = 0;
+      tab.addEventListener('click', function () { activate(i, false); });
+      tab.addEventListener('keydown', function (event) {
+        var next;
+        if (event.key === 'ArrowRight') next = (i + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        activate(next, true);
+      });
+    });
+    activate(Math.max(0, tabs.findIndex(function (tab) { return tab.dataset.caseTab === selected; })), false);
+    tablist.hidden = false;
+    caseCard.classList.add('case-tabbed');
+  }
+
+  function wire(root, selected) {
+    root.querySelectorAll('.case-tablist').forEach(function (tablist) {
+      wireCaseTabs(tablist, selected);
+    });
     root.querySelectorAll('form[data-check]').forEach(function (f) {
       f.addEventListener('submit', function (e) {
         e.preventDefault();
