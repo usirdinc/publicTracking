@@ -5,7 +5,7 @@
 {% block content %}
   <section class="auth-layout" aria-labelledby="signup-heading">
     <div class="auth-intro">
-      <span class="eyebrow">Get started</span><h1 id="signup-heading">Stay informed.<br>One case at a time.</h1>
+      <h1 id="signup-heading">Start tracking your cases</h1>
       <p class="lead">Daily asylum fee and USCIS case checks, with updates sent to your email.</p>
       <ol class="onboarding-list">
         <li><span>01</span>
@@ -24,7 +24,7 @@
       </ol>
     </div>
     <div class="auth-panel">
-      <span class="eyebrow">Create account</span><h2>A clearer view of your case</h2><p class="muted">Next you'll start your {{ price }}/month subscription. Your account turns on once it's paid.</p>
+      <h2>Create an account</h2><p class="muted">Next you'll start your {{ price }}/month subscription. Your account turns on once it's paid.</p>
       <form method="post" action="/signup">
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">

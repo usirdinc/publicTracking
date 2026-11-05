@@ -1,0 +1,10 @@
+/* Same-origin navigation uses the browser's normal link and history behavior. */
+@view-transition { navigation: auto; }
+
+main { view-transition-name: page-content; }
+
+::view-transition-group(*) { animation-duration: 160ms; }
+::view-transition-old(root) { display: none; }
+::view-transition-new(root) { animation: none; }
+::view-transition-old(page-content),
+::view-transition-new(page-content) { animation-duration: 160ms; }

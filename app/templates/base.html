@@ -11,7 +11,10 @@
 {% endblock %}
 </title>
 <meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
-<link rel="stylesheet" href="/static/site.css?v=20261103-native-card">
+<link rel="stylesheet" href="/static/site.css?v=20261105-workspace">
+{% if request.url.path != '/subscribe' %}
+<link rel="stylesheet" href="/static/navigation.css?v=20261105" media="(prefers-reduced-motion: no-preference)">
+{% endif %}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -68,7 +71,7 @@
     </nav>
   </div>
 </footer>
-<script src="/static/app.js?v=20261103-payment-return" defer></script>
+<script src="/static/app.js?v=20261105-workspace" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

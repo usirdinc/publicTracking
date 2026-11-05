@@ -5,8 +5,7 @@
 {% block content %}
   <section class="auth-layout" aria-labelledby="login-heading">
     <div class="auth-intro">
-      <span class="eyebrow">USIRD Case Tracker</span>
-      <h1 id="login-heading">Your cases.<br>Your next update.</h1>
+      <h1 id="login-heading">USIRD Case Tracker</h1>
       <p class="lead">See your Annual Asylum Fee and USCIS case status in one place.</p>
       <ul class="auth-benefits">
         <li>{{ icon('clock') }} Automatic daily checks</li><li>{{ icon('bell') }} Email when something changes</li><li>{{ icon('lock') }} Encrypted case numbers</li>
@@ -14,7 +13,7 @@
       <p class="auth-note">We never ask for your USCIS account password.</p>
     </div>
     <div class="auth-panel">
-      <span class="eyebrow">Account access</span><h2>Welcome back</h2>
+      <h2>Log in</h2>
       <p class="muted">Log in to view and manage your cases.</p>
       <form method="post" action="/login">
         <input type="hidden" name="csrf" value="{{ csrf }}">

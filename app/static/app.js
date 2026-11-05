@@ -95,33 +95,6 @@
     });
   }
 
-  // Landing page: loop a sample check so visitors see what Check now looks like.
-  var demo = document.querySelector('[data-demo]');
-  if (demo) {
-    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var DSTAGES = [[0, 'Waiting in line'], [25, 'Opening the USCIS fee page'], [45, 'Entering A-Number'],
-                   [60, 'Entering receipt number'], [75, 'Submitting to USCIS'], [90, 'Reading the result'], [100, 'Done']];
-    var dShow = function (p) {
-      var label = DSTAGES[0][1];
-      DSTAGES.forEach(function (s) { if (p >= s[0]) label = s[1]; });
-      demo.querySelector('[data-stage]').textContent = label;
-      demo.querySelector('[data-pct]').textContent = Math.round(p) + '%';
-      paintStepper(demo, p, p >= 100);
-      demo.closest('.case').classList.toggle('done', p >= 100);
-    };
-    if (calm) dShow(78);
-    else {
-      var t0 = null, RUN = 6500, HOLD = 1800;
-      var dTick = function (ts) {
-        if (t0 === null) t0 = ts;
-        var e = (ts - t0) % (RUN + HOLD), x = Math.min(1, e / RUN);
-        dShow(100 * (1 - Math.pow(1 - x, 1.6)));   // quick start, gentle finish
-        requestAnimationFrame(dTick);
-      };
-      requestAnimationFrame(dTick);
-    }
-  }
-
   // ---- live progress
   if (!document.querySelector('[data-case]')) return;
   var MILESTONES = [5, 10, 25, 45, 60, 75, 90, 100];
