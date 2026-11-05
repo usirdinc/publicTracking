@@ -52,7 +52,7 @@ Use a managed work computer and open `/staff/lookups` in a regular browser each 
 
 From this checkout on the staff workstation, run `python -m scripts.staff_lookup_runner ice` or
 `python -m scripts.staff_lookup_runner eoir` using the project's Python environment and installed Chrome.
-Sign in with the employee's own Case Tracker account. Open the service queue and press Enter in the terminal.
+Beacon-4 opens the queue using its owner-only workstation credential. Staff can use the desktop shortcuts to start a shift.
 The runner prepares one official lookup at a time and starts the official form's verification flow.
 Complete the CAPTCHA and any site notices directly in Chrome. Review the official result, then save or defer it
 in the Case Tracker queue. Saving or deferring advances to the next item. If a site rejects the session or changes its form,

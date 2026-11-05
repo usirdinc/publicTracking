@@ -1,11 +1,11 @@
 """Local staff runner for the authenticated ICE and EOIR queues.
 
-Run on a staff workstation with Chrome installed. The operator signs in,
-accepts any official site prompts, and completes each CAPTCHA in the window.
+Run on a staff workstation with Chrome installed. The workstation authenticates automatically. The operator accepts any official site prompts, and completes each CAPTCHA in the window.
 """
 import argparse
 import re
 import time
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from playwright.sync_api import Error, sync_playwright
@@ -79,12 +79,35 @@ def finish_eoir(page, queue, job):
 
 def run(browser, base_url, service):
     queue = browser.new_page()
+    credential = Path.home() / "case-tracker-operator" / "lookup-token"
+    try:
+        if credential.stat().st_mode & 0o077:
+            print("The Beacon lookup credential must be owner-readable only.")
+            return
+        token = credential.read_text(encoding="ascii").strip()
+    except (OSError, UnicodeError):
+        print("The Beacon lookup credential is missing or unreadable.")
+        return
+    try:
+        session = queue.context.request.post(
+            base_url + "/staff/lookups/session",
+            headers={"Authorization": "Bearer " + token},
+            max_redirects=0,
+            timeout=15000,
+        )
+    except Error:
+        print("Case Tracker could not be reached for machine sign-in.")
+        return
+    try:
+        if session.status != 204:
+            print(f"Case Tracker rejected the machine session (HTTP {session.status}).")
+            return
+    finally:
+        session.dispose()
     queue.goto(base_url + QUEUES[service])
-    print("Sign in to Case Tracker in Chrome, then open the requested staff queue.")
-    input("Press Enter here when the queue is open. ")
     while not queue.is_closed():
         if urlsplit(queue.url).path != QUEUES[service] or not current_host(queue, base_url):
-            print("The requested queue is no longer open. Sign in and start the runner again.")
+            print("The requested queue is no longer open. Restart the runner to open a fresh machine session.")
             return
         row = queue.locator(f'article[data-lookup-service="{service}"]').first
         if not row.count():

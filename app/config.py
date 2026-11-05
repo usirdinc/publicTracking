@@ -67,6 +67,7 @@ USCIS_RECHECK_HOURS = float(get("USCIS_RECHECK_HOURS", "24"))
 # EOIR court lookups (staff-assisted). Off until the team is ready to run the queue.
 LOOKUP_STAFF_EMAILS = {e.strip().lower() for e in get("LOOKUP_STAFF_EMAILS").split(",") if e.strip()}
 EOIR_RECHECK_DAYS = int(get("EOIR_RECHECK_DAYS", "30"))
+LOOKUP_MACHINE_TOKEN_SHA256 = get("LOOKUP_MACHINE_TOKEN_SHA256")
 ICE_STAFF_ENABLED = get("ICE_STAFF_ENABLED", "0") == "1"
 EOIR_ENABLED = get("EOIR_ENABLED", "0") == "1"
 AAF_RECHECK_HOURS = float(get("AAF_RECHECK_HOURS", "24"))   # automatic AAF re-check interval

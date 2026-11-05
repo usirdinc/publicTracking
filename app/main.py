@@ -1,4 +1,6 @@
 """Web app: sign-up, cases, instant AAF check, Square webhook, admin."""
+import hashlib
+import hmac
 import json
 import logging
 import re
@@ -13,6 +15,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from itsdangerous import BadData, URLSafeTimedSerializer
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import billing, config, db, security, square
@@ -650,11 +653,48 @@ def admin_resume(request: Request, csrf: str = Form("")):
 
 
 # ---------------- Staff lookup workspace ----------------
+LOOKUP_COOKIE = "__Host-usird-lookup"
+LOOKUP_SESSION_SECONDS = 8 * 60 * 60
+
+
+def _lookup_signer():
+    return URLSafeTimedSerializer(config.SECRET_KEY, salt="usird-beacon-lookup-v1")
+
+
+def _lookup_authorized(request, user):
+    if is_lookup_staff(user):
+        return True
+    cookie = request.cookies.get(LOOKUP_COOKIE)
+    expected = config.LOOKUP_MACHINE_TOKEN_SHA256
+    if not cookie or not expected or not config.SECRET_KEY:
+        return False
+    try:
+        fingerprint = _lookup_signer().loads(cookie, max_age=LOOKUP_SESSION_SECONDS)
+    except BadData:
+        return False
+    return isinstance(fingerprint, str) and hmac.compare_digest(fingerprint, expected)
+
+
+@app.post("/staff/lookups/session")
+def lookup_machine_session(request: Request):
+    scheme, _, token = request.headers.get("authorization", "").partition(" ")
+    expected = config.LOOKUP_MACHINE_TOKEN_SHA256
+    if not config.SECRET_KEY or not expected or not config.BASE_URL.startswith("https://"):
+        return Response(status_code=503)
+    fingerprint = hashlib.sha256(token.encode()).hexdigest()
+    if scheme.lower() != "bearer" or not hmac.compare_digest(fingerprint, expected):
+        return Response(status_code=403)
+    response = Response(status_code=204, headers={"Cache-Control": "no-store"})
+    response.set_cookie(LOOKUP_COOKIE, _lookup_signer().dumps(fingerprint),
+                        max_age=LOOKUP_SESSION_SECONDS, secure=True, httponly=True, samesite="strict")
+    return response
+
+
 @app.get("/staff/lookups", response_class=HTMLResponse)
 def staff_lookups(request: Request):
     with closing(get_db()) as cn:
         user = current_user(request, cn)
-        if not is_lookup_staff(user):
+        if not _lookup_authorized(request, user):
             return redirect("/login")
         due = []
         if config.ICE_STAFF_ENABLED:
@@ -689,7 +729,7 @@ def staff_ice_save(request: Request, case_id: int, person: int, csrf: str = Form
                    status: str = Form(""), facility: str = Form(""), version: str = Form("")):
     with closing(get_db()) as cn:
         user = current_user(request, cn)
-        if not config.ICE_STAFF_ENABLED or not is_lookup_staff(user):
+        if not config.ICE_STAFF_ENABLED or not _lookup_authorized(request, user):
             return Response(status_code=403)
         if not security.csrf_ok(request.session, csrf):
             return Response(status_code=403)
@@ -785,7 +825,7 @@ def save_eoir_nationality(request: Request, case_id: int, nationality: str = For
 def admin_eoir(request: Request):
     cn = get_db()
     u = current_user(request, cn)
-    if not is_lookup_staff(u):
+    if not _lookup_authorized(request, u):
         return redirect("/login")
     if not config.EOIR_ENABLED:
         return redirect("/admin", "EOIR lookups are turned off (EOIR_ENABLED=0).", request)
@@ -806,7 +846,7 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
     from app import mailer
     cn = get_db()
     u = current_user(request, cn)
-    if not is_lookup_staff(u) or not security.csrf_ok(request.session, csrf):
+    if not _lookup_authorized(request, u) or not security.csrf_ok(request.session, csrf):
         return redirect("/login")
     if not config.EOIR_ENABLED:
         return redirect("/admin")
