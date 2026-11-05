@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS cases (
   next_check_at TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ice_staff_checks (
+  case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  person INTEGER NOT NULL,
+  version TEXT NOT NULL DEFAULT (lower(hex(randomblob(16)))),
+  result_enc TEXT,
+  checked_at TEXT,
+  next_at TEXT,
+  PRIMARY KEY (case_id, person)
+);
 CREATE TABLE IF NOT EXISTS jobs (
   id INTEGER PRIMARY KEY,
   case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,

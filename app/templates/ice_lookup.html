@@ -24,6 +24,18 @@
         <input type="hidden" name="person" value="{{ loop.index0 }}">
         <label for="country-{{ loop.index }}">Country of birth</label>
         <input id="country-{{ loop.index }}" name="country" value="{{ person.country }}" maxlength="100" autocomplete="off">
+        {% if ice_staff_enabled %}
+          <label class="check"><input type="checkbox" name="staff" value="1" {% if person.staff %}checked{% endif %}>
+            <span>Ask USIRD staff to check the ICE locator daily for this person using this A-Number and country of birth.</span>
+          </label>
+          {% if person.result %}
+            <p><strong>Last staff result:</strong> {{ 'Listed by the locator' if person.result.status == 'listed' else 'No matching record returned' }}
+              {% if person.result.facility %} · {{ person.result.facility }}{% endif %}</p>
+            <p class="hint">Checked <time data-rel datetime="{{ person.checked_at }}">{{ person.checked_at[:10] }}</time>. A missing record does not establish that someone is out of custody.</p>
+          {% elif person.staff %}
+            <p class="hint">Waiting for the first staff lookup.</p>
+          {% endif %}
+        {% endif %}
         <div class="tracking-actions">
           <button class="btn small ghost" name="action" value="save">Save country</button>
           <button class="btn small" name="action" value="prepare">Prepare lookup</button>

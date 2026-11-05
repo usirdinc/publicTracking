@@ -124,6 +124,10 @@ def is_admin(user) -> bool:
     return bool(user and user["email"] in config.ADMIN_EMAILS)
 
 
+def is_lookup_staff(user):
+    return bool(user and (is_admin(user) or user["email"] in config.LOOKUP_STAFF_EMAILS))
+
+
 def render(request, name, **ctx):
     ctx.setdefault("user", None)
     if "flash" not in ctx:
@@ -228,6 +232,8 @@ def login(request: Request, email: str = Form(...), password: str = Form(...), c
         return redirect("/login", "Email or password is not correct.", request)
     request.session.clear()
     request.session["uid"] = u["id"]
+    if u["email"] in config.LOOKUP_STAFF_EMAILS:
+        return redirect("/staff/lookups")
     return redirect("/app" if _can_use(u) else "/subscribe")
 
 
@@ -403,7 +409,7 @@ def _wants_json(request: Request) -> bool:
 @app.get("/cases/{case_id}/ice", response_class=HTMLResponse)
 @app.post("/cases/{case_id}/ice", response_class=HTMLResponse)
 def ice_lookup(request: Request, case_id: int, person: int = Form(-1),
-               country: str = Form(""), csrf: str = Form(""), action: str = Form("")):
+               country: str = Form(""), csrf: str = Form(""), action: str = Form(""), staff: str = Form("")):
     with closing(get_db()) as cn:
         user = current_user(request, cn)
         if not user:
@@ -431,12 +437,17 @@ def ice_lookup(request: Request, case_id: int, person: int = Form(-1),
                         return Response(status_code=404)
                     encrypted = current["ice_birth_countries_enc"]
                     countries = json.loads(security.decrypt(encrypted)) if encrypted else {}
+                    previous_country = countries.get(numbers[person], "")
                     if country:
                         countries[numbers[person]] = country
                     else:
                         countries.pop(numbers[person], None)
                     cn.execute("UPDATE cases SET ice_birth_countries_enc=? WHERE id=? AND user_id=?",
                                (security.encrypt(json.dumps(countries)) if countries else None, case_id, user["id"]))
+                    if country != previous_country or (config.ICE_STAFF_ENABLED and staff != "1"):
+                        cn.execute("DELETE FROM ice_staff_checks WHERE case_id=? AND person=?", (case_id, person))
+                    if config.ICE_STAFF_ENABLED and country and staff == "1":
+                        cn.execute("INSERT OR IGNORE INTO ice_staff_checks(case_id,person) VALUES(?,?)", (case_id, person))
                 message = "Country of birth saved." if country else "Country of birth cleared."
                 if action == "prepare":
                     prepared = {"number": numbers[person].removeprefix("A"), "country": country}
@@ -445,9 +456,24 @@ def ice_lookup(request: Request, case_id: int, person: int = Form(-1),
                 countries = json.loads(security.decrypt(encrypted)) if encrypted else {}
         except (InvalidToken, ValueError):
             return Response("Saved lookup details are temporarily unavailable.", status_code=503)
-        people = [{"last3": number[-3:], "country": countries.get(number, "")} for number in numbers]
+        staff_checks = {row["person"]: row for row in cn.execute(
+            "SELECT * FROM ice_staff_checks WHERE case_id=?", (case_id,)
+        )}
+        people = []
+        for index, number in enumerate(numbers):
+            check = staff_checks.get(index)
+            result = None
+            if check and check["result_enc"]:
+                try:
+                    result = json.loads(security.decrypt(check["result_enc"]))
+                except (InvalidToken, ValueError):
+                    pass
+            people.append({"last3": number[-3:], "country": countries.get(number, ""),
+                           "staff": check is not None, "result": result,
+                           "checked_at": check["checked_at"] if check else None})
         response = render(request, "ice_lookup.html", user=user, case=case, people=people,
-                          prepared=prepared, message=message, admin=is_admin(user))
+                          prepared=prepared, message=message, admin=is_admin(user),
+                          ice_staff_enabled=config.ICE_STAFF_ENABLED)
         response.headers["Cache-Control"] = "no-store, private"
         response.headers["Referrer-Policy"] = "no-referrer"
         return response
@@ -623,10 +649,79 @@ def admin_resume(request: Request, csrf: str = Form("")):
     return redirect("/admin", "Checks resumed.", request)
 
 
+# ---------------- Staff lookup workspace ----------------
+@app.get("/staff/lookups", response_class=HTMLResponse)
+def staff_lookups(request: Request):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not is_lookup_staff(user):
+            return redirect("/login")
+        due = []
+        if config.ICE_STAFF_ENABLED:
+            rows = cn.execute(
+                """SELECT i.person, i.version, c.id, c.label, c.a_numbers_enc, c.ice_birth_countries_enc
+                   FROM ice_staff_checks i JOIN cases c ON c.id=i.case_id
+                   JOIN users u ON u.id=c.user_id
+                   WHERE (i.next_at IS NULL OR i.next_at<=?) AND u.paid_until>?
+                   ORDER BY i.next_at, i.case_id, i.person LIMIT 25""",
+                (db.iso(db.now()), db.iso(db.now())),
+            )
+            for row in rows:
+                try:
+                    numbers = list(dict.fromkeys(security.decrypt(row["a_numbers_enc"]).split(";")))
+                    number = numbers[row["person"]]
+                    country = json.loads(security.decrypt(row["ice_birth_countries_enc"])).get(number)
+                except (InvalidToken, ValueError, IndexError, AttributeError):
+                    continue
+                if country:
+                    due.append({"id": row["id"], "person": row["person"], "label": row["label"],
+                                "number": number.removeprefix("A"), "country": country, "version": row["version"]})
+        response = render(request, "staff_lookups.html", user=user, due=due,
+                          ice_enabled=config.ICE_STAFF_ENABLED, eoir_enabled=config.EOIR_ENABLED,
+                          admin=is_admin(user))
+        response.headers["Cache-Control"] = "no-store, private"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        return response
+
+
+@app.post("/staff/lookups/ice/{case_id}/{person}")
+def staff_ice_save(request: Request, case_id: int, person: int, csrf: str = Form(""),
+                   status: str = Form(""), facility: str = Form(""), version: str = Form("")):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not config.ICE_STAFF_ENABLED or not is_lookup_staff(user):
+            return Response(status_code=403)
+        if not security.csrf_ok(request.session, csrf):
+            return Response(status_code=403)
+        facility = " ".join(facility.split())
+        if status not in ("listed", "no_match", "retry") or len(facility) > 160:
+            return Response("Invalid ICE lookup result.", status_code=400)
+        now = db.iso(db.now())
+        with db.tx(cn):
+            row = cn.execute(
+                """SELECT i.next_at, i.version, u.paid_until FROM ice_staff_checks i
+                   JOIN cases c ON c.id=i.case_id JOIN users u ON u.id=c.user_id
+                   WHERE i.case_id=? AND i.person=?""", (case_id, person)
+            ).fetchone()
+            if not row or row["version"] != version or not db.is_paid(row) or (row["next_at"] and row["next_at"] > now):
+                return redirect("/staff/lookups", "This lookup is no longer due.", request)
+            if status == "retry":
+                cn.execute("UPDATE ice_staff_checks SET next_at=? WHERE case_id=? AND person=?",
+                           (db.in_(days=1), case_id, person))
+            else:
+                result = security.encrypt(json.dumps({
+                    "status": status, "facility": facility if status == "listed" else "",
+                }))
+                cn.execute("""UPDATE ice_staff_checks SET result_enc=?,checked_at=?,next_at=?
+                              WHERE case_id=? AND person=?""",
+                           (result, now, db.in_(days=1), case_id, person))
+        message = "Deferred until tomorrow." if status == "retry" else "ICE result saved."
+        return redirect("/staff/lookups", message, request)
+
+
 # ---------------- EOIR: staff-assisted lookups ----------------
 # ACIS rejects captchas solved in an automated browser, so a staff member looks
 # each case up by hand and pastes the result page here; we parse and store it.
-EOIR_RECHECK_DAYS = 30
 
 
 def _eoir_due(cn, limit=50):
@@ -665,11 +760,32 @@ templates.env.globals["eoir_summary"] = eoir_summary
 templates.env.globals["eoir_enabled"] = config.EOIR_ENABLED
 
 
+@app.post("/cases/{case_id}/eoir")
+def save_eoir_nationality(request: Request, case_id: int, nationality: str = Form(""),
+                          csrf: str = Form("")):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not config.EOIR_ENABLED or not _can_use(user) or not security.csrf_ok(request.session, csrf):
+            return Response(status_code=403)
+        nationality = " ".join(nationality.split())
+        if len(nationality) > 60:
+            return Response("Enter a nationality of up to 60 characters.", status_code=400)
+        with db.tx(cn):
+            case = _own_case(cn, user, case_id)
+            if not case:
+                return Response(status_code=404)
+            if (nationality or None) != case["nationality"]:
+                cn.execute("""UPDATE cases SET nationality=?,eoir_next_at=NULL,eoir_status=NULL,
+                              eoir_fields=NULL,eoir_checked_at=NULL WHERE id=? AND user_id=?""",
+                           (nationality or None, case_id, user["id"]))
+        return redirect("/app", "EOIR lookup details saved.", request)
+
+
 @app.get("/admin/eoir", response_class=HTMLResponse)
 def admin_eoir(request: Request):
     cn = get_db()
     u = current_user(request, cn)
-    if not is_admin(u):
+    if not is_lookup_staff(u):
         return redirect("/login")
     if not config.EOIR_ENABLED:
         return redirect("/admin", "EOIR lookups are turned off (EOIR_ENABLED=0).", request)
@@ -685,19 +801,23 @@ def admin_eoir(request: Request):
 
 @app.post("/admin/eoir/{case_id}")
 def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), action: str = Form("save"),
-                    csrf: str = Form("")):
+                    csrf: str = Form(""), expected_nationality: str = Form("")):
     from tracker.eoir import NO_CASE_TEXT, extract_fields
     from app import mailer
     cn = get_db()
     u = current_user(request, cn)
-    if not is_admin(u) or not security.csrf_ok(request.session, csrf):
+    if not is_lookup_staff(u) or not security.csrf_ok(request.session, csrf):
         return redirect("/login")
     if not config.EOIR_ENABLED:
         return redirect("/admin")
-    c = cn.execute("SELECT c.*, u.email FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
+    c = cn.execute("SELECT c.*, u.email, u.paid_until FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
                    (case_id,)).fetchone()
-    if not c:
-        return redirect("/admin/eoir", "Case not found.", request)
+    if not c or not c["nationality"] or not _can_use(c):
+        return redirect("/admin/eoir", "Case not found or ineligible for staff checks.", request)
+    if (expected_nationality or not is_admin(u)) and expected_nationality != c["nationality"]:
+        return redirect("/admin/eoir", "The nationality changed. Reload the queue before continuing.", request)
+    if c["eoir_next_at"] and c["eoir_next_at"] > db.iso(db.now()):
+        return redirect("/admin/eoir", "This case is no longer due.", request)
     if action == "skip":
         cn.execute("UPDATE cases SET eoir_next_at=? WHERE id=?", (db.in_(days=1), case_id))
         return redirect("/admin/eoir", f"Skipped case {case_id} until tomorrow.", request)
@@ -712,8 +832,12 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
     fields.pop("name", None)  # not needed for alerts
     old = eoir_summary(c["eoir_status"], c["eoir_fields"])
     new_json = json.dumps(fields, sort_keys=True)
-    cn.execute("UPDATE cases SET eoir_status=?, eoir_fields=?, eoir_checked_at=?, eoir_next_at=? WHERE id=?",
-               (status, new_json, db.iso(db.now()), db.in_(days=EOIR_RECHECK_DAYS), case_id))
+    saved = cn.execute("""UPDATE cases SET eoir_status=?,eoir_fields=?,eoir_checked_at=?,eoir_next_at=?
+                           WHERE id=? AND nationality=? AND eoir_next_at IS ?""",
+                       (status, new_json, db.iso(db.now()), db.in_(days=config.EOIR_RECHECK_DAYS),
+                        case_id, c["nationality"], c["eoir_next_at"]))
+    if saved.rowcount != 1:
+        return redirect("/admin/eoir", "The lookup changed while you were saving. Reload the queue.", request)
     new = eoir_summary(status, new_json)
     if old != new:
         mailer.send(c["email"], f"Immigration court update for {c['label']}",

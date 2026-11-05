@@ -39,3 +39,21 @@ Set `SQUARE_NATIVE_CHECKOUT=1` with the matching Square application, location an
 Square Web Payments SDK collects card details in its iframe on `/subscribe`. Only a single-use token reaches this server. Card-on-file IDs are encrypted with the existing DATA_KEY. Creating a subscription never grants access; a signed, fully paid invoice for that subscription does. Persistent attempt IDs prevent duplicate subscriptions, and ambiguous subscription responses must resume the same request. Account options allow cancellation; deleting an account first requests cancellation. Do not delete a pending/uncertain enrollment manually.
 
 Only the checkout page permits Square's documented script, frame, connection and font origins and inline SDK styles. Other pages keep the original strict CSP. No card numbers, tokens or provider bodies should be logged. Run `python -m pytest -q` before release; use Sandbox for an actual test charge. Production form-mount verification does not authorize a real payment.
+
+### Daily staff lookup shift
+
+Use a managed work computer and open `/staff/lookups` in a regular browser each day. Authorized staff perform the searches and complete any verification directly on the official websites. Record a result only after verifying it. Defer failures instead of recording them as no match.
+
+- ICE: the owner opts in for each person on the ICE lookup page. Enter that person's A-Number and country of birth in the ICE locator. Save a listed result or no match. The item becomes due again after one day.
+- EOIR: the owner supplies nationality for the first A-Number on a case. Open the EOIR queue, complete the official ACIS search, and paste the result in the queue. Use `EOIR_RECHECK_DAYS=1` for daily repeat checks.
+- Enable the queues with `ICE_STAFF_ENABLED=1` and `EOIR_ENABLED=1` after staff are ready. Add only existing, individually controlled staff account emails to `LOOKUP_STAFF_EMAILS`. Never allowlist an address before its account is created. Lookup staff have queue access without general admin access.
+
+### Local browser handoff
+
+From this checkout on the staff workstation, run `python -m scripts.staff_lookup_runner ice` or
+`python -m scripts.staff_lookup_runner eoir` using the project's Python environment and installed Chrome.
+Sign in with the employee's own Case Tracker account. Open the service queue and press Enter in the terminal.
+The runner prepares one official lookup at a time and starts the official form's verification flow.
+Complete the CAPTCHA and any site notices directly in Chrome. Review the official result, then save or defer it
+in the Case Tracker queue. Saving or deferring advances to the next item. If a site rejects the session or changes its form,
+complete the lookup manually in a regular browser or defer it. Keep the workstation attended while the runner is open.

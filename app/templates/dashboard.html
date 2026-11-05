@@ -164,7 +164,16 @@
                   {% set e = eoir_summary(c.eoir_status, c.eoir_fields) %}
                   <p>{{ e or "We'll check this soon." }}</p>
                 {% else %}
-                  <p class="muted">Coming soon.</p>
+                  <p class="muted">{{ 'Save the primary person’s nationality to request staff checks.' if eoir_enabled else 'Coming soon.' }}</p>
+                {% endif %}
+                {% if eoir_enabled %}
+                  <form action="/cases/{{ c.id }}/eoir" method="post">
+                    <input type="hidden" name="csrf" value="{{ csrf }}">
+                    <label for="eoir-nationality-{{ c.id }}">Nationality of the primary person</label>
+                    <input id="eoir-nationality-{{ c.id }}" name="nationality" value="{{ c.nationality or '' }}" maxlength="60">
+                    <p class="hint">Staff use the first A-Number on this case and this nationality to check EOIR. Clear the field to stop staff checks.</p>
+                    <button class="btn small ghost" type="submit">Save EOIR details</button>
+                  </form>
                 {% endif %}
               </section>
               <section class="tracking-view" id="view-{{ c.id }}-ice" data-case-view="ice">

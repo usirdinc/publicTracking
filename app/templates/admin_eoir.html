@@ -7,20 +7,21 @@
     <div>
       <span class="eyebrow">Staff workspace</span><h1>EOIR lookup queue</h1><p>{{ due|length }} lookups due</p>
     </div>
-    <a class="btn ghost" href="/admin">Back to admin</a>
+    <a class="btn ghost" href="/staff/lookups">Back to staff lookups</a>
   </div>
   <p class="muted small">For each case: open <a href="https://acis.eoir.justice.gov/en/" target="_blank" rel="noopener">ACIS</a> in normal Chrome, enter the A-Number and nationality, solve the captcha, then copy the whole result page (Ctrl+A, Ctrl+C) and paste it below. If ACIS says no case was found, paste that page too.</p>
   {% for c in due %}
-    <article class="case eoir-case">
+    <article class="case eoir-case" data-lookup-service="eoir" data-lookup-key="{{ c.id }}">
       <div class="case-head">
-        <h3>{{ c.label }}</h3><span class="muted small">case {{ c.id }} · {{ c.email }}</span>
+        <h3>{{ c.label }}</h3><span class="muted small">case {{ c.id }}</span>
       </div>
-      <p><strong>A-Number:</strong> <code>{{ c.a_number }}</code> · <strong>Nationality:</strong> {{ c.nationality }}</p>
+      <p><strong>A-Number:</strong> <code data-lookup-number>{{ c.a_number }}</code> · <strong>Nationality:</strong> <span data-lookup-country>{{ c.nationality }}</span></p>
       {% if c.last %}
         <p class="muted small">Last result: {{ c.last }}</p>
       {% endif %}
       <form method="post" action="/admin/eoir/{{ c.id }}">
         <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="expected_nationality" value="{{ c.nationality }}">
         <label for="result-{{ c.id }}">ACIS result</label><textarea id="result-{{ c.id }}" name="page_text" rows="4" placeholder="Paste the ACIS result page here"></textarea>
         <button class="btn small" name="action" value="save">Save result</button>
         <button class="link" name="action" value="skip">Skip for today</button>
@@ -31,5 +32,5 @@
       <h2>Nothing due</h2><p>There are no court lookups waiting in this queue.</p>
     </div>
   {% endfor %}
-  <p><a href="/admin">Back to admin</a></p>
+  <p><a href="/staff/lookups">Back to staff lookups</a></p>
 {% endblock %}
