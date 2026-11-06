@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Add a case · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="intake">
+  <a class="back-link" href="/app">← My cases</a>
+  <div class="page-head">
+    <div><h1>Add a case</h1><p>Start Annual Asylum Fee and USCIS tracking for an I-589 application.</p></div>
+  </div>
+  {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
+  <form class="panel intake-form" method="post" action="/cases">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <fieldset>
+      <legend>Primary applicant and contact</legend>
+      <p class="muted">Use the primary applicant’s name and date of birth as shown on the application.</p>
+      <div class="intake-fields">{% include "_client_details_fields.html" %}</div>
+    </fieldset>
+    <fieldset>
+      <legend>Case identifiers</legend>
+      <div class="intake-fields">
+        <label>A-Number(s) <input name="a_numbers" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="A123456789" value="{{ a_numbers }}">
+          <span class="hint">For a family on one I-589, enter the primary applicant’s A-Number first, then the others separated by commas.</span></label>
+        <label>I-589 receipt number <input name="receipt" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ZAR1234567890" value="{{ receipt }}">
+          <span class="hint">Enter the three letters and ten digits from the USCIS receipt notice.</span></label>
+        <label>Case label <span class="muted">(optional)</span> <input name="label" maxlength="60" placeholder="e.g. Family asylum application" value="{{ label }}"></label>
+      </div>
+    </fieldset>
+    <div class="intake-footer">
+      <span class="muted small">{{ icon('lock') }} Applicant details and case identifiers are encrypted in storage.</span>
+      <button class="btn" type="submit">Add case and start checks {{ icon('arrow') }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

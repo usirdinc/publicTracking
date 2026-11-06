@@ -2,13 +2,13 @@ from fastapi.testclient import TestClient
 
 from app import db, security
 from app.main import app
-from test_app import client, csrf, signup, make_paid
+from test_app import CLIENT_DETAILS, client, csrf, signup, make_paid
 
 
 def test_ice_lookup_uses_saved_numbers_and_protects_country_data(client):
     signup(client)
     make_paid("a@example.com")
-    client.post("/cases", data={
+    client.post("/cases", data={**CLIENT_DETAILS,
         "a_numbers": "A123456789;A987654321", "receipt": "ZAR1234567890",
         "csrf": csrf(client, "/app"),
     })
@@ -50,7 +50,7 @@ def test_staff_ice_queue_requires_opt_in_and_rejects_stale_results(client, monke
     monkeypatch.setattr(config, "LOOKUP_STAFF_EMAILS", {"staff@example.com"})
     signup(client)
     make_paid("a@example.com")
-    client.post("/cases", data={
+    client.post("/cases", data={**CLIENT_DETAILS,
         "a_numbers": "A123456789", "receipt": "ZAR1234567890",
         "csrf": csrf(client, "/app"),
     })

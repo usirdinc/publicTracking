@@ -9,6 +9,10 @@ from app.main import app
 from worker import run as worker
 
 
+CLIENT_DETAILS = {"first_name": "Test", "last_name": "Applicant", "dob": "1990-01-01",
+                  "phone": "+1 202 555 0142", "email": "contact@example.com"}
+
+
 @pytest.fixture()
 def client():
     cn = db.connect(); db.init(cn)
@@ -35,7 +39,7 @@ def make_paid(email):
 
 def test_signup_and_unpaid_cannot_add(client):
     assert signup(client).status_code == 303
-    r = client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890",
+    r = client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890",
                                     "csrf": csrf(client, "/app")})
     assert "subscribe first" in r.text.lower()
 
@@ -43,13 +47,13 @@ def test_signup_and_unpaid_cannot_add(client):
 def test_csrf_required(client):
     signup(client)
     make_paid("a@example.com")
-    r = client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": "x"})
+    r = client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": "x"})
     assert "session expired" in r.text.lower()
 
 
 def test_add_case_encrypts_and_queues_instant(client):
     signup(client); make_paid("a@example.com")
-    r = client.post("/cases", data={"a_numbers": "a123-456-789, 98765432", "receipt": "zar 1234567890",
+    r = client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "a123-456-789, 98765432", "receipt": "zar 1234567890",
                                     "label": "Fam", "csrf": csrf(client, "/app")})
     assert "Case added" in r.text
     cn = db.connect()
@@ -63,13 +67,13 @@ def test_add_case_encrypts_and_queues_instant(client):
 
 def test_bad_receipt_rejected(client):
     signup(client); make_paid("a@example.com")
-    r = client.post("/cases", data={"a_numbers": "A123456789", "receipt": "123", "csrf": csrf(client, "/app")})
+    r = client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "123", "csrf": csrf(client, "/app")})
     assert "Receipt numbers look like" in r.text
 
 
 def test_other_user_cannot_touch_case(client):
     signup(client, "a@example.com"); make_paid("a@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
     cid = db.connect().execute("SELECT id FROM cases").fetchone()["id"]
     client.post("/logout")
     other = TestClient(app)
@@ -81,7 +85,7 @@ def test_other_user_cannot_touch_case(client):
 
 def test_instant_limit(client):
     signup(client); make_paid("a@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
     cn = db.connect(); cid = cn.execute("SELECT id FROM cases").fetchone()["id"]
     cn.execute("UPDATE jobs SET state='done'")
     t = csrf(client, "/app")
@@ -113,7 +117,7 @@ def test_square_webhook_activates_by_email(client, monkeypatch):
 
 def _setup_case(client):
     signup(client); make_paid("a@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
     return db.connect()
 
 
@@ -190,7 +194,7 @@ def test_eoir_staff_queue(client, monkeypatch):
     sent = []
     monkeypatch.setattr(mailer, "send", lambda to, subj, body: sent.append(subj))
     signup(client, "admin@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890",
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890",
                                 "nationality": "Burma", "csrf": csrf(client, "/app")})
     q = client.get("/admin/eoir")
     assert "A123456789" in q.text and q.headers["cache-control"] == "no-store"
@@ -204,7 +208,7 @@ def test_eoir_staff_queue(client, monkeypatch):
     assert c["eoir_status"] == "CASE_FOUND" and "DOE" not in c["eoir_fields"] and c["eoir_next_at"]
     assert sent and "Immigration court" in sent[0]
     assert "A123456789" not in client.get("/admin/eoir").text   # not due again for 30 days
-    assert "Next hearing March 3, 2027" in client.get("/app").text
+    assert "Next hearing March 3, 2027" not in client.get("/app").text
 
 
 def test_eoir_queue_admin_only(client):
@@ -223,7 +227,7 @@ def test_eoir_hidden_when_disabled(client):
 
 def test_status_reports_progress(client):
     signup(client); make_paid("a@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
     c = client.get("/cases/status").json()["cases"][0]
     assert c["busy"] and c["progress"] == 5 and c["stage"].startswith("Waiting in line")
     cn = db.connect()
@@ -234,7 +238,7 @@ def test_status_reports_progress(client):
 
 def test_aaf_rechecks_daily(client):
     signup(client); make_paid("a@example.com")
-    client.post("/cases", data={"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": csrf(client, "/app")})
     cn = db.connect()
     worker.process(cn, worker.claim(cn), lambda a, r: ("NOT_DUE", "", "", a[0]))
     nxt = db.parse(cn.execute("SELECT next_check_at FROM cases").fetchone()["next_check_at"])
@@ -252,7 +256,11 @@ def test_redesign_keeps_case_privacy_and_post_contracts(client):
     assert "A987654321" not in html and "ZLA9876543210" not in html
     assert "&lt;script&gt;" in html and '<script>alert("example")</script>' not in html
     assert f'data-case="{cid}"' in html and 'data-stepper' in html
-    for action in ("/cases", f"/cases/{cid}/check", f"/cases/{cid}/delete", "/account/delete"):
+    assert 'href="/cases/new"' in html
+    intake = client.get("/cases/new")
+    assert intake.status_code == 200 and "no-store" in intake.headers["cache-control"]
+    assert re.search(r'<form[^>]*method="post"[^>]*action="/cases".*?name="csrf"', intake.text, re.S)
+    for action in (f"/cases/{cid}/check", f"/cases/{cid}/delete", "/account/delete"):
         form = re.search(r'<form\b[^>]*action="' + re.escape(action) + r'"[^>]*>.*?</form>', html, re.S)
         assert form, action
         assert 'method="post"' in form.group() and 'name="csrf"' in form.group()

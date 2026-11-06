@@ -7,7 +7,7 @@ import re
 import time
 from collections import defaultdict
 from contextlib import closing
-from datetime import timedelta
+from datetime import date, timedelta
 from urllib.parse import urlparse
 
 from cryptography.fernet import InvalidToken
@@ -199,7 +199,7 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
     if throttled(client_ip(request)):
         return redirect("/signup", "Too many attempts. Try again in 15 minutes.", request)
     email = email.strip().lower()
-    if "@" not in email or len(email) > 200:
+    if len(email) > 200 or not security.valid_email(email):
         return redirect("/signup", "Enter a valid email address.", request)
     if len(password) < 10:
         return redirect("/signup", "Use a password of at least 10 characters.", request)
@@ -361,39 +361,90 @@ def _can_use(u) -> bool:
     return db.is_paid(u) or is_admin(u)
 
 
+def _client_details(first_name, last_name, dob, phone, email):
+    first_name, last_name = (" ".join(name.split()) for name in (first_name, last_name))
+    if not first_name or not last_name or max(len(first_name), len(last_name)) > 100:
+        raise ValueError("Enter a first and last name of up to 100 characters each.")
+    try:
+        birth_date = date.fromisoformat(dob)
+    except ValueError:
+        raise ValueError("Enter a valid date of birth.") from None
+    if birth_date.isoformat() != dob or birth_date > date.today():
+        raise ValueError("Enter a valid date of birth.")
+    phone = security.normalize_contact_phone(phone)
+    email = email.strip()
+    if not security.valid_email(email):
+        raise ValueError("Enter a valid contact email.")
+    return {"first_name": first_name, "last_name": last_name, "dob": dob,
+            "phone": phone, "email": email}
+
+
+def _case_intake(request, user, *, error=None, **values):
+    response = render(request, "case_new.html", user=user, error=error,
+                      details=values, label=values.get("label", ""),
+                      a_numbers=values.get("a_numbers", ""), receipt=values.get("receipt", ""))
+    response.headers["Cache-Control"] = "no-store, private"
+    if error:
+        response.status_code = 422
+    return response
+
+
+@app.get("/cases/new", response_class=HTMLResponse)
+def new_case(request: Request):
+    cn = get_db()
+    try:
+        user = current_user(request, cn)
+        if not user:
+            return redirect("/login")
+        if not _can_use(user):
+            return redirect("/subscribe")
+        return _case_intake(request, user, email=user["email"])
+    finally:
+        cn.close()
+
+
 @app.post("/cases")
 def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...),
-             receipt: str = Form(...), nationality: str = Form(""), csrf: str = Form("")):
+             receipt: str = Form(...), nationality: str = Form(""), csrf: str = Form(""),
+             first_name: str = Form(""), last_name: str = Form(""), dob: str = Form(""),
+             phone: str = Form(""), email: str = Form("")):
     cn = get_db()
-    u = current_user(request, cn)
-    if not u:
-        return redirect("/login")
-    if not security.csrf_ok(request.session, csrf):
-        return redirect("/app", "Your session expired. Please try again.", request)
-    if not _can_use(u):
-        return redirect("/app", "Please subscribe first to add a case.", request)
     try:
-        anums = security.normalize_a_numbers(a_numbers)
-        rcpt = security.normalize_receipt(receipt)
-    except ValueError as e:
-        return redirect("/app", str(e), request)
-    total = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=?", (u["id"],)).fetchone()["c"]
-    if total >= config.MAX_CASES_PER_USER:
-        return redirect("/app", f"You can track up to {config.MAX_CASES_PER_USER} cases.", request)
-    since = db.iso(db.now() - timedelta(days=1))
-    today = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=? AND created_at>?",
-                       (u["id"], since)).fetchone()["c"]
-    if today >= config.NEW_CASES_PER_DAY:
-        return redirect("/app", "You have added the most cases allowed today. Try again tomorrow.", request)
-    with db.tx(cn):
-        cur = cn.execute(
-            "INSERT INTO cases(user_id,label,a_numbers_enc,receipt_enc,a_last3,receipt_last4,created_at,nationality) "
-            "VALUES(?,?,?,?,?,?,?,?)",
-            (u["id"], (label or "My case").strip()[:60], security.encrypt(";".join(anums)),
-             security.encrypt(rcpt), anums[0][-3:], rcpt[-4:], db.iso(db.now()),
-             (re.sub(r"[^A-Za-z ()'.-]", "", nationality).strip()[:60] or None) if config.EOIR_ENABLED else None))
-        db.enqueue(cn, cur.lastrowid, "new")
-    return redirect("/app", "Case added. Checking with USCIS now; this usually takes under a minute.", request)
+        u = current_user(request, cn)
+        if not u:
+            return redirect("/login")
+        if not security.csrf_ok(request.session, csrf):
+            return redirect("/app", "Your session expired. Please try again.", request)
+        if not _can_use(u):
+            return redirect("/app", "Please subscribe first to add a case.", request)
+        try:
+            anums = security.normalize_a_numbers(a_numbers)
+            rcpt = security.normalize_receipt(receipt)
+            details = _client_details(first_name, last_name, dob, phone, email)
+        except ValueError as e:
+            return _case_intake(request, u, error=str(e), label=label, a_numbers=a_numbers,
+                                receipt=receipt, first_name=first_name, last_name=last_name,
+                                dob=dob, phone=phone, email=email)
+        total = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=?", (u["id"],)).fetchone()["c"]
+        if total >= config.MAX_CASES_PER_USER:
+            return redirect("/app", f"You can track up to {config.MAX_CASES_PER_USER} cases.", request)
+        since = db.iso(db.now() - timedelta(days=1))
+        today = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=? AND created_at>?",
+                           (u["id"], since)).fetchone()["c"]
+        if today >= config.NEW_CASES_PER_DAY:
+            return redirect("/app", "You have added the most cases allowed today. Try again tomorrow.", request)
+        with db.tx(cn):
+            cur = cn.execute(
+                "INSERT INTO cases(user_id,label,a_numbers_enc,receipt_enc,a_last3,receipt_last4,created_at,nationality,client_details_enc) "
+                "VALUES(?,?,?,?,?,?,?,?,?)",
+                (u["id"], (label or "My case").strip()[:60], security.encrypt(";".join(anums)),
+                 security.encrypt(rcpt), anums[0][-3:], rcpt[-4:], db.iso(db.now()),
+                 (re.sub(r"[^A-Za-z ()'.-]", "", nationality).strip()[:60] or None) if config.EOIR_ENABLED else None,
+                 security.encrypt(json.dumps(details))))
+            db.enqueue(cn, cur.lastrowid, "new")
+        return redirect("/app", "Case added. Your first asylum fee and USCIS status checks are queued.", request)
+    finally:
+        cn.close()
 
 
 # A check counts as "in progress" while it runs or waits to run now. The next
@@ -407,6 +458,48 @@ def _own_case(cn, u, case_id):
 
 def _wants_json(request: Request) -> bool:
     return "application/json" in request.headers.get("accept", "")
+
+
+@app.get("/cases/{case_id}/details", response_class=HTMLResponse)
+@app.post("/cases/{case_id}/details", response_class=HTMLResponse)
+def case_details(request: Request, case_id: int, csrf: str = Form(""),
+                 first_name: str = Form(""), last_name: str = Form(""), dob: str = Form(""),
+                 phone: str = Form(""), email: str = Form("")):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not user:
+            return redirect("/login")
+        if not _can_use(user):
+            return redirect("/subscribe")
+        case = _own_case(cn, user, case_id)
+        if not case:
+            return Response(status_code=404)
+        error = None
+        if request.method == "POST":
+            if not security.csrf_ok(request.session, csrf):
+                return Response(status_code=403)
+            try:
+                details = _client_details(first_name, last_name, dob, phone, email)
+            except ValueError as exc:
+                error = str(exc)
+                details = {"first_name": first_name[:100], "last_name": last_name[:100],
+                           "dob": dob[:10], "phone": phone[:40], "email": email[:254]}
+            else:
+                saved = cn.execute("UPDATE cases SET client_details_enc=? WHERE id=? AND user_id=?",
+                                   (security.encrypt(json.dumps(details)), case_id, user["id"]))
+                if saved.rowcount != 1:
+                    return Response(status_code=404)
+                return redirect("/app", "Case details saved.", request)
+        else:
+            try:
+                encrypted = case["client_details_enc"]
+                details = json.loads(security.decrypt(encrypted)) if encrypted else {"email": user["email"]}
+            except (InvalidToken, ValueError):
+                return Response("Saved case details are temporarily unavailable.", status_code=503)
+        response = render(request, "case_details.html", user=user, case=case, details=details,
+                          error=error, admin=is_admin(user))
+        response.headers["Cache-Control"] = "no-store, private"
+        return response
 
 
 @app.get("/cases/{case_id}/ice", response_class=HTMLResponse)

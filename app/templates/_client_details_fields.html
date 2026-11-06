@@ -1,0 +1,6 @@
+<label>First name <input name="first_name" required maxlength="100" autocomplete="given-name" value="{{ details.first_name or '' }}"></label>
+<label>Last name <input name="last_name" required maxlength="100" autocomplete="family-name" value="{{ details.last_name or '' }}"></label>
+<label>Date of birth <input type="date" name="dob" required autocomplete="bday" value="{{ details.dob or '' }}"></label>
+<label>Phone number <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ details.phone or '' }}" aria-describedby="phone-hint"><span class="hint" id="phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</span></label>
+<label>Contact email <input type="email" name="email" required maxlength="254" autocomplete="email" value="{{ details.email or '' }}"></label>
+<p class="hint">Case alerts go to the email address you use to sign in.</p>

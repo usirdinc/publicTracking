@@ -3,8 +3,9 @@
 <div class="landing">
 <section class="hero">
   <div class="hero-copy">
-    <h1>Track your asylum fee and USCIS case status</h1>
-    <p class="lead">Add your A-Number and I-589 receipt once. We check your Annual Asylum Fee and your USCIS case status every day, and email you when anything changes.</p>
+    <span class="eyebrow">USIRD CASE TRACKER</span>
+    <h1>Know when your asylum fee or USCIS case status changes</h1>
+    <p class="lead">One dashboard for your Annual Asylum Fee and USCIS I-589 case status. We check daily and email you when we find a change.</p>
     <div class="cta-row">
       <a class="btn lg" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start tracking for ' ~ price ~ '/month' }}</a>
       {% if not user %}<a class="btn lg ghost" href="#how">How it works</a>{% endif %}
@@ -16,13 +17,14 @@
     </div>
   </div>
   <section class="panel case-example" aria-labelledby="example-heading">
-    <h2 id="example-heading">Example case</h2>
+    <span class="eyebrow">SAMPLE DASHBOARD</span>
+    <h2 id="example-heading">Family asylum application</h2>
     <dl>
       <div><dt>Annual Asylum Fee</dt><dd><span class="badge tone-ok">Not due</span></dd></div>
       <div><dt>USCIS case status</dt><dd>Case Was Received</dd></div>
       <div><dt>Form</dt><dd class="mono">I-589</dd></div>
     </dl>
-    <p>Automatic checks run daily.</p>
+    <p>{{ icon('clock') }} Checked daily. USCIS history is shown when available.</p>
   </section>
 </section>
 
@@ -30,7 +32,7 @@
   <div class="section-head"><h2>How it works</h2></div>
   <div class="grid-3 steps">
     <div class="card step"><h3>Create an account</h3><p>Sign up with your email and start your monthly plan.</p></div>
-    <div class="card step"><h3>Add your case</h3><p>Enter your A-Number and I-589 receipt number. Families can add every A-Number.</p></div>
+    <div class="card step"><h3>Add your case</h3><p>After payment, enter the primary applicant’s details, A-Number, and I-589 receipt number. Add family A-Numbers on the same application.</p></div>
     <div class="card step"><h3>Get alerts</h3><p>We check every day and email you when your fee or case status changes.</p></div>
   </div>
 </section>
@@ -38,8 +40,8 @@
 <section class="section">
   <div class="section-head"><h2>Tracking features</h2></div>
   <div class="grid-3">
-    <div class="card feature"><div class="ico">{{ icon('cash') }}</div><h3>Asylum fee alerts</h3><p>Know as soon as your Annual Asylum Fee is due, and how much.</p></div>
-    <div class="card feature"><div class="ico">{{ icon('doc') }}</div><h3>USCIS case status</h3><p>Your latest case status from USCIS, with the full description.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('cash') }}</div><h3>Asylum fee alerts</h3><p>See whether the Annual Asylum Fee is due and the amount USCIS reports.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('doc') }}</div><h3>USCIS case status</h3><p>Read the latest USCIS status and description, plus case history when USCIS provides it.</p></div>
     <div class="card feature"><div class="ico">{{ icon('bell') }}</div><h3>Email alerts</h3><p>We email you when something changes. No need to keep checking.</p></div>
     <div class="card feature"><div class="ico">{{ icon('bolt') }}</div><h3>Check anytime</h3><p>Request a fresh check from your dashboard and follow its progress.</p></div>
     <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to {{ max_cases }} cases on one account.</p></div>
@@ -54,7 +56,7 @@
     <ul class="checks">
       <li>{{ icon('check') }} Daily asylum fee and USCIS case checks</li>
       <li>{{ icon('check') }} Email alerts when anything changes</li>
-      <li>{{ icon('check') }} Instant checks from your dashboard</li>
+      <li>{{ icon('check') }} On-demand checks from your dashboard</li>
       <li>{{ icon('check') }} Up to {{ max_cases }} cases per account</li>
     </ul>
     <a class="btn lg block" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Get started' }}</a>
@@ -64,10 +66,10 @@
 
 <section class="section">
   <div class="section-head"><h2>Frequently asked questions</h2></div>
-  <div class="faq" id="questions">
+  <div class="faq card" id="questions">
     <details><summary>Where does the information come from?</summary><p>The asylum fee status comes from the official USCIS Annual Asylum Fee page. The case status comes from the official USCIS case status service. We check them for you and show the result.</p></details>
     <details><summary>Do you pay the fee for me?</summary><p>No. We tell you when a fee is due. You pay only on the official USCIS website.</p></details>
-    <details><summary>Do I need my USCIS account password?</summary><p>No. We only need your A-Number and I-589 receipt number.</p></details>
+    <details><summary>Do I need my USCIS account password?</summary><p>No. You enter your applicant and contact details, A-Number, and I-589 receipt number in your USIRD account.</p></details>
     <details><summary>Is this legal advice?</summary><p>No. USIRD Case Tracker is an information service. For advice about your case, talk to an immigration attorney or accredited representative.</p></details>
     <details><summary>How do I cancel?</summary><p>Cancel your Square subscription anytime. You can also delete your account and all case data from your dashboard.</p></details>
   </div>

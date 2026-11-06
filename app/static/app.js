@@ -22,13 +22,6 @@
     f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); });
   });
 
-  document.querySelectorAll('[data-open-add]').forEach(function (a) {
-    a.addEventListener('click', function () {
-      var d = document.getElementById('add');
-      if (d) { d.open = true; setTimeout(function () { var i = d.querySelector('input[name=label]'); if (i) i.focus(); }, 50); }
-    });
-  });
-
   // ---- relative times ("5 min ago", "tomorrow")
   function rel(iso) {
     var t = Date.parse(iso); if (isNaN(t)) return null;

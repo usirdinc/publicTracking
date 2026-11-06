@@ -50,6 +50,28 @@ def csrf_ok(session: dict, sent: str | None) -> bool:
     return bool(tok and sent and hmac.compare_digest(tok, sent))
 
 
+def valid_email(value: str) -> bool:
+    local, separator, domain = value.rpartition("@")
+    return bool(separator and len(value) <= 254 and len(local) <= 64
+                and re.fullmatch(r"[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*", local)
+                and re.fullmatch(r"(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]", domain))
+
+
+def normalize_contact_phone(value: str) -> str:
+    value = value.strip()
+    error = "Enter a 10-digit US or Canadian number, or an international number starting with + and its country code."
+    if not re.fullmatch(r"\+?[0-9(). -]{7,40}", value):
+        raise ValueError(error)
+    digits = re.sub(r"[^0-9]", "", value)
+    if not value.startswith("+") and len(digits) == 10:
+        digits = "1" + digits
+    if (not value.startswith("+") and not re.fullmatch(r"1[0-9]{10}", digits)
+            or not re.fullmatch(r"[1-9][0-9]{7,14}", digits)
+            or digits.startswith("1") and not re.fullmatch(r"1[2-9][0-9]{2}[2-9][0-9]{6}", digits)):
+        raise ValueError(error)
+    return "+" + digits
+
+
 A_RE = re.compile(r"^A?\d{8,9}$")
 RECEIPT_RE = re.compile(r"^[A-Z]{3}\d{10}$")
 
