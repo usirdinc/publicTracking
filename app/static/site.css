@@ -724,16 +724,6 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 
 /* Muted blue and warm paper retain the formal office theme. */
 :root { --bg: #f5f4f0; --surface-2: #f2f4f5; --primary: #284f66; --primary-hover: #1d3a4e; --primary-soft: #eaf0f4; }
-.landing-photo { margin: 0; align-self: center; overflow: hidden; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
-.landing-photo > img { display: block; width: 100%; height: auto; }
-.landing-photo figcaption { padding: 14px 18px 0; font-size: 16px; }
-.photo-service-summary { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 14px 18px 18px; color: var(--fg-2); font-size: 13px; }
-.photo-service-summary svg { width: 16px; height: 16px; color: var(--primary); margin-right: 4px; }
-.notice-story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
-.notice-story p { color: var(--fg-2); max-width: 52ch; }
-.notice-photo { margin: 0; }
-.notice-photo img { width: 100%; display: block; border-radius: 6px; }
-.notice-photo figcaption, .number-example figcaption { margin-top: 8px; font-size: 12px; color: var(--muted); }
 .text-resource { display: block; margin-top: 12px; font-size: 13px; }
 .payment-guide-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
 .payment-guide-actions > a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
@@ -778,11 +768,33 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
   :root { --bg: #10171c; --surface-2: #1b252d; --primary: #a8cce0; --primary-hover: #c0dce9; --primary-soft: #20333e; --on-primary: #152631; }
 }
 @media (max-width: 620px) {
-  .notice-story { grid-template-columns: minmax(0,1fr); gap: 20px; }
   .number-definitions, .payment-branches { grid-template-columns: minmax(0,1fr); }
   .guide-heading, .guide-content { padding: 18px; }
   .guide-heading h2 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .tracking-guide-dialog[open] { animation: detail-enter 160ms ease-out; }
+}
+
+
+/* Use the established USIRD identity and document imagery in context. */
+.brand .usird-logo { display: block; width: 42px; height: 42px; object-fit: contain; flex: none; }
+.footer-brand { display: inline-flex; align-items: center; gap: 8px; }
+.footer-brand img { object-fit: contain; flex: none; }
+.document-context-intro { max-width: 65ch; margin-bottom: 24px; }
+.document-context-intro p, .receipt-context > p { color: var(--fg-2); }
+.document-context-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: clamp(24px, 4vw, 48px); align-items: start; }
+.supporting-application-photo { margin: 0; }
+.supporting-application-photo > img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.supporting-application-photo figcaption { margin-top: 10px; max-width: 48ch; font-size: 13px; color: var(--muted); }
+.receipt-context h3 { font-size: 23px; }
+.receipt-preview-button { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); cursor: zoom-in; margin: 16px 0 8px; }
+.receipt-preview-button img { display: block; width: 100%; height: auto; }
+.receipt-preview-button:hover { border-color: var(--line-strong); }
+@media (max-width: 620px) {
+  .document-context-grid { grid-template-columns: minmax(0, 1fr); }
+  .supporting-application-photo { max-width: 480px; }
+}
+@media (max-width: 380px) {
+  .brand .usird-logo { width: 36px; height: 36px; }
 }

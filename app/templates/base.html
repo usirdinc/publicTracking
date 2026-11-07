@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6a001b">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="/static/images/usird-logo.png">
 <title>
 {% block title %}
   USIRD Case Tracker
 {% endblock %}
 </title>
 <meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
-<link rel="stylesheet" href="/static/site.css?v=20261107-notice-guides">
+<link rel="stylesheet" href="/static/site.css?v=20261107-usird-brand">
 {% if request.url.path != '/subscribe' %}
 <link rel="stylesheet" href="/static/navigation.css?v=20261106-motion" media="(prefers-reduced-motion: no-preference)">
 {% endif %}
@@ -20,7 +21,7 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><span class="logo">{{ icon('shield') }}</span><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span></a>
+    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><img class="usird-logo" src="/static/images/usird-logo.png" width="42" height="42" alt=""><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span></a>
     <nav aria-label="Main navigation">
       {% if user %}
         <a href="/app"
@@ -71,7 +72,7 @@
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div>
-      <a class="footer-brand" href="/">USIRD Case Tracker </a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+      <a class="footer-brand" href="/"><img src="/static/images/usird-logo.png" width="28" height="28" alt=""> USIRD Case Tracker</a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
     </div>
     <nav aria-label="Footer navigation">
       <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a>

@@ -16,14 +16,15 @@
       <span>{{ icon('check') }} Encrypted case numbers</span>
     </div>
   </div>
-  <figure class="landing-photo">
-    <img src="/static/images/asylum-application.webp" width="1024" height="436" alt="An American flag above the title of Form I-589">
-    <figcaption>Your application. Your updates. One place to keep track.</figcaption>
-    <div class="photo-service-summary">
-      <span>{{ icon('cash') }} Annual Asylum Fee</span>
-      <span>{{ icon('doc') }} USCIS case updates</span>
-    </div>
-  </figure>
+  <section class="panel case-example" aria-labelledby="example-heading">
+    <h2 id="example-heading">Your case at a glance</h2>
+    <dl>
+      <div><dt>Annual Asylum Fee</dt><dd><span class="badge tone-ok">Not due</span></dd></div>
+      <div><dt>USCIS case status</dt><dd>Case Was Received</dd></div>
+      <div><dt>Application</dt><dd class="mono">I-589</dd></div>
+    </dl>
+    <p>Illustrative case. Your dashboard shows the information returned for your application.</p>
+  </section>
 </section>
 
 <section class="section" id="how">
@@ -47,16 +48,26 @@
   </div>
 </section>
 
-<section class="section notice-story" aria-labelledby="notice-story-heading">
-  <figure class="notice-photo">
-    <img src="/static/images/receipt-notice.webp" width="1024" height="456" loading="lazy" alt="A USCIS notice photograph with identifying information permanently covered">
-    <figcaption>Document illustration with identifying details removed.</figcaption>
-  </figure>
-  <div>
-    <h2 id="notice-story-heading">Find the numbers on your USCIS notice</h2>
-    <p>Your A-Number identifies the person. The receipt number identifies the application. Our labeled example shows where to find each one.</p>
-    <button class="btn ghost" data-open-guide="number-guide" type="button" hidden>See a receipt example {{ icon('arrow') }}</button>
-    <a class="text-resource" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">Open the redacted receipt example (PDF)</a>
+<section class="section document-context" aria-labelledby="document-context-heading">
+  <div class="document-context-intro">
+    <h2 id="document-context-heading">From your application to your USCIS notices</h2>
+    <p>Use your I-589 receipt notice to find the numbers needed for tracking.</p>
+  </div>
+  <div class="document-context-grid">
+    <figure class="supporting-application-photo">
+      <img src="/static/images/asylum-application.webp" width="1024" height="436" loading="lazy" alt="An American flag and the printed title of Form I-589">
+      <figcaption>Form I-589, Application for Asylum and for Withholding of Removal.</figcaption>
+    </figure>
+    <div class="receipt-context">
+      <h3>Know which numbers to enter</h3>
+      <p>Your A-Number identifies the person. The receipt number identifies the application.</p>
+      <button class="receipt-preview-button" type="button" data-open-guide="number-guide" hidden aria-label="Open the labeled receipt notice example">
+        <img src="/static/examples/receipt-number-guide.webp" width="991" height="273" loading="lazy" alt="Receipt notice example with the receipt number and A-Number fields highlighted">
+      </button>
+      <p class="hint">Redacted example with illustrative numbers.</p>
+      <button class="btn ghost" data-open-guide="number-guide" type="button" hidden>Find my numbers {{ icon('arrow') }}</button>
+      <a class="text-resource" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">Open the redacted receipt example (PDF)</a>
+    </div>
   </div>
 </section>
 
