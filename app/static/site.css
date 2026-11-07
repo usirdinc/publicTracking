@@ -486,13 +486,25 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 
 
 @media (prefers-reduced-motion: no-preference) {
-  .btn {
-    transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+  /* Give every native control the same quick response. */
+  button, .btn, summary, input:not([type="hidden"]), textarea, select {
+    transition: background-color 140ms ease-out, border-color 140ms ease-out,
+      color 140ms ease-out, translate 120ms ease-out, opacity 140ms ease-out;
   }
-  .btn:not(:disabled):active { transform: translateY(1px); }
-  input, textarea, select { transition: border-color 120ms ease; }
-  .case-tablist button {
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  button:not(:disabled):active, .btn:not(:disabled):active, summary:active,
+  input[type="checkbox"]:not(:disabled):active {
+    translate: 0 2px;
+  }
+  a:not(.btn) {
+    transition: color 140ms ease-out, text-decoration-color 140ms ease-out, opacity 120ms ease-out;
+  }
+  a:not(.btn):active { opacity: .72; }
+  .btn svg, .faq summary::after { transition: transform 160ms ease-out; }
+  .btn:not(:disabled):active svg { transform: scale(.9); }
+  .faq details[open] > summary::after { transform: rotate(180deg); }
+  .uscis-explanation:not([open]) > summary { margin-bottom: 0; }
+  .payment-message:not(:empty), .waiting:not([hidden]) {
+    animation: detail-enter 160ms ease-out both;
   }
   .tab-enter, .faq details[open] > p, .account-options[open] > :not(summary) {
     animation: detail-enter 160ms ease-out both;
