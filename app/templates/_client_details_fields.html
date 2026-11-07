@@ -1,12 +1,22 @@
-<label>First name <input data-intake-field name="first_name" autocapitalize="words" required maxlength="100" autocomplete="given-name" value="{{ details.first_name or '' }}"></label>
-<label>Last name <input data-intake-field name="last_name" autocapitalize="words" required maxlength="100" autocomplete="family-name" value="{{ details.last_name or '' }}"></label>
-<div class="birth-field">
-  <label for="birth-date">Date of birth</label>
-  <div class="birth-control">
-    <input id="birth-date" data-intake-field type="date" name="dob" required autocomplete="bday" value="{{ details.dob or '' }}">
-    <button type="button" class="btn ghost small" data-open-birthday hidden>Use dial</button>
+<fieldset data-intake-step>
+  <legend tabindex="-1">Who are you tracking?</legend>
+  <p class="hint">Use the primary applicant’s name as it appears on the application.</p>
+  <div class="intake-fields">
+    <label>First name <input data-intake-field name="first_name" autocapitalize="words" required maxlength="100" autocomplete="given-name" value="{{ details.first_name or '' }}"></label>
+    <label>Last name <input data-intake-field name="last_name" autocapitalize="words" required maxlength="100" autocomplete="family-name" value="{{ details.last_name or '' }}"></label>
   </div>
-</div>
+</fieldset>
+<fieldset data-intake-step>
+  <legend tabindex="-1">When were they born?</legend>
+  <div class="intake-fields">
+    <label>Date of birth <input id="birth-date" data-intake-field type="date" name="dob" required autocomplete="bday" value="{{ details.dob or '' }}"></label>
+  </div>
+</fieldset>
+<fieldset data-intake-step>
+  <legend tabindex="-1">Contact details</legend>
+  <div class="intake-fields">
 <label>Phone number <input data-intake-field type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ details.phone or '' }}" aria-describedby="phone-hint"><span class="hint" id="phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</span></label>
 <label>Contact email <input data-intake-field type="email" name="email" required maxlength="254" autocomplete="email" value="{{ details.email or '' }}"></label>
 <p class="hint">Case alerts go to the email address you use to sign in.</p>
+  </div>
+</fieldset>

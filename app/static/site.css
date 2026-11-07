@@ -448,8 +448,6 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .tracking-view .tile-value { margin-top: 6px; }
 .tracking-view .pay-note { margin: 12px 0 0; border: 1px solid var(--line); }
 .tracking-view .source-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
-.uscis-explanation { margin-top: 10px; }
-.uscis-explanation summary { cursor: pointer; color: var(--primary); font-size: 13px; }
 .tracking-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
 .tracking-actions .when { margin-right: auto; }
 .tracking-future p { margin: 0; }
@@ -502,7 +500,6 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
   .btn svg, .faq summary::after { transition: transform 160ms ease-out; }
   .btn:not(:disabled):active svg { transform: scale(.9); }
   .faq details[open] > summary::after { transform: rotate(180deg); }
-  .uscis-explanation:not([open]) > summary { margin-bottom: 0; }
   .payment-message:not(:empty), .waiting:not([hidden]) {
     animation: detail-enter 160ms ease-out both;
   }
@@ -524,23 +521,7 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .intake-fields [name="a_numbers"], .intake-fields [name="receipt"] { font-variant-numeric: tabular-nums; }
 .field-feedback { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 400; }
 .field-feedback:empty { display: none; }
-[aria-invalid="true"] + .field-feedback,
-.birth-control:has([aria-invalid="true"]) + .field-feedback { color: var(--due); }
-.birth-control { display: flex; align-items: center; gap: 8px; }
-.birth-control input { min-width: 0; }
-.birth-control button { white-space: nowrap; }
-.birth-control button[hidden] { display: none; }
-.birthday-dial { width: min(400px, calc(100% - 24px)); border: 1px solid var(--line); border-radius: 12px; padding: 20px; color: var(--fg); background: var(--surface); box-shadow: var(--shadow); }
-.birthday-dial::backdrop { background: rgb(0 0 0 / .35); }
-.dial-columns { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 10px; margin-block: 16px; }
-.dial-column { min-width: 0; text-align: center; }
-.dial-column button { width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--fg); cursor: pointer; }
-.dial-column input { text-align: center; margin-block: 4px; font-variant-numeric: tabular-nums; font-size: 17px; padding-inline: 4px; touch-action: none; }
-.dial-actions { display: flex; justify-content: flex-end; gap: 8px; }
-@media (prefers-reduced-motion: no-preference) {
-  .birthday-dial[open], .field-feedback:not(:empty) { animation: detail-enter 160ms ease-out both; }
-}
-
+[aria-invalid="true"] + .field-feedback { color: var(--due); }
 
 .profile-photo { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px 12px; align-items: center; margin-bottom: 16px; }
 .profile-photo img, .profile-photo canvas, .profile-initial { width: 52px; height: 52px; object-fit: cover; border-radius: 50%; }
@@ -575,11 +556,52 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .workspace-form fieldset + fieldset { border-top: 1px solid var(--line); padding-top: 12px; }
 .workspace-form legend { color: var(--fg); font-size: 16px; padding-right: 12px; }
 .workspace-form .intake-fields { row-gap: 16px; }
-.workspace-form .birth-control { margin-top: 7px; }
 .workspace-form .intake-footer { margin-top: 4px; }
 @media (max-width: 960px) {
   .workspace-aside:has(.workspace-account) { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 620px) {
   .case-views-overview { grid-template-columns: minmax(0, 1fr); }
+}
+
+
+/* Case cards use the same spacing and dividers as the intake form. */
+.case-list .case { box-shadow: var(--shadow); }
+.case-list .case-top { background: var(--surface); padding: 18px clamp(14px, 3vw, 24px); }
+.case-list .case-views { gap: 14px; padding: 16px clamp(12px, 3vw, 20px); }
+.case-list .tracking-view { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+.case-list .tracking-view h3 { padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.case-list .case-tablist { padding-inline: clamp(12px, 3vw, 20px); background: var(--surface-2); }
+.case-list .case-tablist button { min-height: 44px; }
+.case-list .workspace-case-actions { padding-inline: clamp(14px, 3vw, 24px); }
+.uscis-explanation { margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.uscis-explanation summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 42px; padding: 8px 13px; border-radius: 6px; list-style: none;
+  cursor: pointer; color: var(--fg); font-size: 13px; font-weight: 650;
+}
+.uscis-explanation summary::-webkit-details-marker { display: none; }
+.uscis-explanation summary:hover { color: var(--primary); }
+.disclosure-chevron { flex: none; width: 8px; height: 8px; margin-right: 3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.uscis-explanation[open] .disclosure-chevron { transform: rotate(225deg); }
+.uscis-explanation-body { padding: 12px 13px; border-top: 1px solid var(--line); background: var(--surface); border-radius: 0 0 6px 6px; }
+.uscis-explanation-body .uscis-description { margin: 0; line-height: 1.65; }
+@media (prefers-reduced-motion: no-preference) {
+  .disclosure-chevron { transition: transform 160ms ease-out; }
+  .uscis-explanation[open] .uscis-explanation-body { animation: detail-enter 160ms ease-out; }
+}
+
+
+.workspace-form [hidden] { display: none; }
+.intake-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+.intake-progress progress { width: 100%; height: 6px; accent-color: var(--primary); }
+.intake-progress span { white-space: nowrap; }
+.intake-guided fieldset + fieldset { border: 0; padding-top: 0; }
+.intake-guided legend { font-size: clamp(20px, 4vw, 25px); }
+.intake-guided legend:focus { outline: none; }
+.intake-guided .intake-fields { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+.intake-guided .intake-footer { justify-content: flex-end; }
+.intake-guided .intake-footer > span { width: 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  .intake-guided [data-intake-step]:not([hidden]) { animation: detail-enter 160ms ease-out; }
 }

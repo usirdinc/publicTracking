@@ -109,7 +109,13 @@
                     {{ c.uscis_status }}
                   </div>
                   {% if c.uscis_desc %}
-                    <details class="uscis-explanation" open><summary>What this means</summary><div class="uscis-description">{{ c.uscis_desc | uscis_description }}</div><p class="source-note">Source: USCIS · Information only, not legal advice.</p></details>
+                    <details class="uscis-explanation" open>
+                      <summary><span>What this means</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
+                      <div class="uscis-explanation-body">
+                        <div class="uscis-description">{{ c.uscis_desc | uscis_description }}</div>
+                        <p class="source-note">Source: USCIS · Information only, not legal advice.</p>
+                      </div>
+                    </details>
                   {% endif %}
                   <div class="tile-sub">
                     {% if c.uscis_modified %}

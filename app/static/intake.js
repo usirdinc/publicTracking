@@ -36,12 +36,23 @@
     receipt: value => !/^[A-Z]{3}[0-9]{10}$/i.test(value.replace(/[\s-]/g, ''))
       && 'Enter three letters followed by ten digits.',
   };
+  const steps = Array.from(form.querySelectorAll('[data-intake-step]'));
+  const back = form.querySelector('[data-intake-back]');
+  const next = form.querySelector('[data-intake-next]');
+  const submit = form.querySelector('[data-intake-submit]');
+  const cancel = form.querySelector('[data-intake-cancel]');
+  const progress = form.querySelector('[data-intake-progress]');
+  const position = progress.querySelector('[data-intake-position]');
+  const meter = progress.querySelector('progress');
+  const validators = new Map();
+  let current = 0;
+
   for (const field of form.querySelectorAll('[data-intake-field]')) {
     const feedback = document.createElement('span');
     feedback.className = 'field-feedback';
     feedback.id = field.name + '-feedback';
     feedback.setAttribute('aria-live', 'polite');
-    (field === date ? field.parentElement : field).after(feedback);
+    field.after(feedback);
     field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), feedback.id].filter(Boolean).join(' '));
 
     function validate() {
@@ -50,88 +61,64 @@
       field.setCustomValidity(error || '');
       field.setAttribute('aria-invalid', String(Boolean(error)));
       feedback.textContent = error || (field.name === 'receipt' || field.name === 'a_numbers' ? 'Format looks right' : '');
+      return !error;
     }
+    validators.set(field, validate);
     field.addEventListener('blur', validate);
     field.addEventListener('change', validate);
-    field.addEventListener('invalid', validate);
     field.addEventListener('input', () => {
       field.setCustomValidity('');
       field.removeAttribute('aria-invalid');
       feedback.textContent = '';
     });
-    form.addEventListener('submit', event => {
-      validate();
-      if (!field.validity.valid) event.preventDefault();
+  }
+
+  function showStep(index, focus = false) {
+    current = index;
+    steps.forEach((step, i) => { step.hidden = i !== index; });
+    position.textContent = `Step ${index + 1} of ${steps.length}`;
+    meter.value = index + 1;
+    back.hidden = index === 0;
+    if (cancel) cancel.hidden = index !== 0;
+    next.hidden = index === steps.length - 1;
+    submit.hidden = !next.hidden;
+    if (focus) steps[index].querySelector('legend').focus();
+  }
+
+  function firstInvalid(step) {
+    return Array.from(step.querySelectorAll('input')).find(field => {
+      const validate = validators.get(field);
+      return validate ? !validate() : !field.validity.valid;
     });
   }
-  form.addEventListener('submit', event => {
-    if (event.defaultPrevented) form.reportValidity();
-  });
 
-  const opener = document.querySelector('[data-open-birthday]');
-  const dial = document.createElement('dialog');
-  if (typeof dial.showModal !== 'function') return;
-  dial.className = 'birthday-dial';
-  dial.setAttribute('aria-labelledby', 'birthday-heading');
-  dial.innerHTML = `<h2 id="birthday-heading">Date of birth</h2>
-    <p class="hint">Swipe up or down on a value, use the arrows, or type it in.</p>
-    <div class="dial-columns"></div>
-    <div class="dial-actions">
-      <button type="button" class="btn ghost" data-dial-cancel>Cancel</button>
-      <button type="button" class="btn" data-dial-apply>Use date</button>
-    </div>`;
-  document.body.append(dial);
-  const columns = dial.querySelector('.dial-columns');
-  const apply = dial.querySelector('[data-dial-apply]');
-  const parts = ['Month', 'Day', 'Year'].map((name, index) => {
-    const column = document.createElement('div');
-    column.className = 'dial-column';
-    column.innerHTML = `<label for="dial-${index}">${name}</label>
-      <button type="button" aria-label="Increase ${name.toLowerCase()}">▲</button>
-      <input id="dial-${index}" type="number" inputmode="numeric" step="1" required>
-      <button type="button" aria-label="Decrease ${name.toLowerCase()}">▼</button>`;
-    columns.append(column);
-    const input = column.querySelector('input');
-    input.min = '1';
-    input.max = [12, 31, year][index];
-    const step = delta => {
-      input.value = Math.max(Number(input.min), Math.min(Number(input.max), (input.valueAsNumber || 1) + delta));
-      sync();
-    };
-    const buttons = column.querySelectorAll('button');
-    buttons[0].addEventListener('click', () => step(1));
-    buttons[1].addEventListener('click', () => step(-1));
-    input.addEventListener('input', () => sync());
-    let start;
-    input.addEventListener('touchstart', event => { start = event.touches[0].clientY; }, { passive: true });
-    input.addEventListener('touchend', event => {
-      const distance = start - event.changedTouches[0].clientY;
-      if (Math.abs(distance) < 18) return;
-      event.preventDefault();
-      step(Math.trunc(distance / 18));
-    }, { passive: false });
-    return input;
-  });
-
-  function sync() {
-    const [month, day, birthYear] = parts.map(input => input.valueAsNumber);
-    const leap = birthYear % 4 === 0 && (birthYear % 100 !== 0 || birthYear % 400 === 0);
-    parts[1].max = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1] || 31;
-    apply.disabled = !parts.every(input => input.validity.valid) || isoDate(birthYear, month, day) > date.max;
+  function advance() {
+    const invalid = firstInvalid(steps[current]);
+    if (invalid) invalid.focus();
+    else showStep(current + 1, true);
   }
 
-  opener.hidden = false;
-  opener.addEventListener('click', () => {
-    const [y, m, d] = (date.value || (year - 30) + '-01-01').split('-').map(Number);
-    [m, d, y].forEach((value, index) => { parts[index].value = value; });
-    sync();
-    dial.showModal();
-  });
-  dial.querySelector('[data-dial-cancel]').addEventListener('click', () => dial.close());
-  apply.addEventListener('click', () => {
-    const [month, day, birthYear] = parts.map(input => input.valueAsNumber);
-    date.value = isoDate(birthYear, month, day);
-    date.dispatchEvent(new Event('change', { bubbles: true }));
-    dial.close();
+  form.noValidate = true;
+  form.classList.add('intake-guided');
+  progress.hidden = false;
+  meter.max = steps.length;
+  showStep(0);
+  next.addEventListener('click', advance);
+  back.addEventListener('click', () => showStep(current - 1, true));
+  form.addEventListener('submit', event => {
+    if (current < steps.length - 1) {
+      event.preventDefault();
+      advance();
+      return;
+    }
+    for (const [index, step] of steps.entries()) {
+      const invalid = firstInvalid(step);
+      if (invalid) {
+        event.preventDefault();
+        showStep(index);
+        invalid.focus();
+        return;
+      }
+    }
   });
 })();
