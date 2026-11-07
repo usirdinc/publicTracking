@@ -723,7 +723,6 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 
 
 /* Payment and document guidance */
-:root { --bg: #f5f4f0; --surface-2: #f2f4f5; --primary: #284f66; --primary-hover: #1d3a4e; --primary-soft: #eaf0f4; }
 .text-resource { display: block; margin-top: 12px; font-size: 13px; }
 .payment-guide-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
 .payment-guide-actions > a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
@@ -764,9 +763,6 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .notice-attachments strong, .notice-attachments span { display: block; margin-inline: 12px; }
 .notice-attachments span { font-size: 13px; color: var(--muted); }
 .guide-source { border-top: 1px solid var(--line); padding-top: 16px; margin: 24px 0 0; color: var(--muted); font-size: 12px; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #10171c; --surface-2: #1b252d; --primary: #a8cce0; --primary-hover: #c0dce9; --primary-soft: #20333e; --on-primary: #152631; }
-}
 @media (max-width: 620px) {
   .number-definitions, .payment-branches { grid-template-columns: minmax(0,1fr); }
   .guide-heading, .guide-content { padding: 18px; }
