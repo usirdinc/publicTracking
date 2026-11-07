@@ -671,3 +671,31 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .result-empty { padding: 14px 0 8px; max-width: 52ch; }
 .result-empty-title { margin: 0 0 6px; font-weight: 600; font-size: 14px; }
 .result-empty .hint { margin: 0; }
+
+
+/* Distinguish fee, status, narrative, and history through surface and hierarchy. */
+.case-list .case-views { background: var(--bg); gap: 20px; padding: 20px; }
+.case-list .tracking-view { background: var(--surface); border-radius: 8px; padding: 0 20px 20px; }
+.result-section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; margin: 0 -20px 20px; border-radius: 7px 7px 0 0; background: var(--surface-2); }
+.case-list .result-section-header h3 { padding: 0; border: 0; margin: 0 0 3px; font-size: 16px; }
+.result-section-header p { margin: 0; font-size: 12px; color: var(--fg-2); }
+.result-section-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 8px; background: var(--surface); color: var(--primary); flex: none; }
+.result-section-icon svg { width: 20px; height: 20px; }
+[data-case-view="aaf"] .result-section-header { background: var(--primary-soft); }
+[data-case-view="status"] .result-section-header { background: var(--pending-soft); }
+[data-case-view="status"] .result-section-icon { color: var(--pending); }
+[data-case-view="description"] .result-section-header { background: var(--surface-2); }
+[data-case-view="history"] .result-section-header { background: var(--surface-2); }
+.case-list [data-case-view="aaf"] .tile-value,
+.case-list [data-case-view="status"] .tile-value { font-size: clamp(21px, 3vw, 25px); line-height: 1.35; margin-block: 14px; }
+.case-list .result-heading { margin-bottom: 14px; }
+.case-list .fee-amount { font-size: 36px; }
+.case-list .tracking-actions { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 18px; }
+.case-description-view .uscis-description { padding-inline: 2px; }
+.case-list .history-timeline { margin-top: 4px; }
+.case-list .history-event { padding: 0 0 4px 8px; }
+@media (max-width: 580px) {
+  .case-list .case-views { gap: 16px; padding: 12px; }
+  .case-list .tracking-view { padding-inline: 16px; }
+  .result-section-header { padding: 14px 16px; margin-inline: -16px; }
+}
