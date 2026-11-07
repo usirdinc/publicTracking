@@ -1,0 +1,13 @@
+{% from "_icons.html" import icon %}
+{#- Live check progress: a line that fills step to step, a traveling dot,
+    a pulsing current step, and icons that turn into checkmarks. app.js drives it. -#}
+{% macro stepper() -%}
+<div class="stepper" data-stepper>
+  <div class="st-track"><span class="st-fill" data-fill></span><span class="st-dot" data-dot></span></div>
+  <ol class="st-steps">
+    {%- for at, label, ico in [(0, 'Queue', 'clock'), (25, 'Open', 'lock'), (45, 'Enter', 'doc'), (75, 'Submit', 'bolt'), (90, 'Result', 'bell')] %}
+    <li data-at="{{ at }}"><span class="st-node"><span class="st-ico">{{ icon(ico) }}</span><span class="st-ok">{{ icon('check') }}</span></span><span class="st-label">{{ label }}</span></li>
+    {%- endfor %}
+  </ol>
+</div>
+{%- endmacro %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="landing">
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">USIRD CASE TRACKER</span>
+    <h1>Know when your asylum fee or USCIS case status changes</h1>
+    <p class="lead">One dashboard for your Annual Asylum Fee and USCIS I-589 case status. We check daily and email you when we find a change.</p>
+    <div class="cta-row">
+      <a class="btn lg" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Start tracking for ' ~ price ~ '/month' }}</a>
+      {% if not user %}<a class="btn lg ghost" href="#how">How it works</a>{% endif %}
+    </div>
+    <div class="trust">
+      <span>{{ icon('check') }} Cancel anytime</span>
+      <span>{{ icon('check') }} No USCIS password</span>
+      <span>{{ icon('check') }} Encrypted case numbers</span>
+    </div>
+  </div>
+  <section class="panel case-example" aria-labelledby="example-heading">
+    <h2 id="example-heading">Your case at a glance</h2>
+    <dl>
+      <div><dt>Annual Asylum Fee</dt><dd><span class="badge tone-ok">Not due</span></dd></div>
+      <div><dt>USCIS case status</dt><dd>Case Was Received</dd></div>
+      <div><dt>Application</dt><dd class="mono">I-589</dd></div>
+    </dl>
+    <p>Illustrative case. Your dashboard shows the information returned for your application.</p>
+  </section>
+</section>
+
+<section class="section" id="how">
+  <div class="section-head"><h2>How it works</h2></div>
+  <div class="grid-3 steps">
+    <div class="card step"><h3>Create an account</h3><p>Sign up with your email and start your monthly plan.</p></div>
+    <div class="card step"><h3>Add your case</h3><p>After payment, enter the primary applicant’s details, A-Number, and I-589 receipt number. Add family A-Numbers on the same application.</p></div>
+    <div class="card step"><h3>Get alerts</h3><p>We check every day and email you when your fee or case status changes.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Tracking features</h2></div>
+  <div class="grid-3">
+    <div class="card feature"><div class="ico">{{ icon('cash') }}</div><h3>Asylum fee alerts</h3><p>See whether the Annual Asylum Fee is due and the amount USCIS reports.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('doc') }}</div><h3>USCIS case status</h3><p>Read the latest USCIS status and description, plus case history when USCIS provides it.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('bell') }}</div><h3>Email alerts</h3><p>We email you when something changes. No need to keep checking.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('bolt') }}</div><h3>Check anytime</h3><p>Request a fresh check from your dashboard and follow its progress.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to {{ max_people }} people across {{ max_cases }} cases on one account.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('lock') }}</div><h3>Private and secure</h3><p>Your numbers are encrypted on our server. You can delete your case data anytime.</p></div>
+  </div>
+</section>
+
+<section class="section document-context" aria-labelledby="document-context-heading">
+  <div class="document-context-intro">
+    <h2 id="document-context-heading">From your application to your USCIS notices</h2>
+    <p>Use your I-589 receipt notice to find the numbers needed for tracking.</p>
+  </div>
+  <div class="document-context-grid">
+    <figure class="supporting-application-photo">
+      <img src="/static/images/asylum-application.webp" width="1024" height="436" loading="lazy" alt="An American flag and the printed title of Form I-589">
+      <figcaption>Form I-589, Application for Asylum and for Withholding of Removal.</figcaption>
+    </figure>
+    <div class="receipt-context">
+      <h3>Know which numbers to enter</h3>
+      <p>Your A-Number identifies the person. The receipt number identifies the application.</p>
+      <button class="receipt-preview-button" type="button" data-open-guide="number-guide" hidden aria-label="Open the labeled receipt notice example">
+        <img src="/static/examples/receipt-number-guide.webp" width="991" height="273" loading="lazy" alt="Receipt notice example with the receipt number and A-Number fields highlighted">
+      </button>
+      <p class="hint">Redacted example with illustrative numbers.</p>
+      <button class="btn ghost" data-open-guide="number-guide" type="button" hidden>Find my numbers {{ icon('arrow') }}</button>
+      <a class="text-resource" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">Open the redacted receipt example (PDF)</a>
+    </div>
+  </div>
+</section>
+
+<section class="section pricing-section" id="pricing">
+  <div class="pricing-copy"><h2>Monthly subscription</h2><p class="lead">Daily checks and email updates, without having to check the USCIS website yourself.</p><p class="muted">The subscription is for tracking. Any asylum fee is paid separately on the official USCIS website.</p></div>
+  <div class="card price">
+    <div><span class="amount">{{ price }}</span> <span class="per">/ month</span></div>
+    <ul class="checks">
+      <li>{{ icon('check') }} Daily asylum fee and USCIS case checks</li>
+      <li>{{ icon('check') }} Email alerts when anything changes</li>
+      <li>{{ icon('check') }} On-demand checks from your dashboard</li>
+      <li>{{ icon('check') }} Up to {{ max_people }} people and {{ max_cases }} cases per account</li>
+    </ul>
+    <a class="btn lg block" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Get started' }}</a>
+    <p class="muted small mt">Cancel anytime. Billed securely by Square.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Frequently asked questions</h2></div>
+  <div class="faq card" id="questions">
+    <details><summary>Where does the information come from?</summary><p>The asylum fee status comes from the official USCIS Annual Asylum Fee page. The case status comes from the official USCIS case status service. We check them for you and show the result.</p></details>
+    <details><summary>Do you pay the fee for me?</summary><p>No. We tell you when a fee is due. You pay only on the official USCIS website.</p></details>
+    <details><summary>Do I need my USCIS account password?</summary><p>No. You enter your applicant and contact details, A-Number, and I-589 receipt number in your USIRD account.</p></details>
+    <details><summary>Is this legal advice?</summary><p>No. USIRD Case Tracker is an information service. For advice about your case, talk to an immigration attorney or accredited representative.</p></details>
+    <details><summary>How do I cancel?</summary><p>Cancel your Square subscription anytime. You can also delete your account and all case data from your dashboard.</p></details>
+  </div>
+</section>
+</div>
+{% endblock %}

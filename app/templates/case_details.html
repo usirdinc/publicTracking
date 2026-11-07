@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Case details · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="intake intake-journey">
+<a class="back-link" href="/app">← My cases</a>
+<div class="page-head">
+  <div><h1>Case details</h1><p>{{ case.label }} · A-Number ending {{ case.a_last3 }} · Receipt ending {{ case.receipt_last4 }}</p></div>
+</div>
+<section class="panel intake-form workspace-form">
+  {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/cases/{{ case.id }}/details">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="intake-progress" data-intake-progress hidden>
+      <span data-intake-position role="status"></span><progress aria-label="Form progress"></progress>
+      <nav class="intake-stages" aria-label="Case setup steps"></nav>
+    </div>
+    {% include "_client_details_fields.html" %}
+    <div class="intake-footer">
+      <button class="btn ghost" type="button" data-intake-back hidden>Back</button>
+      <button class="btn" type="button" data-intake-next hidden>Continue {{ icon('arrow') }}</button>
+      <a class="btn ghost" data-intake-cancel href="/app">Cancel</a>
+      <button class="btn" type="submit" data-intake-submit>Save details</button>
+    </div>
+  </form>
+</section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/intake.js?v=20261107-refined" defer></script>{% endblock %}

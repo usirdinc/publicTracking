@@ -1,0 +1,14 @@
+<fieldset data-intake-step data-step-label="Applicant">
+  <legend tabindex="-1">Who are you tracking?</legend>
+  <p class="hint">Use the primary applicant’s name as it appears on the application.</p>
+  <div class="intake-fields">
+    <label>First name <input data-intake-field name="first_name" autocapitalize="words" required maxlength="100" autocomplete="given-name" placeholder="First name" value="{{ details.first_name or '' }}"></label>
+    <label>Last name <input data-intake-field name="last_name" autocapitalize="words" required maxlength="100" autocomplete="family-name" placeholder="Last name" value="{{ details.last_name or '' }}"></label>
+  </div>
+</fieldset>
+<fieldset data-intake-step data-step-label="Birthday">
+  <legend tabindex="-1">When were they born?</legend>
+  <div class="intake-fields">
+    <label>Date of birth <input id="birth-date" data-intake-field type="date" name="dob" required autocomplete="bday" value="{{ details.dob or '' }}"></label>
+  </div>
+</fieldset>

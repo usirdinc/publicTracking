@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}
+  Create account · USIRD Case Tracker
+{% endblock %}
+{% block content %}
+  <section class="auth-layout" aria-labelledby="signup-heading">
+    <div class="auth-intro">
+      <h1 id="signup-heading">Start tracking your cases</h1>
+      <p class="lead">Daily asylum fee and USCIS case checks, with updates sent to your email.</p>
+      <ol class="onboarding-list">
+        <li><span>01</span>
+        <div>
+          <strong>Create your account</strong><p>Enter your email, phone number, and a secure password. Confirm the code we text you.</p>
+        </div>
+        </li><li><span>02</span>
+        <div>
+          <strong>Start your monthly subscription</strong><p>{{ price }} per month through Square. Cancel anytime.</p>
+        </div>
+        </li><li><span>03</span>
+        <div>
+          <strong>Add your cases</strong><p>After payment, add the applicant’s details, A-Number, and I-589 receipt number.</p>
+        </div>
+        </li>
+      </ol>
+    </div>
+    <div class="auth-panel">
+      <h2>Create an account</h2><p class="muted">First confirm your phone number. Then continue to your {{ price }}/month subscription.</p>
+      <form method="post" action="/signup">
+        <label for="signup-phone">Phone number</label><input id="signup-phone" type="tel" name="phone" required maxlength="40" autocomplete="tel" placeholder="+1 202 555 0142">
+        <p class="hint">We’ll text a verification code to confirm this number.</p>
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input id="password" type="password" name="password" minlength="10" required autocomplete="new-password" aria-describedby="password-hint"><button type="button" class="password-toggle" data-password-toggle aria-controls="password" aria-pressed="false">Show</button>
+        </div>
+        <p class="hint" id="password-hint">Use at least 10 characters.</p>
+        <label class="check"><input type="checkbox" name="agree" value="1" required> <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</span></label>
+        <button class="btn lg block" type="submit">Send verification code {{ icon('arrow') }}</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+  </section>
+{% endblock %}

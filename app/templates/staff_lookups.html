@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Daily lookups · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Staff lookup queue</h1><p>Complete official lookups and record the results.</p></div>
+  {% if eoir_enabled %}<a class="btn ghost" href="/admin/eoir">Open EOIR queue</a>{% endif %}
+</div>
+{% if ice_enabled %}
+  <h2>ICE detention lookups</h2>
+  <p>Open the official locator on your work computer. Enter the displayed A-Number and country of birth and complete the verification yourself. If the search fails or the result is unclear, defer it.</p>
+  <a class="btn small ghost" href="https://locator.ice.gov/odls/" target="_blank" rel="noopener noreferrer">Open ICE detainee locator (new tab)</a>
+  {% for item in due %}
+    <article class="panel eoir-case" data-lookup-service="ice" data-lookup-key="{{ item.id }}-{{ item.person }}">
+      <h3>{{ item.label }} · Person {{ item.person + 1 }}</h3>
+      <p>A-Number <code data-lookup-number>{{ item.number }}</code> · Country of birth <strong data-lookup-country>{{ item.country }}</strong></p>
+      <form action="/staff/lookups/ice/{{ item.id }}/{{ item.person }}" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="version" value="{{ item.version }}">
+        <label for="facility-{{ item.id }}-{{ item.person }}">Facility name, if shown</label>
+        <input id="facility-{{ item.id }}-{{ item.person }}" name="facility" maxlength="160" autocomplete="off">
+        <div class="tracking-actions">
+          <button class="btn small" name="status" value="listed">Save listed result</button>
+          <button class="btn small ghost" name="status" value="no_match">Save no match</button>
+          <button class="link" name="status" value="retry">Defer until tomorrow</button>
+        </div>
+      </form>
+    </article>
+  {% else %}
+    <p class="muted mt">No ICE lookups are due.</p>
+  {% endfor %}
+{% else %}
+  <p class="muted">ICE staff lookups are disabled.</p>
+{% endif %}
+{% endblock %}

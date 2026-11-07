@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Add a case · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="intake intake-journey">
+  <a class="back-link" href="/app">← My cases</a>
+  <div class="page-head">
+    <div><h1>Add a case</h1><p>Start Annual Asylum Fee and USCIS tracking for an I-589 application.</p></div>
+  </div>
+  {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
+  <form class="panel intake-form workspace-form" method="post" action="/cases">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="intake-progress" data-intake-progress hidden>
+      <span data-intake-position role="status"></span><progress aria-label="Form progress"></progress>
+      <nav class="intake-stages" aria-label="Case setup steps"></nav>
+    </div>
+    {% include "_client_details_fields.html" %}
+    <fieldset data-intake-step data-step-label="Case numbers">
+      <legend tabindex="-1">Find your case</legend>
+      <p class="hint">Use the A-Number and receipt number on the USCIS notice for this application.</p>
+      <button class="link number-help" type="button" data-open-guide="number-guide" hidden>Where do I find these numbers?</button>
+      <div class="intake-fields">
+        <label>A-Number(s) <input data-intake-field name="a_numbers" maxlength="80" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="A123456789" value="{{ a_numbers }}">
+          <span class="hint">For a family on one I-589, enter the primary applicant’s A-Number first, then the others separated by commas. Your account can track up to {{ max_people }} people across {{ max_cases }} cases.</span></label>
+        <label>I-589 receipt number <input data-intake-field name="receipt" maxlength="30" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ZAR1234567890" value="{{ receipt }}">
+          <span class="hint">Enter the three letters and ten digits from the USCIS receipt notice.</span></label>
+        <label>Case label <span class="muted">(optional)</span> <input name="label" maxlength="60" placeholder="e.g. Family asylum application" value="{{ label }}"></label>
+      </div>
+    </fieldset>
+    <div class="intake-footer">
+      <button class="btn ghost" type="button" data-intake-back hidden>Back</button>
+      <button class="btn" type="button" data-intake-next hidden>Continue {{ icon('arrow') }}</button>
+      <span class="muted small">{{ icon('lock') }} Applicant details and case identifiers are encrypted in storage.</span>
+      <button class="btn" type="submit" data-intake-submit>Add case and start checks {{ icon('arrow') }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/intake.js?v=20261107-refined" defer></script>{% endblock %}
