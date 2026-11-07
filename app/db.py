@@ -16,6 +16,15 @@ CREATE TABLE IF NOT EXISTS users (
   square_customer_id TEXT,
   subscription_status TEXT
 );
+CREATE TABLE IF NOT EXISTS notification_deliveries (
+  event_key TEXT NOT NULL,
+  channel TEXT NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (event_key, channel)
+);
 CREATE TABLE IF NOT EXISTS account_profiles (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   contact_enc TEXT NOT NULL

@@ -267,20 +267,38 @@ def dashboard(request: Request):
 @app.get("/account/settings", response_class=HTMLResponse)
 @app.post("/account/settings", response_class=HTMLResponse)
 def account_settings(request: Request, csrf: str = Form(""),
-                     email: str = Form(""), phone: str = Form("")):
+                     email: str = Form(""), phone: str = Form(""),
+                     email_enabled: str = Form(""), sms_enabled: str = Form(""),
+                     sms_consent: str = Form("")):
+    from app import notifications, sms
     with closing(get_db()) as cn:
         user = current_user(request, cn)
         if not user:
             return redirect("/login")
         error = None
+        try:
+            previous = notifications.contact(cn, user)
+        except (InvalidToken, ValueError):
+            return Response("Your profile is temporarily unavailable.", status_code=503)
         if request.method == "POST":
             if not security.csrf_ok(request.session, csrf):
                 return Response(status_code=403)
-            contact = {"email": email.strip(), "phone": phone.strip()}
+            contact = {"email": email.strip(), "phone": phone.strip(),
+                       "email_enabled": email_enabled == "1", "sms_enabled": sms_enabled == "1"}
             try:
                 if not security.valid_email(contact["email"]):
                     raise ValueError("Enter a valid contact email.")
                 contact["phone"] = security.normalize_contact_phone(contact["phone"])
+                if contact["sms_enabled"]:
+                    if (previous.get("sms_consent_phone") == contact["phone"]
+                            and previous.get("sms_consented_at")):
+                        contact["sms_consent_phone"] = previous["sms_consent_phone"]
+                        contact["sms_consented_at"] = previous["sms_consented_at"]
+                    elif sms_consent == "1":
+                        contact["sms_consent_phone"] = contact["phone"]
+                        contact["sms_consented_at"] = db.iso(db.now())
+                    else:
+                        raise ValueError("Please confirm SMS consent for this phone number, or turn SMS alerts off.")
             except ValueError as exc:
                 error = str(exc)
             else:
@@ -289,15 +307,10 @@ def account_settings(request: Request, csrf: str = Form(""),
                            (user["id"], security.encrypt(json.dumps(contact))))
                 return redirect("/account/settings", "Profile settings saved.", request)
         else:
-            row = cn.execute("SELECT contact_enc FROM account_profiles WHERE user_id=?",
-                             (user["id"],)).fetchone()
-            try:
-                contact = json.loads(security.decrypt(row["contact_enc"])) if row else {"email": user["email"], "phone": ""}
-            except (InvalidToken, ValueError):
-                return Response("Your profile is temporarily unavailable.", status_code=503)
+            contact = previous
         has_photo = cn.execute("SELECT 1 FROM profile_photos WHERE user_id=?", (user["id"],)).fetchone() is not None
         response = render(request, "account_settings.html", user=user, contact=contact,
-                          error=error, has_photo=has_photo, admin=is_admin(user))
+                          error=error, has_photo=has_photo, sms_ready=sms.configured(), admin=is_admin(user))
         response.headers["Cache-Control"] = "no-store, private"
         if error:
             response.status_code = 422

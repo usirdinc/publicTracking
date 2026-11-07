@@ -11,7 +11,7 @@ import random
 import time
 from datetime import timedelta
 
-from app import config, db, mailer, security
+from app import config, db, mailer, notifications, security
 
 log = logging.getLogger("worker")
 
@@ -46,12 +46,12 @@ def pause(cn, hours: float, reason: str):
 def notify_change(user_email, case, old, new, amount):
     from app.main import status_text  # same wording as the site
     text, _ = status_text(new, amount)
-    mailer.send(user_email, f"AAF update for {case['label']}: {text}",
+    notifications.send_update(case, f"AAF update for {case['label']}: {text}",
                 f"Your Annual Asylum Fee status for \"{case['label']}\" "
                 f"(A-Number ending {case['a_last3']}) changed.\n\nNow: {text}\n\n"
                 f"See details: {config.BASE_URL}/app\n\n"
                 "This is an automated check of the public USCIS page. It is not legal advice.\n"
-                "To pay, use the official USCIS site: https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire\n")
+                "To pay, use the official USCIS site: https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire\n", "aaf")
 
 
 def process(cn, job, checker) -> str:

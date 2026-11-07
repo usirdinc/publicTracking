@@ -31,7 +31,15 @@
         <label>Phone number <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ contact.phone }}" aria-describedby="settings-phone-hint"></label>
       </div>
       <p class="hint" id="settings-phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</p>
-      <p class="hint">Your sign-in email is {{ user.email }}. Current case alerts are sent to that address.</p>
+      <p class="hint">Your sign-in email is {{ user.email }}.</p>
+      <fieldset class="notification-preferences">
+        <legend>Case notifications</legend>
+        <label class="check"><input type="checkbox" name="email_enabled" value="1" {{ 'checked' if contact.get('email_enabled', true) else '' }}><span>Email me when a tracked status changes.</span></label>
+        <label class="check"><input type="checkbox" name="sms_enabled" value="1" {{ 'checked' if contact.get('sms_enabled', true) else '' }}><span>Text me when a tracked status changes.</span></label>
+        <label class="check"><input type="checkbox" name="sms_consent" value="1"><span>I agree to receive automated USIRD case alerts at the phone number above. Message frequency varies. Message and data rates may apply. Reply STOP to opt out. Consent is optional.</span></label>
+        <p class="hint">Confirm consent when enabling SMS for a new phone number. You can turn either channel off here.</p>
+        {% if not sms_ready %}<p class="hint">SMS delivery is waiting for the sender connection.</p>{% endif %}
+      </fieldset>
       <div class="intake-footer"><button class="btn" type="submit">Save profile</button></div>
     </form>
   </section>

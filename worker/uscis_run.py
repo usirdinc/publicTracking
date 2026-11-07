@@ -12,7 +12,7 @@ import logging
 import time
 from datetime import timedelta
 
-from app import config, db, mailer, security
+from app import config, db, mailer, notifications, security
 
 log = logging.getLogger("uscis")
 
@@ -28,11 +28,11 @@ def due_cases(cn, limit=20):
 
 
 def notify_change(case, old, new, desc):
-    mailer.send(case["email"], f"USCIS update for {case['label']}: {new}",
+    notifications.send_update(case, f"USCIS update for {case['label']}: {new}",
                 f"The USCIS case status for \"{case['label']}\" (receipt ending "
                 f"{case['receipt_last4']}) changed.\n\nBefore: {old}\nNow: {new}\n\n{desc}\n\n"
                 f"See details: {config.BASE_URL}/app\n\n"
-                "From the official USCIS Case Status API. It is not legal advice.\n")
+                "From the official USCIS Case Status API. It is not legal advice.\n", "uscis")
 
 
 def process(cn, case, client) -> str:
