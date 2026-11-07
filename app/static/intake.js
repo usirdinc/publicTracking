@@ -46,6 +46,16 @@
   const meter = progress.querySelector('progress');
   const validators = new Map();
   let current = 0;
+  const stages = steps.map((step, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = step.dataset.stepLabel;
+    button.addEventListener('click', () => {
+      if (index < current) showStep(index, true);
+    });
+    progress.querySelector('.intake-stages').append(button);
+    return button;
+  });
 
   for (const field of form.querySelectorAll('[data-intake-field]')) {
     const feedback = document.createElement('span');
@@ -78,6 +88,15 @@
     steps.forEach((step, i) => { step.hidden = i !== index; });
     position.textContent = `Step ${index + 1} of ${steps.length}`;
     meter.value = index + 1;
+    stages.forEach((button, i) => {
+      button.disabled = i >= index;
+      button.dataset.completed = String(i < index);
+      if (i === index) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    next.textContent = index + 1 < steps.length
+      ? 'Continue to ' + steps[index + 1].dataset.stepLabel.toLowerCase()
+      : 'Continue';
     back.hidden = index === 0;
     if (cancel) cancel.hidden = index !== 0;
     next.hidden = index === steps.length - 1;

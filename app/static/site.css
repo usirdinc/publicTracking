@@ -605,3 +605,37 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 @media (prefers-reduced-motion: no-preference) {
   .intake-guided [data-intake-step]:not([hidden]) { animation: detail-enter 160ms ease-out; }
 }
+
+
+/* Guided setup has one focused task per screen. */
+.intake-journey { max-width: 660px; }
+.intake-journey .page-head { margin-top: 18px; margin-bottom: 24px; }
+.intake-journey .page-head h1 { font-size: 22px; }
+.intake-journey .page-head p { max-width: 55ch; line-height: 1.6; }
+.intake-journey .workspace-form { padding: clamp(20px, 5vw, 36px); }
+.intake-progress { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding-bottom: 20px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+.intake-progress progress { width: 72px; height: 5px; align-self: center; }
+.intake-stages { display: flex; align-items: stretch; gap: 6px; grid-column: 1 / -1; }
+.intake-stages button { flex: 1; min-width: 0; padding: 7px 4px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.intake-stages button:disabled { cursor: default; }
+.intake-stages button[aria-current="step"] { color: var(--primary); background: var(--primary-soft); border-color: var(--line); font-weight: 650; }
+.intake-stages button[data-completed="true"] { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+.intake-guided fieldset { min-height: 235px; }
+.intake-guided legend { font-size: clamp(24px, 5vw, 29px); line-height: 1.25; margin-bottom: 20px; letter-spacing: -.02em; }
+.intake-guided legend + .hint { margin-top: -7px; margin-bottom: 20px; max-width: 48ch; }
+.intake-guided .intake-fields { gap: 18px; }
+.intake-guided input[data-intake-field] { min-height: 52px; padding: 12px 14px; font-size: 17px; border-radius: 7px; }
+.intake-guided input::placeholder { font-size: 15px; }
+.intake-guided .intake-footer { padding-top: 20px; margin-top: 24px; gap: 12px; }
+.intake-guided .intake-footer > [data-intake-back] { margin-inline-end: auto; }
+.intake-guided .intake-footer > [data-intake-next],
+.intake-guided .intake-footer > [data-intake-submit] { min-height: 44px; }
+.intake-guided .intake-footer > span { order: 3; margin-top: 2px; font-size: 11px; }
+@media (max-width: 580px) {
+  .intake-guided .intake-footer .btn { width: auto; }
+  .intake-guided .intake-footer > [data-intake-next],
+  .intake-guided .intake-footer > [data-intake-submit] { flex: 1; }
+  .intake-stages { gap: 2px; }
+  .intake-stages button { font-size: 11px; }
+  .intake-guided fieldset { min-height: 210px; }
+}
