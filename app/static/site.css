@@ -722,7 +722,7 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .phone-send-form:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
 
 
-/* Muted blue and warm paper retain the formal office theme. */
+/* Payment and document guidance */
 :root { --bg: #f5f4f0; --surface-2: #f2f4f5; --primary: #284f66; --primary-hover: #1d3a4e; --primary-soft: #eaf0f4; }
 .text-resource { display: block; margin-top: 12px; font-size: 13px; }
 .payment-guide-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
@@ -783,17 +783,13 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .footer-brand img { object-fit: contain; flex: none; }
 .document-context-intro { max-width: 65ch; margin-bottom: 24px; }
 .document-context-intro p, .receipt-context > p { color: var(--fg-2); }
-.document-context-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: clamp(24px, 4vw, 48px); align-items: start; }
-.supporting-application-photo { margin: 0; }
-.supporting-application-photo > img { display: block; width: 100%; height: auto; border-radius: 6px; }
-.supporting-application-photo figcaption { margin-top: 10px; max-width: 48ch; font-size: 13px; color: var(--muted); }
+.document-context-grid { max-width: 900px; }
 .receipt-context h3 { font-size: 23px; }
 .receipt-preview-button { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); cursor: zoom-in; margin: 16px 0 8px; }
 .receipt-preview-button img { display: block; width: 100%; height: auto; }
 .receipt-preview-button:hover { border-color: var(--line-strong); }
 @media (max-width: 620px) {
   .document-context-grid { grid-template-columns: minmax(0, 1fr); }
-  .supporting-application-photo { max-width: 480px; }
 }
 @media (max-width: 380px) {
   .brand .usird-logo { width: 36px; height: 36px; }
