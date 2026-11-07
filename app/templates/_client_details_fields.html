@@ -12,11 +12,3 @@
     <label>Date of birth <input id="birth-date" data-intake-field type="date" name="dob" required autocomplete="bday" value="{{ details.dob or '' }}"></label>
   </div>
 </fieldset>
-<fieldset data-intake-step data-step-label="Contact">
-  <legend tabindex="-1">Contact details</legend>
-  <div class="intake-fields">
-<label>Phone number <input data-intake-field type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ details.phone or '' }}" aria-describedby="phone-hint"><span class="hint" id="phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</span></label>
-<label>Contact email <input data-intake-field type="email" name="email" required maxlength="254" autocomplete="email" value="{{ details.email or '' }}"></label>
-<p class="hint">Case alerts go to the email address you use to sign in.</p>
-  </div>
-</fieldset>

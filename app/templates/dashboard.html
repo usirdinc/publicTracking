@@ -184,19 +184,8 @@
     <aside class="workspace-aside" aria-label="Case and account settings">
       <section class="panel account-panel workspace-account" id="account">
         <h2>Your account</h2>
-        <div class="profile-photo" data-profile-photo data-csrf="{{ csrf }}">
-          <img {% if has_photo %}src="/account/photo"{% endif %} alt="Profile photo" {{ 'hidden' if not has_photo else '' }}>
-          <span class="profile-initial" aria-hidden="true" {{ 'hidden' if has_photo else '' }}>{{ user.email[0]|upper }}</span>
-          <canvas width="256" height="256" aria-label="New profile photo preview" role="img" hidden></canvas>
-          <div class="profile-actions">
-            <p class="account-email">{{ user.email }}</p>
-            <input id="profile-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
-            <label class="profile-file-label" for="profile-file">Change photo</label>
-            <button type="button" class="btn small" data-photo-save hidden>Save photo</button>
-            <button type="button" class="link" data-photo-remove {{ 'hidden' if not has_photo else '' }}>Remove photo</button>
-          </div>
-          <p class="hint photo-status" role="status"></p>
-        </div>
+        <p class="account-email">{{ user.email }}</p>
+        <a class="profile-settings-link" href="/account/settings">Manage profile {{ icon('arrow') }}</a>
         <dl class="account-facts">
           <div>
             <dt>Access</dt><dd>
@@ -240,4 +229,3 @@
     </aside>
   </div>
 {% endblock %}
-{% block scripts %}<script src="/static/profile.js?v=20261106-photo" defer></script>{% endblock %}

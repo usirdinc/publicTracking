@@ -341,7 +341,7 @@ def test_profile_photo_upload_requires_session_csrf_and_jpeg(client):
     assert client.get("/account/photo").status_code == 401
     signup(client)
     make_paid("a@example.com")
-    page = client.get("/app")
+    page = client.get("/account/settings")
     token = re.search(r'data-csrf="([^"]+)"', page.text).group(1)
     headers = {"X-CSRF-Token": token, "Content-Type": "image/jpeg"}
     assert client.put("/account/photo", headers={"Content-Type": "image/jpeg"}, content=b"bad").status_code == 403
@@ -357,3 +357,25 @@ def test_intake_rejects_extra_letters_in_a_number_and_punctuation_in_receipt(cli
                "a_numbers": "A123456789", "receipt": "ZAR1234567890"}
     assert client.post("/cases", data={**payload, "a_numbers": "AB123456789"}).status_code == 422
     assert client.post("/cases", data={**payload, "receipt": "ZAR!1234567890"}).status_code == 422
+
+def test_account_profile_contact_settings(client):
+    assert client.get("/account/settings", follow_redirects=False).headers["location"] == "/login"
+    signup(client)
+    page = client.get("/account/settings")
+    assert "no-store" in page.headers["cache-control"]
+    token = csrf(client, "/account/settings")
+    assert client.post("/account/settings", data={"csrf": "bad"}).status_code == 403
+    bad = client.post("/account/settings", data={"csrf": token, "email": "bad", "phone": "2025550142"})
+    assert bad.status_code == 422
+    assert 'value="2025550142"' in bad.text
+    good = client.post("/account/settings", data={"csrf": token, "email": "contact@example.com",
+                                                 "phone": "2025550142"})
+    assert "Profile settings saved." in good.text
+    assert 'value="+12025550142"' in good.text
+    cn = db.connect()
+    row = cn.execute("SELECT contact_enc FROM account_profiles").fetchone()
+    assert "contact@example.com" not in row["contact_enc"]
+    assert cn.execute("SELECT email FROM users").fetchone()["email"] == "a@example.com"
+    make_paid("a@example.com")
+    assert 'name="phone"' not in client.get("/cases/new").text
+    assert 'href="/account/settings"' in client.get("/app").text

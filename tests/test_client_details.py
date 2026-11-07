@@ -15,7 +15,7 @@ def test_case_intake_requires_details_and_encrypts_them(client):
                                           "receipt": "invalid", "csrf": token})
     assert invalid.status_code == 422
     assert "no-store" in invalid.headers["cache-control"]
-    assert 'value="contact@example.com"' in invalid.text
+    assert 'name="email"' not in invalid.text
     assert 'value="A123456789"' in invalid.text
     payload = {"a_numbers": "A123456789", "receipt": "ZAR1234567890", "csrf": token}
     for invalid_contact in ({"email": "wrong..address@example.com"}, {"phone": "2025550142 ext 3"}):
@@ -31,7 +31,8 @@ def test_case_intake_requires_details_and_encrypts_them(client):
     assert "contact@example.com" not in client.get("/app").text
     path = f"/cases/{case['id']}/details"
     response = client.get(path)
-    assert "contact@example.com" in response.text
+    assert 'name="email"' not in response.text
+    assert 'value="Test"' in response.text
     assert "no-store" in response.headers["cache-control"]
     assert client.post(path, data={**CLIENT_DETAILS, "csrf": "bad"}).status_code == 403
     other = TestClient(app)

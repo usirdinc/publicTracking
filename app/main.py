@@ -264,6 +264,46 @@ def dashboard(request: Request):
                   paused=_paused(cn), admin=is_admin(u), billing_row=billing.enrollment(cn, u["id"]))
 
 
+@app.get("/account/settings", response_class=HTMLResponse)
+@app.post("/account/settings", response_class=HTMLResponse)
+def account_settings(request: Request, csrf: str = Form(""),
+                     email: str = Form(""), phone: str = Form("")):
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not user:
+            return redirect("/login")
+        error = None
+        if request.method == "POST":
+            if not security.csrf_ok(request.session, csrf):
+                return Response(status_code=403)
+            contact = {"email": email.strip(), "phone": phone.strip()}
+            try:
+                if not security.valid_email(contact["email"]):
+                    raise ValueError("Enter a valid contact email.")
+                contact["phone"] = security.normalize_contact_phone(contact["phone"])
+            except ValueError as exc:
+                error = str(exc)
+            else:
+                cn.execute("INSERT INTO account_profiles (user_id, contact_enc) VALUES (?, ?) "
+                           "ON CONFLICT(user_id) DO UPDATE SET contact_enc=excluded.contact_enc",
+                           (user["id"], security.encrypt(json.dumps(contact))))
+                return redirect("/account/settings", "Profile settings saved.", request)
+        else:
+            row = cn.execute("SELECT contact_enc FROM account_profiles WHERE user_id=?",
+                             (user["id"],)).fetchone()
+            try:
+                contact = json.loads(security.decrypt(row["contact_enc"])) if row else {"email": user["email"], "phone": ""}
+            except (InvalidToken, ValueError):
+                return Response("Your profile is temporarily unavailable.", status_code=503)
+        has_photo = cn.execute("SELECT 1 FROM profile_photos WHERE user_id=?", (user["id"],)).fetchone() is not None
+        response = render(request, "account_settings.html", user=user, contact=contact,
+                          error=error, has_photo=has_photo, admin=is_admin(user))
+        response.headers["Cache-Control"] = "no-store, private"
+        if error:
+            response.status_code = 422
+        return response
+
+
 @app.get("/account/photo")
 @app.put("/account/photo")
 @app.delete("/account/photo")
@@ -407,9 +447,9 @@ def _client_details(first_name, last_name, dob, phone, email):
         raise ValueError("Enter a valid date of birth.") from None
     if birth_date.isoformat() != dob or birth_date > date.today():
         raise ValueError("Enter a valid date of birth.")
-    phone = security.normalize_contact_phone(phone)
+    phone = security.normalize_contact_phone(phone) if phone else ""
     email = email.strip()
-    if not security.valid_email(email):
+    if email and not security.valid_email(email):
         raise ValueError("Enter a valid contact email.")
     return {"first_name": first_name, "last_name": last_name, "dob": dob,
             "phone": phone, "email": email}
@@ -528,6 +568,14 @@ def case_details(request: Request, case_id: int, csrf: str = Form(""),
                 details = {"first_name": first_name[:100], "last_name": last_name[:100],
                            "dob": dob[:10], "phone": phone[:40], "email": email[:254]}
             else:
+                if case["client_details_enc"]:
+                    try:
+                        previous = json.loads(security.decrypt(case["client_details_enc"]))
+                    except (InvalidToken, ValueError):
+                        return Response("Saved case details are temporarily unavailable.", status_code=503)
+                    for key in ("phone", "email"):
+                        if not details[key]:
+                            details[key] = previous.get(key, "")
                 saved = cn.execute("UPDATE cases SET client_details_enc=? WHERE id=? AND user_id=?",
                                    (security.encrypt(json.dumps(details)), case_id, user["id"]))
                 if saved.rowcount != 1:

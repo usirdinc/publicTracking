@@ -647,3 +647,20 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 @media (prefers-reduced-motion: no-preference) {
   [data-check] button[aria-busy="true"] svg { animation: spin 1s linear infinite; }
 }
+
+
+.profile-menu { position: relative; }
+.profile-menu > summary { display: flex; align-items: center; gap: 9px; cursor: pointer; list-style: none; border-radius: 6px; padding: 4px; }
+.profile-menu > summary::-webkit-details-marker { display: none; }
+.menu-avatar { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface-2); font-size: 13px; font-weight: 650; }
+.profile-menu-panel { position: absolute; right: 0; top: calc(100% + 12px); z-index: 30; width: min(280px, calc(100vw - 32px)); padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
+.profile-menu-panel .hint, .profile-menu-email { margin: 0; }
+.profile-menu-email { font-size: 13px; overflow-wrap: anywhere; padding-bottom: 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.profile-menu-panel > a, .profile-menu-panel button { display: block; width: 100%; text-align: left; padding: 9px 6px; border-radius: 5px; font-size: 13px; }
+.profile-menu-panel > a:hover, .profile-menu-panel button:hover { background: var(--surface-2); }
+.profile-contact { margin-top: 18px; }
+.profile-settings-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 13px; }
+.profile-settings-link svg { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: no-preference) {
+  .profile-menu[open] .profile-menu-panel { animation: detail-enter 120ms ease-out; }
+}

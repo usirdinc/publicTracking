@@ -16,6 +16,10 @@ CREATE TABLE IF NOT EXISTS users (
   square_customer_id TEXT,
   subscription_status TEXT
 );
+CREATE TABLE IF NOT EXISTS account_profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  contact_enc TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS profile_photos (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   jpeg BLOB NOT NULL

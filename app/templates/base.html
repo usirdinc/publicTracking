@@ -11,7 +11,7 @@
 {% endblock %}
 </title>
 <meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
-<link rel="stylesheet" href="/static/site.css?v=20261107-check-feedback">
+<link rel="stylesheet" href="/static/site.css?v=20261107-settings">
 {% if request.url.path != '/subscribe' %}
 <link rel="stylesheet" href="/static/navigation.css?v=20261106-motion" media="(prefers-reduced-motion: no-preference)">
 {% endif %}
@@ -35,9 +35,15 @@
           {% endif %}
           >Admin</a>
         {% endif %}
-        <form method="post" action="/logout" class="inline">
-          <button class="link">Log out</button>
-        </form>
+        <details class="profile-menu">
+          <summary aria-label="Open account menu"><span class="menu-avatar" aria-hidden="true">{{ user.email[0]|upper }}</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
+          <div class="profile-menu-panel">
+            <p class="hint">Signed in as</p><p class="profile-menu-email">{{ user.email }}</p>
+            <a href="/account/settings">Profile settings</a>
+            <a href="/app#account">Subscription and account</a>
+            <form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>
+          </div>
+        </details>
       {% else %}
         <a class="hide-sm" href="/#how">How it works</a>
         <a href="/login"
