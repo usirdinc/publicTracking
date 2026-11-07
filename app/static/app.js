@@ -104,6 +104,12 @@
     L.target = Math.max(L.target, pct || 2);
     if (stage) L.stage = stage;
     el.classList.add('busy'); el.classList.remove('done');
+    var button = el.querySelector('form[data-check] button');
+    if (button) {
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.querySelector('[data-check-label]').textContent = 'Checking…';
+    }
     if (!raf) raf = requestAnimationFrame(tick);
   }
 
@@ -172,7 +178,7 @@
       var anyBusy = false;
       (d.cases || []).forEach(function (c) {
         if (c.busy) { anyBusy = true; begin(c.id, c.progress, c.stage); }
-        else if (live[c.id]) finish(c.id);
+        else if (live[c.id] && !live[c.id].submitting) finish(c.id);
       });
       polling = anyBusy;
       if (anyBusy) timer = setTimeout(poll, 1200);
@@ -230,20 +236,28 @@
         e.preventDefault();
         var id = f.closest('[data-case]').dataset.case, btn = f.querySelector('button');
         btn.disabled = true;
-        begin(id, 2, 'Starting');
+        begin(id, 2, 'Sending your check request');
+        live[id].submitting = true;
         fetch(f.action, { method: 'POST', body: new FormData(f), credentials: 'same-origin',
                           headers: { 'Accept': 'application/json' } })
           .then(function (r) { return r.json(); })
           .then(function (d) {
-            btn.disabled = false;
+            if (live[id]) live[id].submitting = false;
             if (!d.ok) {
+              btn.disabled = false;
+              btn.removeAttribute('aria-busy');
+              btn.querySelector('[data-check-label]').textContent = 'Check now';
               var el = card(id); if (el) el.classList.remove('busy');
               delete live[id];
               toast(d.message || 'Could not start a check right now.');
             }
             ensurePolling();
           })
-          .catch(function () { btn.disabled = false; ensurePolling(); });
+          .catch(function () {
+            if (live[id]) live[id].submitting = false;
+            toast('Checking whether your request started. Please wait for the case to refresh.');
+            ensurePolling();
+          });
       });
     });
     root.querySelectorAll('form[data-confirm]').forEach(function (f) {

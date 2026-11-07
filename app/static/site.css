@@ -639,3 +639,11 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
   .intake-stages button { font-size: 11px; }
   .intake-guided fieldset { min-height: 210px; }
 }
+
+
+.case.busy .live { margin-top: 16px; border-color: var(--line-strong); }
+.live-note { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 14px 0 0; }
+.case.busy .case-views { opacity: .65; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-check] button[aria-busy="true"] svg { animation: spin 1s linear infinite; }
+}

@@ -67,6 +67,7 @@
                 <span class="live-stage" data-stage>Getting ready</span><span class="live-pct" data-pct>0%</span>
               </div>
               {{ stepper() }}
+              <p class="live-note">Checking your Annual Asylum Fee. USCIS status is checked separately and may update at a different time.</p>
             </div>
             {% if cases|length > 1 %}
               <div class="case-tablist" role="tablist" aria-label="Tracking views for {{ c.label }}" hidden>
@@ -172,7 +173,7 @@
                   <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" aria-label="Delete case {{ c.label }}">Delete</button>
                 </form>
                   <form method="post" action="/cases/{{ c.id }}/check" class="inline" data-check>
-                    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} Check now</button>
+                    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} <span data-check-label>Check now</span></button>
                   </form>
               </div>
             </div>
