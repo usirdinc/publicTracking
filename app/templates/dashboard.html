@@ -173,11 +173,11 @@
               <section class="tracking-view case-description-view" id="view-{{ c.id }}-description" data-case-view="description">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('doc') }}</span>
-                  <div><h3>{{ _("Case description") }}</h3><p>{{ _("Details reported by USCIS") }}</p><p class="source-language-note">{{ _('USCIS source text is shown in English.') }}</p></div>
+                  <div class="result-section-copy"><h3>{{ _("Case description") }}</h3><p>{{ _("Details reported by USCIS") }}</p></div>
                 </header>
                 {% if c.uscis_desc %}
                   <div class="uscis-description" lang="en" data-source-text data-no-translate>{{ c.uscis_desc | uscis_description }}</div>
-                  <p class="source-note">{{ _("Source: USCIS · Information only, not legal advice.") }}</p>
+                  <p class="source-note">{{ _("Source: USCIS · Information only, not legal advice.") }} <span class="source-language-note">{{ _('USCIS source text is shown in English.') }}</span></p>
                 {% else %}
                   <div class="result-empty">
                     <p class="result-empty-title">{{ _("Waiting for the USCIS description") }}</p>
@@ -185,19 +185,26 @@
                   </div>
                 {% endif %}
               </section>
-              <section class="tracking-view" id="view-{{ c.id }}-history" data-case-view="history">
+              {% set history = case_history(c.uscis_history_enc) %}
+              <section class="tracking-view case-history-view" id="view-{{ c.id }}-history" data-case-view="history">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('clock') }}</span>
-                  <div><h3>{{ _("USCIS case history") }}</h3><p>{{ _("Previous case events") }}</p><p class="source-language-note">{{ _('USCIS source text is shown in English.') }}</p></div>
+                  <div class="result-section-copy"><h3>{{ _("USCIS case history") }}</h3><p>{{ _("Previous case events") }}</p></div>
+                  {% if history %}<span class="history-count">{{ _('Recorded events: {count}', count=history|length) }}</span>{% endif %}
                 </header>
-                {% set history = case_history(c.uscis_history_enc) %}
                 {% if history %}
-                  <p class="hint">{{ _("History returned by USCIS. Some earlier events may not be available.") }}</p>
+                  <p class="hint history-context">{{ _("History returned by USCIS. Some earlier events may not be available.") }}</p>
                   <ol class="history-timeline">
                     {% for event in history %}
-                      <li><div class="history-event"><span class="history-date" data-no-translate>{{ event.date or _('Date not provided') }}</span><div class="uscis-description" lang="en" data-source-text data-no-translate>{{ event.text | uscis_description }}</div></div></li>
+                      <li>
+                        <div class="history-event-date">
+                          {% if event.date %}<time class="history-date" data-date datetime="{{ event.date }}">{{ event.date }}</time>{% else %}<span class="history-date">{{ _('Date not provided') }}</span>{% endif %}
+                        </div>
+                        <div class="history-event"><div class="uscis-description" lang="en" data-source-text data-no-translate>{{ event.text | uscis_description }}</div></div>
+                      </li>
                     {% endfor %}
                   </ol>
+                  <p class="source-note source-language-note">{{ _('USCIS source text is shown in English.') }}</p>
                 {% else %}
                   <div class="result-empty">
                     <p class="result-empty-title">{{ _("No history available yet") }}</p>

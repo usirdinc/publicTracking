@@ -478,5 +478,6 @@
   "Checking now…": "ယခု စစ်ဆေးနေသည်…",
   "Case deleted, including its numbers and history.": "အမှုတွဲနှင့်အတူ သက်ဆိုင်သည့် နံပါတ်များနှင့် မှတ်တမ်းများကိုပါ ဖျက်ပြီးပါပြီ။",
   "You can track up to {count} cases.": "အမှုတွဲ {count} ခုအထိ စောင့်ကြည့်နိုင်ပါသည်။",
-  "Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.": "ခိုလှုံခွင့် နှစ်စဉ်ကြေးနှင့် USCIS အမှုတွဲအခြေအနေကို နေ့စဉ် စစ်ဆေးပြီး အပြောင်းအလဲ တွေ့ရှိပါက Email ဖြင့် အသိပေးပါသည်။"
+  "Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.": "ခိုလှုံခွင့် နှစ်စဉ်ကြေးနှင့် USCIS အမှုတွဲအခြေအနေကို နေ့စဉ် စစ်ဆေးပြီး အပြောင်းအလဲ တွေ့ရှိပါက Email ဖြင့် အသိပေးပါသည်။",
+  "Recorded events: {count}": "မှတ်တမ်း {count} ခု"
 }

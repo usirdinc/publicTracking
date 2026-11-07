@@ -135,7 +135,7 @@ def test_init_migrates_old_db(tmp_path):
 def test_description_allows_official_links_but_not_executable_html():
     from app.uscis_display import description_html
     result = str(description_html('First<br><br>Second <a href="https://www.uscis.gov/notice.pdf" onclick="bad()">Notice</a><script>alert(1)</script><img src=x onerror=bad()><a href="javascript:bad()">bad</a><a href="https://uscis.gov.evil.test/">evil</a>'))
-    assert 'First<br><br>Second' in result
+    assert '<p>First</p><p>Second' in result
     assert 'href="https://www.uscis.gov/notice.pdf"' in result
     assert 'rel="noopener noreferrer"' in result
     for unsafe in ('onclick', '<script', '<img', 'javascript:', 'evil.test', 'alert(1)'):
@@ -166,3 +166,31 @@ def test_worker_encrypts_history_and_preserves_it_when_api_omits_it(cn):
     refreshed = uscis_run.due_cases(cn)[0]
     uscis_run.process(cn, refreshed, FakeClient([CaseStatus(True,'Case Was Received')]))
     assert cn.execute('SELECT uscis_history_enc FROM cases').fetchone()[0] == stored['uscis_history_enc']
+
+
+def test_description_formats_source_emphasis_and_paragraphs():
+    from app.uscis_display import description_html
+    source = '**Your Annual Asylum Fee is Due**<br><br><br>Application is pending.\n\nRead <a href="https://www.uscis.gov/notice.pdf">the notice</a>.'
+    result = str(description_html(source))
+    assert '**' not in result
+    assert '<p class="uscis-notice-heading"><strong>Your Annual Asylum Fee is Due</strong></p>' in result
+    assert '<p>Application is pending.</p>' in result
+    assert '<p>Read <a href="https://www.uscis.gov/notice.pdf"' in result
+    assert result.count('<p') == 3 and result.count('</p>') == 3
+    assert '<br>' not in result
+
+
+def test_description_balances_inline_formatting_and_lists():
+    from app.uscis_display import description_html
+    result = str(description_html('<strong>First<br><br>Second</strong><ul><li>One</li><li>Two</li></ul>Last'))
+    assert '<p class="uscis-notice-heading"><strong>First</strong></p><p><strong>Second</strong></p>' in result
+    assert '<ul><li><p>One</p></li><li><p>Two</p></li></ul><p>Last</p>' in result
+    assert str(description_html(None)) == ''
+
+
+def test_description_markdown_cannot_create_executable_content():
+    from app.uscis_display import description_html
+    result = str(description_html('**&lt;img src=x onerror=bad()&gt;**<script>hidden()</script><a href="javascript:bad()">link</a>'))
+    assert '<strong>&lt;img src=x onerror=bad()&gt;</strong>' in result
+    assert '<img' not in result and '<script' not in result
+    assert 'hidden()' not in result and 'href="javascript:' not in result
