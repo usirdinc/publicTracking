@@ -18,7 +18,7 @@ def test_language_persists_across_public_pages_and_is_private(client):
     assert response.status_code == 303
     assert "HttpOnly" in response.headers["set-cookie"]
     assert "SameSite=lax" in response.headers["set-cookie"]
-    for path, expected in [("/", "အသုံးပြုပုံ"), ("/signup", "သင့်အမှုများကို စတင်စောင့်ကြည့်ပါ"),
+    for path, expected in [("/", "အသုံးပြုပုံ"), ("/signup", "မိမိ၏ အမှုတွဲများကို စတင်စောင့်ကြည့်ပါ"),
                            ("/login", "အကောင့်ဝင်ရန်")]:
         page = client.get(path)
         assert page.status_code == 200
@@ -65,7 +65,7 @@ def test_burmese_validation_keeps_identifiers_and_policy(client):
     response = client.post("/cases", data={**CLIENT_DETAILS,"a_numbers":"A123456789",
                                           "receipt":"invalid","csrf":csrf(client,"/cases/new")})
     assert response.status_code == 422
-    assert "လက်ခံစာနံပါတ်သည် ABC1234567890" in response.text
+    assert "Receipt Number သည် ABC1234567890" in response.text
     assert 'value="A123456789"' in response.text
     assert db.connect().execute("SELECT COUNT(*) FROM cases").fetchone()[0] == 0
     assert i18n.translate("Fee due: $100", "my") == "ပေးဆောင်ရမည့်ကြေး — $100"
