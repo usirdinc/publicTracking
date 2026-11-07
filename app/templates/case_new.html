@@ -7,11 +7,11 @@
     <div><h1>Add a case</h1><p>Start Annual Asylum Fee and USCIS tracking for an I-589 application.</p></div>
   </div>
   {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
-  <form class="panel intake-form" method="post" action="/cases">
+  <form class="panel intake-form workspace-form" method="post" action="/cases">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <fieldset>
       <legend>Primary applicant and contact</legend>
-      <p class="muted">Use the primary applicant’s name and date of birth as shown on the application.</p>
+      <p class="muted">Enter the primary applicant’s name and date of birth as shown on the application.</p>
       <div class="intake-fields">{% include "_client_details_fields.html" %}</div>
     </fieldset>
     <fieldset>

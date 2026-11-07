@@ -3,13 +3,13 @@
   My cases · USIRD Case Tracker
 {% endblock %}
 {% block content %}
-  <div class="page-head">
+  <div class="page-head workspace-heading">
     <div>
-      <h1>My cases</h1><p>Annual Asylum Fee and USCIS case status</p>
+      <h1>My cases</h1><p>Review your Annual Asylum Fee and USCIS updates in one place.</p>
     </div>
     <div class="page-actions">
       {% if paid or admin %}
-        <span class="case-count">{{ cases|length }} of {{ max_cases }} cases</span><a class="btn" href="/cases/new">{{ icon('plus') }} Add case</a>
+        <a class="btn" href="/cases/new">{{ icon('plus') }} Add case</a>
       {% else %}
         <span class="badge tone-pending">Subscription needed</span>
       {% endif %}
@@ -29,7 +29,11 @@
     </section>
   {% endif %}
   <div class="workspace-grid">
-    <section class="case-list" aria-label="Your cases">
+    <section class="case-list" aria-labelledby="case-list-heading">
+      <div class="workspace-list-heading">
+        <h2 id="case-list-heading">Tracked cases</h2>
+        <span class="case-count">{{ cases|length }} of {{ max_cases }} cases</span>
+      </div>
       {% if not cases %}
         <div class="empty panel">
           <span class="empty-icon">{{ icon('doc') }}</span><h2>No cases yet</h2><p>
@@ -40,7 +44,7 @@
           {% endif %}
           </p>
           {% if paid or admin %}
-            <a class="btn ghost" href="/cases/new">{{ icon('plus') }} Add your first case</a>
+            <a class="btn" href="/cases/new">{{ icon('plus') }} Add your first case</a>
           {% endif %}
         </div>
       {% endif %}
@@ -71,7 +75,7 @@
                 {% endfor %}
               </div>
             {% endif %}
-            <div class="case-views">
+            <div class="case-views{% if cases|length == 1 %} case-views-overview{% endif %}">
               <section class="tracking-view" id="view-{{ c.id }}-aaf" data-case-view="aaf">
                 <h3>{{ icon('cash') }} Annual Asylum Fee</h3>
                 <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
@@ -155,7 +159,7 @@
                 {% endif %}
               </section>
             </div>
-            <div class="case-foot case-management">
+            <div class="case-foot case-management workspace-case-actions">
               <div class="acts">
                 <a class="link" href="/cases/{{ c.id }}/details">{{ 'Edit details' if c.client_details_enc else 'Complete details' }}</a>
                 <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="Delete this case and its history?">
@@ -171,20 +175,21 @@
       </div>
     </section>
     <aside class="workspace-aside" aria-label="Case and account settings">
-      <section class="panel account-panel" id="account">
+      <section class="panel account-panel workspace-account" id="account">
+        <h2>Your account</h2>
         <div class="profile-photo" data-profile-photo data-csrf="{{ csrf }}">
           <img {% if has_photo %}src="/account/photo"{% endif %} alt="Profile photo" {{ 'hidden' if not has_photo else '' }}>
           <span class="profile-initial" aria-hidden="true" {{ 'hidden' if has_photo else '' }}>{{ user.email[0]|upper }}</span>
           <canvas width="256" height="256" aria-label="New profile photo preview" role="img" hidden></canvas>
           <div class="profile-actions">
-            <label for="profile-file">Profile photo</label>
-            <input id="profile-file" type="file" accept="image/jpeg,image/png,image/webp">
+            <p class="account-email">{{ user.email }}</p>
+            <input id="profile-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
+            <label class="profile-file-label" for="profile-file">Change photo</label>
             <button type="button" class="btn small" data-photo-save hidden>Save photo</button>
             <button type="button" class="link" data-photo-remove {{ 'hidden' if not has_photo else '' }}>Remove photo</button>
           </div>
           <p class="hint photo-status" role="status"></p>
         </div>
-        <span class="eyebrow">Your account</span><p class="account-email">{{ user.email }}</p>
         <dl class="account-facts">
           <div>
             <dt>Access</dt><dd>

@@ -1,18 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Case details · USIRD Case Tracker{% endblock %}
 {% block content %}
+<div class="intake">
+<a class="back-link" href="/app">← My cases</a>
 <div class="page-head">
   <div><h1>Case details</h1><p>{{ case.label }} · A-Number ending {{ case.a_last3 }} · Receipt ending {{ case.receipt_last4 }}</p></div>
-  <a class="btn small ghost" href="/app">Back to my cases</a>
 </div>
-<section class="panel account-panel">
-  <h2>Primary applicant</h2>
+<section class="panel intake-form workspace-form">
   {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
   <form method="post" action="/cases/{{ case.id }}/details">
     <input type="hidden" name="csrf" value="{{ csrf }}">
-    <div class="intake-fields">{% include "_client_details_fields.html" %}</div>
-    <button class="btn" type="submit">Save details</button>
+    <fieldset>
+      <legend>Primary applicant and contact</legend>
+      <div class="intake-fields">{% include "_client_details_fields.html" %}</div>
+    </fieldset>
+    <div class="intake-footer">
+      <a class="btn ghost" href="/app">Cancel</a>
+      <button class="btn" type="submit">Save details</button>
+    </div>
   </form>
 </section>
+</div>
 {% endblock %}
 {% block scripts %}<script src="/static/intake.js?v=20261106-dial" defer></script>{% endblock %}

@@ -546,7 +546,40 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .profile-photo img, .profile-photo canvas, .profile-initial { width: 52px; height: 52px; object-fit: cover; border-radius: 50%; }
 .profile-initial { display: grid; place-items: center; background: var(--surface-2); color: var(--primary); border: 1px solid var(--line); font-weight: 700; }
 .profile-photo [hidden] { display: none; }
-.profile-actions input[type=file] { width: 100%; padding: 0; border: 0; min-height: 32px; font-size: 12px; }
+.profile-actions { position: relative; }
+.profile-actions input[type=file] { width: 1px; min-height: 0; height: 1px; padding: 0; border: 0; }
 .profile-actions button { margin-top: 5px; margin-right: 5px; }
 .photo-status { grid-column: 1 / -1; margin: 0; }
 .photo-status:empty { display: none; }
+
+
+/* Signed-in workspace */
+.workspace-heading { padding-bottom: 24px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+.workspace-heading h1 { margin-bottom: 5px; }
+.workspace-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.workspace-list-heading h2, .workspace-account h2 { margin: 0; font-size: 16px; }
+.workspace-list-heading .case-count { background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.case-list .empty { padding-block: clamp(32px, 7vw, 64px); }
+.case-views-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.case-views-overview > [data-case-view="history"] { grid-column: 1 / -1; }
+.case-views-overview .tracking-view { padding: 16px; }
+.workspace-case-actions .acts { width: 100%; gap: 10px 16px; flex-wrap: wrap; }
+.workspace-case-actions .acts > form[data-check] { margin-inline-start: auto; }
+.workspace-case-actions .link { font-size: 13px; }
+.workspace-account h2 { padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.workspace-account .account-email { overflow-wrap: anywhere; margin: 0 0 4px; }
+.workspace-account .profile-actions .profile-file-label { display: inline-block; width: fit-content; margin: 0; color: var(--primary); cursor: pointer; }
+.profile-file-label:hover { text-decoration: underline; }
+#profile-file:focus-visible + .profile-file-label { outline: 2px solid var(--focus); outline-offset: 3px; }
+.workspace-form { margin-bottom: 24px; }
+.workspace-form fieldset + fieldset { border-top: 1px solid var(--line); padding-top: 12px; }
+.workspace-form legend { color: var(--fg); font-size: 16px; padding-right: 12px; }
+.workspace-form .intake-fields { row-gap: 16px; }
+.workspace-form .birth-control { margin-top: 7px; }
+.workspace-form .intake-footer { margin-top: 4px; }
+@media (max-width: 960px) {
+  .workspace-aside:has(.workspace-account) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .case-views-overview { grid-template-columns: minmax(0, 1fr); }
+}
