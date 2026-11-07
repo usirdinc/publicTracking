@@ -54,6 +54,19 @@ def notify_change(user_email, case, old, new, amount):
                 "To pay, use the official USCIS site: https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire\n", "aaf")
 
 
+def notify_due_reminder(case, amount):
+    from app.main import status_text
+    text, _ = status_text("DUE", amount)
+    notifications.send_update(
+        case, f"AAF reminder for {case['label']}: {text}",
+        f"Your latest check still shows an Annual Asylum Fee due for \"{case['label']}\" "
+        f"(A-Number ending {case['a_last3']}).\n\n{text}\n\n"
+        f"View the result and payment instructions: {config.BASE_URL}/app\n\n"
+        "Daily reminders continue while USCIS reports the fee as due. "
+        "Manage email and SMS preferences in Profile settings.\n",
+        "aaf_reminder")
+
+
 def process(cn, job, checker) -> str:
     """Run one job. checker(a_numbers:list, receipt:str) -> (status, amount, note, matched).
     Returns the status (or 'skipped')."""
@@ -110,6 +123,8 @@ def process(cn, job, checker) -> str:
     known_old = old if old and not old.startswith("ERROR") else None
     if (known_old and known_old != status) or (known_old is None and status == "DUE"):
         notify_change(user["email"], case, known_old, status, amount)
+    elif known_old == "DUE" and status == "DUE":
+        notify_due_reminder(case, amount)
     return status
 
 

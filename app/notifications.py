@@ -1,5 +1,6 @@
 """Deliver case changes through the account's selected channels."""
 from contextlib import closing
+from datetime import timedelta
 import hashlib
 import json
 import logging
@@ -33,12 +34,14 @@ def send_update(case, subject, body, kind):
         current = cn.execute("SELECT checked_at, uscis_checked_at FROM cases WHERE id=?", (case["id"],)).fetchone()
         if not user or not current:
             return
+        if kind == "aaf_reminder" and not (db.is_paid(user) or user["email"] in config.ADMIN_EMAILS):
+            return
         try:
             profile = contact(cn, user)
         except Exception:
             log.error("Case %s: saved notification contacts could not be read", case["id"])
             return
-        checked = current["checked_at" if kind == "aaf" else "uscis_checked_at"]
+        checked = current["checked_at" if kind.startswith("aaf") else "uscis_checked_at"]
         event = hashlib.sha256(f"{case['id']}|{kind}|{checked}|{subject}".encode()).hexdigest()
         channels = []
         if profile.get("email_enabled", True):
@@ -50,19 +53,33 @@ def send_update(case, subject, body, kind):
             channels.append(("sms", phone))
         for channel, destination in channels:
             # A durable claim prevents duplicate sends after retries or concurrent workers.
-            claim = cn.execute(
-                "INSERT OR IGNORE INTO notification_deliveries "
-                "(event_key, channel, user_id, case_id, state, created_at) VALUES (?, ?, ?, ?, 'sending', ?)",
-                (event, channel, user["id"], case["id"], db.iso(db.now())))
+            with db.tx(cn):
+                if kind == "aaf_reminder":
+                    recent = cn.execute(
+                        "SELECT 1 FROM notification_deliveries WHERE case_id=? AND channel=? "
+                        "AND kind IN ('aaf','aaf_reminder') AND state IN ('sending','accepted','uncertain') "
+                        "AND created_at>? LIMIT 1",
+                        (case["id"], channel, db.iso(db.now() - timedelta(hours=24)))).fetchone()
+                    if recent:
+                        continue
+                claim = cn.execute(
+                    "INSERT OR IGNORE INTO notification_deliveries "
+                    "(event_key, channel, kind, user_id, case_id, state, created_at) "
+                    "VALUES (?, ?, ?, ?, ?, 'sending', ?)",
+                    (event, channel, kind, user["id"], case["id"], db.iso(db.now())))
             if not claim.rowcount:
                 continue
             try:
                 if channel == "email":
                     accepted = mailer.send(destination, subject, body)
                 else:
-                    text = (f"USIRD Case Tracker: Your {kind.upper()} status has changed. "
-                            f"Sign in to view your update: {config.BASE_URL}/app "
-                            "Reply STOP to opt out.")
+                    if kind == "aaf_reminder":
+                        text = ("USIRD Case Tracker reminder: USCIS still shows your Annual Asylum Fee as due. "
+                                f"View details: {config.BASE_URL}/app Reply STOP to opt out.")
+                    else:
+                        text = (f"USIRD Case Tracker: Your {kind.upper()} status has changed. "
+                                f"Sign in to view your update: {config.BASE_URL}/app "
+                                "Reply STOP to opt out.")
                     accepted = sms.send(destination, text)
                 state = "accepted" if accepted else "failed"
             except sms.DeliveryUncertain:

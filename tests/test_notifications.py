@@ -47,3 +47,54 @@ def test_sms_requires_consent_for_new_phone_and_can_be_disabled(client):
     assert "Profile settings saved" in client.post("/account/settings", data={**payload, "sms_consent": "1"}).text
     assert client.post("/account/settings", data={**payload, "phone": "2025550143"}).status_code == 422
     assert "Profile settings saved" in client.post("/account/settings", data={**payload, "sms_enabled": ""}).text
+
+def test_daily_due_reminders_once_per_day_in_both_channels_and_stop_when_not_due(client, monkeypatch):
+    from datetime import timedelta
+    from app import phone_verification
+    from worker import run as worker
+
+    signup(client)
+    make_paid("a@example.com")
+    cn = db.connect()
+    user = cn.execute("SELECT * FROM users").fetchone()
+    profile = {"email": "contact@example.com", "phone": "+12025550142",
+               "email_enabled": True, "sms_enabled": True,
+               "sms_consent_phone": "+12025550142", "sms_consented_at": db.iso(db.now())}
+    cn.execute("UPDATE account_profiles SET contact_enc=?", (security.encrypt(json.dumps(profile)),))
+    cn.execute("UPDATE phone_verifications SET verified_phone_key=?, verified_at=?",
+               (phone_verification.digest("phone:+12025550142"), db.iso(db.now())))
+    client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789",
+                                "receipt": "ZAR1234567890", "csrf": csrf(client, "/cases/new")})
+    case = cn.execute("SELECT * FROM cases").fetchone()
+    clock = [db.now()]
+    monkeypatch.setattr(db, "now", lambda: clock[0])
+    emails, texts = [], []
+    monkeypatch.setattr(notifications.mailer, "send", lambda *args: emails.append(args) or True)
+    monkeypatch.setattr(sms, "send", lambda *args: texts.append(args) or True)
+
+    def run_check(status):
+        job = worker.claim(cn)
+        assert job
+        worker.process(cn, job, lambda numbers, receipt: (status, "105", "", numbers[0]))
+
+    run_check("DUE")
+    assert len(emails) == len(texts) == 1
+
+    clock[0] += timedelta(hours=6)
+    db.enqueue(cn, case["id"], "instant")
+    run_check("DUE")
+    assert len(emails) == len(texts) == 1
+
+    clock[0] += timedelta(hours=18)
+    db.enqueue(cn, case["id"], "instant")
+    run_check("DUE")
+    assert len(emails) == len(texts) == 2
+    assert "reminder" in emails[-1][1].lower() and "reminder" in texts[-1][1].lower()
+
+    db.enqueue(cn, case["id"], "instant")
+    run_check("NOT_DUE")
+    assert len(emails) == len(texts) == 3
+
+    clock[0] += timedelta(hours=24)
+    run_check("NOT_DUE")
+    assert len(emails) == len(texts) == 3

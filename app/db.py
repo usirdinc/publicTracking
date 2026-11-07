@@ -38,6 +38,7 @@ CREATE INDEX IF NOT EXISTS verification_sends_rate ON verification_sends(created
 CREATE TABLE IF NOT EXISTS notification_deliveries (
   event_key TEXT NOT NULL,
   channel TEXT NOT NULL,
+  kind TEXT NOT NULL DEFAULT '',
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
   state TEXT NOT NULL,
@@ -157,6 +158,7 @@ def connect(path: str | None = None) -> sqlite3.Connection:
 
 # Columns added after launch; init() adds any that are missing.
 MIGRATIONS = {
+    "notification_deliveries": [("kind", "TEXT NOT NULL DEFAULT ''")],
     "users": [("phone_verification_required", "INTEGER NOT NULL DEFAULT 0")],
     "cases": [
         ("uscis_status", "TEXT"), ("uscis_desc", "TEXT"), ("uscis_form", "TEXT"),
