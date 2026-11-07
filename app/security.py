@@ -72,7 +72,7 @@ def normalize_contact_phone(value: str) -> str:
     return "+" + digits
 
 
-A_RE = re.compile(r"^A?\d{8,9}$")
+A_RE = re.compile(r"A?[0-9]{8,9}|A?[0-9]{2,3}-[0-9]{3}-[0-9]{3}", re.IGNORECASE)
 RECEIPT_RE = re.compile(r"^[A-Z]{3}\d{10}$")
 
 
@@ -80,12 +80,12 @@ def normalize_a_numbers(raw: str) -> list[str]:
     """'A123-456-789; 987654321' -> ['A123456789', 'A987654321']; raises ValueError."""
     out = []
     for part in re.split(r"[;,\s]+", raw or ""):
-        d = re.sub(r"\D", "", part)
-        if not d:
+        if not part:
             continue
-        if len(d) not in (8, 9):
-            raise ValueError("Each A-Number must have 8 or 9 digits.")
-        out.append("A" + d.zfill(9))
+        if not A_RE.fullmatch(part):
+            raise ValueError("Each A-Number must have 8 or 9 digits, with an optional A prefix.")
+        digits = part.upper().removeprefix("A").replace("-", "")
+        out.append("A" + digits.zfill(9))
     if not out:
         raise ValueError("Enter at least one A-Number.")
     unique = list(dict.fromkeys(out))
@@ -95,7 +95,7 @@ def normalize_a_numbers(raw: str) -> list[str]:
 
 
 def normalize_receipt(raw: str) -> str:
-    r = re.sub(r"[^A-Za-z0-9]", "", raw or "").upper()
-    if not RECEIPT_RE.match(r):
+    r = re.sub(r"[\s-]", "", raw or "").upper()
+    if not RECEIPT_RE.fullmatch(r):
         raise ValueError("Receipt numbers look like ABC1234567890 (3 letters, 10 digits).")
     return r

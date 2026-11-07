@@ -258,9 +258,44 @@ def dashboard(request: Request):
         return redirect("/subscribe")
     cases = cn.execute("SELECT * FROM cases WHERE user_id=? ORDER BY id", (u["id"],)).fetchall()
     flash = request.session.pop("flash", None)
-    return render(request, "dashboard.html", user=u, cases=cases, paid=db.is_paid(u),
+    has_photo = cn.execute("SELECT 1 FROM profile_photos WHERE user_id=?", (u["id"],)).fetchone() is not None
+    return render(request, "dashboard.html", user=u, cases=cases, paid=db.is_paid(u), has_photo=has_photo,
                   checkout_url=config.SQUARE_CHECKOUT_URL, flash=flash,
                   paused=_paused(cn), admin=is_admin(u), billing_row=billing.enrollment(cn, u["id"]))
+
+
+@app.get("/account/photo")
+@app.put("/account/photo")
+@app.delete("/account/photo")
+async def account_photo(request: Request):
+    headers = {"Cache-Control": "no-store, private", "X-Content-Type-Options": "nosniff"}
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not user:
+            return Response(status_code=401, headers=headers)
+        if request.method == "GET":
+            photo = cn.execute("SELECT jpeg FROM profile_photos WHERE user_id=?", (user["id"],)).fetchone()
+            if photo is None:
+                return Response(status_code=404, headers=headers)
+            return Response(photo["jpeg"], media_type="image/jpeg", headers=headers)
+        if not security.csrf_ok(request.session, request.headers.get("X-CSRF-Token")):
+            return Response(status_code=403, headers=headers)
+        if request.method == "DELETE":
+            cn.execute("DELETE FROM profile_photos WHERE user_id=?", (user["id"],))
+            return Response(status_code=204, headers=headers)
+        if request.headers.get("Content-Type") != "image/jpeg":
+            return Response(status_code=415, headers=headers)
+        photo = bytearray()
+        async for chunk in request.stream():
+            if len(photo) + len(chunk) > 256 * 1024:
+                return Response(status_code=413, headers=headers)
+            photo.extend(chunk)
+        if not photo.startswith(b"\xff\xd8\xff") or not photo.endswith(b"\xff\xd9"):
+            return Response(status_code=415, headers=headers)
+        cn.execute("INSERT INTO profile_photos (user_id, jpeg) VALUES (?, ?) "
+                   "ON CONFLICT(user_id) DO UPDATE SET jpeg=excluded.jpeg",
+                   (user["id"], bytes(photo)))
+        return Response(status_code=204, headers=headers)
 
 
 @app.get("/subscribe", response_class=HTMLResponse)

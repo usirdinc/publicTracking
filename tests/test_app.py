@@ -336,3 +336,24 @@ def test_square_confirmation_controls_registration_return(client, monkeypatch):
     assert response.json() == {'paid':True} and 'no-store' in response.headers['cache-control']
     assert client.get('/subscribe', follow_redirects=False).headers['location'] == '/app'
     assert client.get('/app').status_code == 200
+
+def test_profile_photo_upload_requires_session_csrf_and_jpeg(client):
+    assert client.get("/account/photo").status_code == 401
+    signup(client)
+    make_paid("a@example.com")
+    page = client.get("/app")
+    token = re.search(r'data-csrf="([^"]+)"', page.text).group(1)
+    headers = {"X-CSRF-Token": token, "Content-Type": "image/jpeg"}
+    assert client.put("/account/photo", headers={"Content-Type": "image/jpeg"}, content=b"bad").status_code == 403
+    assert client.put("/account/photo", headers=headers, content=b"bad").status_code == 415
+    assert client.put("/account/photo", headers=headers, content=b"x" * (256 * 1024 + 1)).status_code == 413
+    assert client.get("/account/photo").status_code == 404
+
+
+def test_intake_rejects_extra_letters_in_a_number_and_punctuation_in_receipt(client):
+    signup(client)
+    make_paid("a@example.com")
+    payload = {**CLIENT_DETAILS, "csrf": csrf(client, "/cases/new"),
+               "a_numbers": "A123456789", "receipt": "ZAR1234567890"}
+    assert client.post("/cases", data={**payload, "a_numbers": "AB123456789"}).status_code == 422
+    assert client.post("/cases", data={**payload, "receipt": "ZAR!1234567890"}).status_code == 422

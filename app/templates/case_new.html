@@ -17,9 +17,9 @@
     <fieldset>
       <legend>Case identifiers</legend>
       <div class="intake-fields">
-        <label>A-Number(s) <input name="a_numbers" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="A123456789" value="{{ a_numbers }}">
+        <label>A-Number(s) <input data-intake-field name="a_numbers" maxlength="80" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="A123456789" value="{{ a_numbers }}">
           <span class="hint">For a family on one I-589, enter the primary applicant’s A-Number first, then the others separated by commas. Your account can track up to {{ max_people }} people across {{ max_cases }} cases.</span></label>
-        <label>I-589 receipt number <input name="receipt" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ZAR1234567890" value="{{ receipt }}">
+        <label>I-589 receipt number <input data-intake-field name="receipt" maxlength="30" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="ZAR1234567890" value="{{ receipt }}">
           <span class="hint">Enter the three letters and ten digits from the USCIS receipt notice.</span></label>
         <label>Case label <span class="muted">(optional)</span> <input name="label" maxlength="60" placeholder="e.g. Family asylum application" value="{{ label }}"></label>
       </div>
@@ -31,3 +31,4 @@
   </form>
 </div>
 {% endblock %}
+{% block scripts %}<script src="/static/intake.js?v=20261106-dial" defer></script>{% endblock %}
