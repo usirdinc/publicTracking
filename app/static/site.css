@@ -1,9 +1,9 @@
 /* USIRD Case Tracker. Shared, dependency-free, CSP-compatible design system. */
 :root {
   color-scheme: light dark;
-  --bg: #f6f8fa; --surface: #fff; --surface-2: #f6f8fa; --fg: #1f2328;
-  --fg-2: #3d4c5c; --muted: #617083; --line: #d0d7de; --line-strong: #8c959f;
-  --primary: #6a001b; --primary-hover: #510015; --primary-soft: #f8f0f2; --on-primary: #fff;
+  --bg: #edf0f3; --surface: #fff; --surface-2: #eef0f2; --fg: #171b20;
+  --fg-2: #303b48; --muted: #4d5968; --line: #afb8c3; --line-strong: #73808e;
+  --primary: #6a001b; --primary-hover: #510015; --primary-soft: #f0f0f1; --on-primary: #fff;
   --ok: #226445; --ok-soft: #edf7f1; --warn: #875716; --warn-soft: #fff7e7;
   --due: #a02433; --due-soft: #fff1f2; --pending: #536479; --pending-soft: #edf1f5;
   --focus: #0969da; --radius: 6px;
@@ -396,7 +396,7 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
   .auth-panel { padding: 22px; }
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0d1117; --surface: #161b22; --surface-2: #161b22; --shadow: 0 1px 2px rgb(0 0 0 / 28%); --fg: #edf0f4; --fg-2: #c2cbd6; --muted: #a0adbd; --line: #303a47; --line-strong: #475467; --primary: #ee9eb3; --primary-hover: #f5bfd0; --primary-soft: #30212a; --on-primary: #30121c; --focus: #ee9eb3; --ok: #90d0ad; --ok-soft: #192e25; --warn: #e8c17c; --warn-soft: #30291d; --due: #f2a0a9; --due-soft: #341f28; --pending: #bac7d9; --pending-soft: #26303d; }
+  :root { --bg: #0d1117; --surface: #161b22; --surface-2: #161b22; --shadow: 0 1px 2px rgb(0 0 0 / 28%); --fg: #edf0f4; --fg-2: #c2cbd6; --muted: #a0adbd; --line: #4a5665; --line-strong: #738194; --primary: #ee9eb3; --primary-hover: #f5bfd0; --primary-soft: #30212a; --on-primary: #30121c; --focus: #ee9eb3; --ok: #90d0ad; --ok-soft: #192e25; --warn: #e8c17c; --warn-soft: #30291d; --due: #f2a0a9; --due-soft: #341f28; --pending: #bac7d9; --pending-soft: #26303d; }
   .logo, .st-steps li.active .st-node { background: #6a001b; color: #fff; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -806,3 +806,23 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 @media (max-width: 580px) {
   .account-page h1 { font-size: 24px; }
 }
+
+
+/* Clear status colors and defined information sections. */
+.badge.tone-ok { background: #226445; color: #fff; }
+.badge.tone-warn { background: #875716; color: #fff; }
+.badge.tone-due { background: #a02433; color: #fff; }
+.badge.tone-pending { background: #46566b; color: #fff; }
+[data-case-view="aaf"] .result-section-header { background: #6a001b; color: #fff; }
+[data-case-view="status"] .result-section-header { background: #303b48; color: #fff; }
+[data-case-view="aaf"] .result-section-header p,
+[data-case-view="status"] .result-section-header p { color: #fff; }
+[data-case-view="aaf"] .result-section-icon,
+[data-case-view="status"] .result-section-icon { background: transparent; color: #fff; border: 1px solid #fff; }
+[data-case-view="description"] .result-section-header,
+[data-case-view="history"] .result-section-header { border-bottom: 1px solid var(--line); }
+.intake-stages button[aria-current="step"] { background: #6a001b; color: #fff; border-color: #6a001b; }
+.upcoming-tracking { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 22px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px; }
+.upcoming-tracking > svg { color: var(--primary); margin-top: 2px; }
+.upcoming-tracking h2 { font-size: 16px; margin: 0 0 4px; }
+.upcoming-tracking p { margin: 0; font-size: 14px; color: var(--fg-2); }
