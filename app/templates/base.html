@@ -1,0 +1,83 @@
+{% from "_icons.html" import icon %}{% from "_stepper.html" import stepper %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6a001b">
+<meta name="color-scheme" content="light dark">
+<title>
+{% block title %}
+  USIRD Case Tracker
+{% endblock %}
+</title>
+<meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
+<link rel="stylesheet" href="/static/site.css?v=20261107-settings">
+{% if request.url.path != '/subscribe' %}
+<link rel="stylesheet" href="/static/navigation.css?v=20261106-motion" media="(prefers-reduced-motion: no-preference)">
+{% endif %}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><span class="logo">{{ icon('shield') }}</span><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span></a>
+    <nav aria-label="Main navigation">
+      {% if user %}
+        <a href="/app"
+        {% if request.url.path == '/app' %}
+          aria-current="page"
+        {% endif %}
+        >My cases</a>
+        {% if admin %}
+          <a class="hide-sm" href="/admin"
+          {% if request.url.path.startswith('/admin') %}
+            aria-current="page"
+          {% endif %}
+          >Admin</a>
+        {% endif %}
+        <details class="profile-menu">
+          <summary aria-label="Open account menu"><span class="menu-avatar" aria-hidden="true">{{ user.email[0]|upper }}</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
+          <div class="profile-menu-panel">
+            <p class="hint">Signed in as</p><p class="profile-menu-email">{{ user.email }}</p>
+            <a href="/account/settings">Profile settings</a>
+            <a href="/app#account">Subscription and account</a>
+            <form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>
+          </div>
+        </details>
+      {% else %}
+        <a class="hide-sm" href="/#how">How it works</a>
+        <a href="/login"
+        {% if request.url.path == '/login' %}
+          aria-current="page"
+        {% endif %}
+        >Log in</a>
+        <a class="btn small" href="/signup">Get started</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+{% if flash %}
+  <div class="wrap notice-wrap">
+    <div class="toast" role="status">
+      <span>{{ flash }}</span><button type="button" class="notice-close" data-dismiss-notice aria-label="Dismiss notification">×</button>
+    </div>
+  </div>
+{% endif %}
+<main class="wrap" id="main" tabindex="-1">
+  {% block content %}
+  {% endblock %}
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <a class="footer-brand" href="/">USIRD Case Tracker </a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+    </div>
+    <nav aria-label="Footer navigation">
+      <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a>
+    </nav>
+  </div>
+</footer>
+<script src="/static/app.js?v=20261107-check-feedback" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
