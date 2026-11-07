@@ -1,10 +1,24 @@
-/* Same-origin navigation uses the browser's normal link and history behavior. */
+/* The header stays in place while the main content changes. */
 @view-transition { navigation: auto; }
 
 main { view-transition-name: page-content; }
 
-::view-transition-group(*) { animation-duration: 160ms; }
-::view-transition-old(root) { display: none; }
+::view-transition-group(root),
+::view-transition-group(page-content),
 ::view-transition-new(root) { animation: none; }
-::view-transition-old(page-content),
-::view-transition-new(page-content) { animation-duration: 160ms; }
+::view-transition-old(root) { display: none; }
+::view-transition-image-pair(page-content) { isolation: auto; }
+::view-transition-old(page-content) {
+  mix-blend-mode: normal;
+  animation: page-exit 110ms ease-in both;
+}
+::view-transition-new(page-content) {
+  mix-blend-mode: normal;
+  animation: page-enter 210ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes page-exit { to { opacity: 0; } }
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -188,12 +188,14 @@
     });
     if (panels.some(function (panel) { return !panel; })) return;
 
-    function activate(index, moveFocus) {
+    function activate(index, moveFocus, animate) {
+      var changed = tabs[index].getAttribute('aria-selected') !== 'true';
       tabs.forEach(function (tab, i) {
         var active = i === index;
         tab.setAttribute('aria-selected', String(active));
         tab.tabIndex = active ? 0 : -1;
         panels[i].hidden = !active;
+        panels[i].classList.toggle('tab-enter', Boolean(active && animate && changed));
       });
       if (moveFocus) tabs[index].focus();
     }
@@ -202,7 +204,7 @@
       panels[i].setAttribute('role', 'tabpanel');
       panels[i].setAttribute('aria-labelledby', tab.id);
       panels[i].tabIndex = 0;
-      tab.addEventListener('click', function () { activate(i, false); });
+      tab.addEventListener('click', function () { activate(i, false, true); });
       tab.addEventListener('keydown', function (event) {
         var next;
         if (event.key === 'ArrowRight') next = (i + 1) % tabs.length;
@@ -211,7 +213,7 @@
         else if (event.key === 'End') next = tabs.length - 1;
         else return;
         event.preventDefault();
-        activate(next, true);
+        activate(next, true, true);
       });
     });
     activate(Math.max(0, tabs.findIndex(function (tab) { return tab.dataset.caseTab === selected; })), false);
