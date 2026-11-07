@@ -71,7 +71,7 @@
             </div>
             {% if cases|length > 1 %}
               <div class="case-tablist" role="tablist" aria-label="Tracking views for {{ c.label }}" hidden>
-                {% for key, name in [('aaf', 'AAF'), ('status', 'USCIS status'), ('history', 'USCIS history')] %}
+                {% for key, name in [('aaf', 'AAF'), ('status', 'Case status'), ('description', 'Description'), ('history', 'History')] %}
                   <button type="button" role="tab" id="tab-{{ c.id }}-{{ key }}" aria-controls="view-{{ c.id }}-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-case-tab="{{ key }}">{{ name }}{% if key == 'aaf' and c.status == 'DUE' %} <span class="case-tab-due">Fee due</span>{% endif %}</button>
                 {% endfor %}
               </div>
@@ -79,9 +79,14 @@
             <div class="case-views{% if cases|length == 1 %} case-views-overview{% endif %}">
               <section class="tracking-view" id="view-{{ c.id }}-aaf" data-case-view="aaf">
                 <h3>{{ icon('cash') }} Annual Asylum Fee</h3>
-                <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
+                <div class="result-heading">
+                  <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
+                  {% if c.status == 'DUE' and c.amount %}
+                    <strong class="fee-amount">${{ c.amount }}</strong>
+                  {% endif %}
+                </div>
                 <div class="tile-value">
-                  {{ t[0] if c.status else "Getting your fee status" }}
+                  {{ "Annual Asylum Fee due" if c.status == 'DUE' and c.amount else t[0] if c.status else "Getting your fee status" }}
                 </div>
                 <div class="tile-sub">
                   {% if c.checked_at %}
@@ -109,15 +114,6 @@
                   <div class="tile-value">
                     {{ c.uscis_status }}
                   </div>
-                  {% if c.uscis_desc %}
-                    <details class="uscis-explanation" open>
-                      <summary><span>What this means</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
-                      <div class="uscis-explanation-body">
-                        <div class="uscis-description">{{ c.uscis_desc | uscis_description }}</div>
-                        <p class="source-note">Source: USCIS · Information only, not legal advice.</p>
-                      </div>
-                    </details>
-                  {% endif %}
                   <div class="tile-sub">
                     {% if c.uscis_modified %}
                       USCIS updated <time data-date datetime="{{ c.uscis_modified }}">{{ c.uscis_modified[:10] }}</time>
@@ -151,6 +147,18 @@
                   </div>
                 {% endif %}
               </section>
+              <section class="tracking-view case-description-view" id="view-{{ c.id }}-description" data-case-view="description">
+                <h3>{{ icon('doc') }} Case description</h3>
+                {% if c.uscis_desc %}
+                  <div class="uscis-description">{{ c.uscis_desc | uscis_description }}</div>
+                  <p class="source-note">Source: USCIS · Information only, not legal advice.</p>
+                {% else %}
+                  <div class="result-empty">
+                    <p class="result-empty-title">Waiting for the USCIS description</p>
+                    <p class="hint">The description will appear here when USCIS provides it.</p>
+                  </div>
+                {% endif %}
+              </section>
               <section class="tracking-view" id="view-{{ c.id }}-history" data-case-view="history">
                 <h3>USCIS case history</h3>
                 {% set history = case_history(c.uscis_history_enc) %}
@@ -158,11 +166,14 @@
                   <p class="hint">History returned by USCIS. Some earlier events may not be available.</p>
                   <ol class="history-timeline">
                     {% for event in history %}
-                      <li><span class="history-date">{{ event.date or 'Date not provided' }}</span><div class="uscis-description">{{ event.text | uscis_description }}</div></li>
+                      <li><div class="history-event"><span class="history-date">{{ event.date or 'Date not provided' }}</span><div class="uscis-description">{{ event.text | uscis_description }}</div></div></li>
                     {% endfor %}
                   </ol>
                 {% else %}
-                  <p class="hint">No history has been retrieved yet. Your next USCIS check will request it; USCIS may not provide history for every case.</p>
+                  <div class="result-empty">
+                    <p class="result-empty-title">No history available yet</p>
+                    <p class="hint">Your next USCIS check will request it. USCIS may provide only the current status for some cases.</p>
+                  </div>
                 {% endif %}
               </section>
             </div>

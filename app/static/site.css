@@ -574,22 +574,7 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .case-list .case-tablist { padding-inline: clamp(12px, 3vw, 20px); background: var(--surface-2); }
 .case-list .case-tablist button { min-height: 44px; }
 .case-list .workspace-case-actions { padding-inline: clamp(14px, 3vw, 24px); }
-.uscis-explanation { margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
-.uscis-explanation summary {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 42px; padding: 8px 13px; border-radius: 6px; list-style: none;
-  cursor: pointer; color: var(--fg); font-size: 13px; font-weight: 650;
-}
-.uscis-explanation summary::-webkit-details-marker { display: none; }
-.uscis-explanation summary:hover { color: var(--primary); }
 .disclosure-chevron { flex: none; width: 8px; height: 8px; margin-right: 3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
-.uscis-explanation[open] .disclosure-chevron { transform: rotate(225deg); }
-.uscis-explanation-body { padding: 12px 13px; border-top: 1px solid var(--line); background: var(--surface); border-radius: 0 0 6px 6px; }
-.uscis-explanation-body .uscis-description { margin: 0; line-height: 1.65; }
-@media (prefers-reduced-motion: no-preference) {
-  .disclosure-chevron { transition: transform 160ms ease-out; }
-  .uscis-explanation[open] .uscis-explanation-body { animation: detail-enter 160ms ease-out; }
-}
 
 
 .workspace-form [hidden] { display: none; }
@@ -664,3 +649,25 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 @media (prefers-reduced-motion: no-preference) {
   .profile-menu[open] .profile-menu-panel { animation: detail-enter 120ms ease-out; }
 }
+
+
+/* Result summaries, narrative, and events have distinct reading hierarchies. */
+.result-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.fee-amount { font-size: clamp(26px, 4vw, 32px); line-height: 1.2; font-variant-numeric: tabular-nums; letter-spacing: -.025em; color: var(--fg); }
+.tracking-view[data-case-view="aaf"] .tile-value,
+.tracking-view[data-case-view="status"] .tile-value { font-size: 19px; margin-block: 10px 12px; }
+.case-views-overview > [data-case-view="description"] { grid-column: 1 / -1; }
+.case-description-view .uscis-description { max-width: 70ch; margin: 0; line-height: 1.8; }
+.case-description-view .uscis-description > :first-child { margin-top: 0; }
+.case-description-view .uscis-description > :last-child { margin-bottom: 0; }
+.case-description-view .source-note { padding-top: 12px; border-top: 1px solid var(--line); }
+.history-timeline { margin: 20px 0 4px; border: 0; padding: 0; }
+.history-timeline li { position: relative; padding: 0 0 22px 24px; }
+.history-timeline li::before { content: ""; position: absolute; top: 7px; left: 0; width: 8px; height: 8px; border: 2px solid var(--primary); background: var(--surface); border-radius: 50%; }
+.history-timeline li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 20px; bottom: 0; width: 1px; background: var(--line); }
+.history-event { min-width: 0; }
+.history-date { display: inline-block; padding: 3px 7px; border-radius: 4px; background: var(--surface-2); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.history-timeline .uscis-description { margin-top: 8px; max-width: 70ch; line-height: 1.7; }
+.result-empty { padding: 14px 0 8px; max-width: 52ch; }
+.result-empty-title { margin: 0 0 6px; font-weight: 600; font-size: 14px; }
+.result-empty .hint { margin: 0; }
