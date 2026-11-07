@@ -10,7 +10,7 @@
       <ol class="onboarding-list">
         <li><span>01</span>
         <div>
-          <strong>Create your account</strong><p>Start with your email and a secure password.</p>
+          <strong>Create your account</strong><p>Enter your email, phone number, and a secure password. Confirm the code we text you.</p>
         </div>
         </li><li><span>02</span>
         <div>
@@ -24,8 +24,10 @@
       </ol>
     </div>
     <div class="auth-panel">
-      <h2>Create an account</h2><p class="muted">Next you'll start your {{ price }}/month subscription. Your account turns on once it's paid.</p>
+      <h2>Create an account</h2><p class="muted">First confirm your phone number. Then continue to your {{ price }}/month subscription.</p>
       <form method="post" action="/signup">
+        <label for="signup-phone">Phone number</label><input id="signup-phone" type="tel" name="phone" required maxlength="40" autocomplete="tel" placeholder="+1 202 555 0142">
+        <p class="hint">We’ll text a verification code to confirm this number.</p>
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
         <label for="password">Password</label>
@@ -34,7 +36,7 @@
         </div>
         <p class="hint" id="password-hint">Use at least 10 characters.</p>
         <label class="check"><input type="checkbox" name="agree" value="1" required> <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</span></label>
-        <button class="btn lg block" type="submit">Continue to payment {{ icon('arrow') }}</button>
+        <button class="btn lg block" type="submit">Send verification code {{ icon('arrow') }}</button>
       </form>
       <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
     </div>

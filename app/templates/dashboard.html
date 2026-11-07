@@ -15,6 +15,12 @@
       {% endif %}
     </div>
   </div>
+  {% if needs_phone_verification %}
+    <section class="subscription-banner" aria-label="Verify your phone number">
+      <div><h2>Confirm your phone number</h2><p>Verify the number saved in your profile to receive text notifications.</p></div>
+      <a class="btn" href="/account/verify-phone">Verify phone</a>
+    </section>
+  {% endif %}
   {% if paused %}
     <div class="banner" role="status">
       {{ icon('clock') }} <span>Automatic checks are paused for a short time. Your cases will be checked as soon as they resume.</span>
@@ -99,7 +105,14 @@
                   {% endif %}
                 </div>
                 {% if c.status == 'DUE' %}
-                  <p class="pay-note"><strong>Your fee is due.</strong> Pay only on the official USCIS site: <a href="https://my.uscis.gov/accounts/annual-asylum-fee/questionnaire" rel="noopener" target="_blank">my.uscis.gov</a></p>
+                  <div class="pay-note">
+                    <strong>Your fee is due.</strong>
+                    <p>Use the official USCIS payment portal for the amount and instructions for your application.</p>
+                    <div class="payment-guide-actions">
+                      <button type="button" class="btn small" data-open-guide="aaf-payment-guide" hidden>How to pay the AAF</button>
+                      <a href="https://my.uscis.gov/accounts/annual-asylum-fee/start/overview" rel="noopener noreferrer" target="_blank">Open USCIS payment portal {{ icon('arrow') }}</a>
+                    </div>
+                  </div>
                 {% endif %}
                 <div class="tracking-actions">
                   <span class="when">

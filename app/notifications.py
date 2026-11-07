@@ -3,8 +3,9 @@ from contextlib import closing
 import hashlib
 import json
 import logging
+from cryptography.fernet import InvalidToken
 
-from app import config, db, mailer, security, sms
+from app import config, db, mailer, security, sms, phone_verification
 
 log = logging.getLogger("notifications")
 
@@ -13,7 +14,17 @@ def contact(cn, user):
     row = cn.execute("SELECT contact_enc FROM account_profiles WHERE user_id=?", (user["id"],)).fetchone()
     if row:
         return json.loads(security.decrypt(row["contact_enc"]))
-    return {"email": user["email"], "phone": "", "email_enabled": True, "sms_enabled": True}
+    phones = set()
+    for case in cn.execute("SELECT client_details_enc FROM cases WHERE user_id=?", (user["id"],)):
+        if case["client_details_enc"]:
+            try:
+                legacy = json.loads(security.decrypt(case["client_details_enc"]))
+                if legacy.get("phone"):
+                    phones.add(security.normalize_contact_phone(legacy["phone"]))
+            except (InvalidToken, ValueError, TypeError):
+                continue
+    return {"email": user["email"], "phone": next(iter(phones)) if len(phones) == 1 else "",
+            "email_enabled": True, "sms_enabled": True}
 
 
 def send_update(case, subject, body, kind):
@@ -34,7 +45,8 @@ def send_update(case, subject, body, kind):
             channels.append(("email", profile.get("email") or user["email"]))
         phone = profile.get("phone", "")
         if (profile.get("sms_enabled", True) and profile.get("sms_consented_at")
-                and profile.get("sms_consent_phone") == phone and sms.configured()):
+                and profile.get("sms_consent_phone") == phone and sms.configured()
+                and phone_verification.is_verified(cn, user["id"], phone)):
             channels.append(("sms", phone))
         for channel, destination in channels:
             # A durable claim prevents duplicate sends after retries or concurrent workers.

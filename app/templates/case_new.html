@@ -16,6 +16,8 @@
     {% include "_client_details_fields.html" %}
     <fieldset data-intake-step data-step-label="Case numbers">
       <legend tabindex="-1">Find your case</legend>
+      <p class="hint">Use the A-Number and receipt number on the USCIS notice for this application.</p>
+      <button class="link number-help" type="button" data-open-guide="number-guide" hidden>Where do I find these numbers?</button>
       <div class="intake-fields">
         <label>A-Number(s) <input data-intake-field name="a_numbers" maxlength="80" required autocapitalize="characters" spellcheck="false" autocomplete="off" placeholder="A123456789" value="{{ a_numbers }}">
           <span class="hint">For a family on one I-589, enter the primary applicant’s A-Number first, then the others separated by commas. Your account can track up to {{ max_people }} people across {{ max_cases }} cases.</span></label>

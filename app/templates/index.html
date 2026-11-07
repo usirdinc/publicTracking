@@ -16,16 +16,14 @@
       <span>{{ icon('check') }} Encrypted case numbers</span>
     </div>
   </div>
-  <section class="panel case-example" aria-labelledby="example-heading">
-    <span class="eyebrow">SAMPLE DASHBOARD</span>
-    <h2 id="example-heading">Family asylum application</h2>
-    <dl>
-      <div><dt>Annual Asylum Fee</dt><dd><span class="badge tone-ok">Not due</span></dd></div>
-      <div><dt>USCIS case status</dt><dd>Case Was Received</dd></div>
-      <div><dt>Form</dt><dd class="mono">I-589</dd></div>
-    </dl>
-    <p>{{ icon('clock') }} Checked daily. USCIS history is shown when available.</p>
-  </section>
+  <figure class="landing-photo">
+    <img src="/static/images/asylum-application.webp" width="1024" height="436" alt="An American flag above the title of Form I-589">
+    <figcaption>Your application. Your updates. One place to keep track.</figcaption>
+    <div class="photo-service-summary">
+      <span>{{ icon('cash') }} Annual Asylum Fee</span>
+      <span>{{ icon('doc') }} USCIS case updates</span>
+    </div>
+  </figure>
 </section>
 
 <section class="section" id="how">
@@ -46,6 +44,19 @@
     <div class="card feature"><div class="ico">{{ icon('bolt') }}</div><h3>Check anytime</h3><p>Request a fresh check from your dashboard and follow its progress.</p></div>
     <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to {{ max_people }} people across {{ max_cases }} cases on one account.</p></div>
     <div class="card feature"><div class="ico">{{ icon('lock') }}</div><h3>Private and secure</h3><p>Your numbers are encrypted on our server. You can delete your case data anytime.</p></div>
+  </div>
+</section>
+
+<section class="section notice-story" aria-labelledby="notice-story-heading">
+  <figure class="notice-photo">
+    <img src="/static/images/receipt-notice.webp" width="1024" height="456" loading="lazy" alt="A USCIS notice photograph with identifying information permanently covered">
+    <figcaption>Document illustration with identifying details removed.</figcaption>
+  </figure>
+  <div>
+    <h2 id="notice-story-heading">Find the numbers on your USCIS notice</h2>
+    <p>Your A-Number identifies the person. The receipt number identifies the application. Our labeled example shows where to find each one.</p>
+    <button class="btn ghost" data-open-guide="number-guide" type="button" hidden>See a receipt example {{ icon('arrow') }}</button>
+    <a class="text-resource" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">Open the redacted receipt example (PDF)</a>
   </div>
 </section>
 

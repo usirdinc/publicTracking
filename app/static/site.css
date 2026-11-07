@@ -713,3 +713,76 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .notification-preferences { min-width: 0; padding: 18px 0 0; margin-top: 20px; border: 0; border-top: 1px solid var(--line); }
 .notification-preferences legend { padding-right: 12px; font-weight: 650; }
 .notification-preferences .check { margin-block: 14px; font-family: var(--ui-font); font-size: 13px; }
+
+
+.account-page { --ui-font: var(--font); }
+.phone-send-form { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-spacing: .15em; margin-bottom: 16px; }
+
+.phone-send-form:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+
+
+/* Muted blue and warm paper retain the formal office theme. */
+:root { --bg: #f5f4f0; --surface-2: #f2f4f5; --primary: #284f66; --primary-hover: #1d3a4e; --primary-soft: #eaf0f4; }
+.landing-photo { margin: 0; align-self: center; overflow: hidden; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+.landing-photo > img { display: block; width: 100%; height: auto; }
+.landing-photo figcaption { padding: 14px 18px 0; font-size: 16px; }
+.photo-service-summary { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 14px 18px 18px; color: var(--fg-2); font-size: 13px; }
+.photo-service-summary svg { width: 16px; height: 16px; color: var(--primary); margin-right: 4px; }
+.notice-story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.notice-story p { color: var(--fg-2); max-width: 52ch; }
+.notice-photo { margin: 0; }
+.notice-photo img { width: 100%; display: block; border-radius: 6px; }
+.notice-photo figcaption, .number-example figcaption { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.text-resource { display: block; margin-top: 12px; font-size: 13px; }
+.payment-guide-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.payment-guide-actions > a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.payment-guide-actions > a svg { width: 14px; height: 14px; }
+.number-help { margin: 0 0 16px; text-decoration: underline; }
+[data-open-guide][hidden] { display: none; }
+.tracking-guide-dialog { width: min(820px, calc(100% - 24px)); max-height: 88dvh; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); overflow-y: auto; }
+.tracking-guide-dialog::backdrop { background: rgb(15 24 35 / .5); }
+.guide-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--line); background: var(--primary-soft); }
+.guide-heading h2 { font-size: 25px; margin: 0 0 6px; }
+.guide-heading p { margin: 0; font-size: 14px; color: var(--fg-2); }
+.guide-close { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); font-size: 24px; cursor: pointer; }
+.guide-content { padding: 24px; }
+.number-example { margin: 0 0 24px; }
+.number-example img { width: 100%; height: auto; display: block; border: 1px solid var(--line); }
+.number-definitions { margin: 0 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.number-definitions dt { display: flex; gap: 8px; align-items: center; font-weight: 650; margin-bottom: 8px; }
+.number-definitions dd { margin: 0; color: var(--fg-2); }
+.number-key { width: 14px; height: 14px; border: 3px solid; }
+.receipt-key { color: #315672; }.alien-key { color: #8d5338; }
+.payment-map { list-style: none; margin: 0 0 26px; padding: 0; }
+.payment-map > li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 24px; }
+.payment-map > li:not(:last-child)::before { content: ""; position: absolute; left: 16px; top: 36px; bottom: 4px; width: 1px; background: var(--line-strong); }
+.payment-map-step { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: 16px; font-weight: 650; }
+.payment-map h3 { font-size: 19px; margin: 4px 0 8px; }
+.payment-map p { margin: 0 0 8px; color: var(--fg-2); }
+.payment-map a { text-decoration: underline; }
+.payment-branches { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.payment-branches > div { border: 1px solid var(--line); padding: 12px; border-radius: 5px; }
+.payment-branches strong { display: block; margin-bottom: 6px; }
+.payment-branches p { font-size: 14px; margin: 0; }
+.payment-receipt-note { margin-bottom: 24px; padding: 18px; background: var(--surface-2); border-radius: 6px; }
+.payment-receipt-note h3 { font-size: 19px; }
+.payment-receipt-note p { margin: 0; }
+.notice-attachments { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.notice-attachments a { min-width: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; padding-bottom: 12px; }
+.notice-attachments img { width: 100%; height: 200px; object-fit: cover; object-position: top; display: block; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.notice-attachments strong, .notice-attachments span { display: block; margin-inline: 12px; }
+.notice-attachments span { font-size: 13px; color: var(--muted); }
+.guide-source { border-top: 1px solid var(--line); padding-top: 16px; margin: 24px 0 0; color: var(--muted); font-size: 12px; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #10171c; --surface-2: #1b252d; --primary: #a8cce0; --primary-hover: #c0dce9; --primary-soft: #20333e; --on-primary: #152631; }
+}
+@media (max-width: 620px) {
+  .notice-story { grid-template-columns: minmax(0,1fr); gap: 20px; }
+  .number-definitions, .payment-branches { grid-template-columns: minmax(0,1fr); }
+  .guide-heading, .guide-content { padding: 18px; }
+  .guide-heading h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tracking-guide-dialog[open] { animation: detail-enter 160ms ease-out; }
+}

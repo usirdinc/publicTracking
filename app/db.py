@@ -16,6 +16,25 @@ CREATE TABLE IF NOT EXISTS users (
   square_customer_id TEXT,
   subscription_status TEXT
 );
+CREATE TABLE IF NOT EXISTS phone_verifications (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  phone_enc TEXT,
+  code_hash TEXT,
+  challenge TEXT,
+  expires_at TEXT,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_sent_at TEXT,
+  verified_phone_key TEXT,
+  verified_at TEXT
+);
+CREATE TABLE IF NOT EXISTS verification_sends (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  phone_key TEXT NOT NULL,
+  ip_key TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS verification_sends_rate ON verification_sends(created_at);
 CREATE TABLE IF NOT EXISTS notification_deliveries (
   event_key TEXT NOT NULL,
   channel TEXT NOT NULL,
@@ -138,6 +157,7 @@ def connect(path: str | None = None) -> sqlite3.Connection:
 
 # Columns added after launch; init() adds any that are missing.
 MIGRATIONS = {
+    "users": [("phone_verification_required", "INTEGER NOT NULL DEFAULT 0")],
     "cases": [
         ("uscis_status", "TEXT"), ("uscis_desc", "TEXT"), ("uscis_form", "TEXT"),
         ("uscis_modified", "TEXT"), ("uscis_checked_at", "TEXT"), ("uscis_next_at", "TEXT"),

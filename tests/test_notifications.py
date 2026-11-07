@@ -9,7 +9,7 @@ def test_channels_use_profile_contacts_once_and_respect_consent(client, monkeypa
     make_paid("a@example.com")
     cn = db.connect()
     user = cn.execute("SELECT * FROM users").fetchone()
-    cn.execute("INSERT INTO account_profiles (user_id, contact_enc) VALUES (?,?)",
+    cn.execute("INSERT OR REPLACE INTO account_profiles (user_id, contact_enc) VALUES (?,?)",
                (user["id"], security.encrypt(json.dumps({
                    "email": "contact@example.com", "phone": "+12025550142",
                    "email_enabled": True, "sms_enabled": True,
@@ -17,6 +17,9 @@ def test_channels_use_profile_contacts_once_and_respect_consent(client, monkeypa
     client.post("/cases", data={**CLIENT_DETAILS, "a_numbers": "A123456789",
                                 "receipt": "ZAR1234567890", "csrf": csrf(client, "/cases/new")})
     case = cn.execute("SELECT * FROM cases").fetchone()
+    from app import phone_verification
+    cn.execute("UPDATE phone_verifications SET verified_phone_key=?, verified_at=? WHERE user_id=?",
+               (phone_verification.digest("phone:+12025550142"), db.iso(db.now()), user["id"]))
     emails, texts = [], []
     monkeypatch.setattr(notifications.mailer, "send", lambda *args: emails.append(args) or True)
     monkeypatch.setattr(sms, "configured", lambda: True)

@@ -18,7 +18,7 @@ from fastapi.templating import Jinja2Templates
 from itsdangerous import BadData, URLSafeTimedSerializer
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import billing, config, db, security, square
+from app import billing, config, db, security, square, phone_verification
 from app.uscis_display import description_html, case_history
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -194,7 +194,7 @@ def signup_form(request: Request):
 
 @app.post("/signup")
 def signup(request: Request, email: str = Form(...), password: str = Form(...),
-           agree: str = Form(""), csrf: str = Form("")):
+           agree: str = Form(""), csrf: str = Form(""), phone: str = Form("")):
     if not security.csrf_ok(request.session, csrf):
         return redirect("/signup", "Your session expired. Please try again.", request)
     if throttled(client_ip(request)):
@@ -206,17 +206,28 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
         return redirect("/signup", "Use a password of at least 10 characters.", request)
     if not agree:
         return redirect("/signup", "Please accept the Terms and Privacy Policy.", request)
+    try:
+        phone = security.normalize_contact_phone(phone)
+    except ValueError as exc:
+        return redirect("/signup", str(exc), request)
     cn = get_db()
     n = cn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
     if n >= config.ACCOUNT_CAP:
         return redirect("/", "We are not accepting new registrations right now. Please check back soon.", request)
     if cn.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
         return redirect("/login", "That email already has an account. Please log in.", request)
-    cur = cn.execute("INSERT INTO users(email,pw_hash,created_at) VALUES(?,?,?)",
+    cur = cn.execute("INSERT INTO users(email,pw_hash,created_at,phone_verification_required) VALUES(?,?,?,1)",
                      (email, security.hash_password(password), db.iso(db.now())))
     request.session.clear()
     request.session["uid"] = cur.lastrowid
-    return redirect("/subscribe")
+    try:
+        user = current_user(request, cn)
+        message = phone_verification.send_code(cn, user, phone, client_ip(request))
+    except ValueError as exc:
+        message = str(exc)
+    finally:
+        cn.close()
+    return redirect("/account/verify-phone", message, request)
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -236,6 +247,8 @@ def login(request: Request, email: str = Form(...), password: str = Form(...), c
         return redirect("/login", "Email or password is not correct.", request)
     request.session.clear()
     request.session["uid"] = u["id"]
+    if u["phone_verification_required"]:
+        return redirect("/account/verify-phone")
     if u["email"] in config.LOOKUP_STAFF_EMAILS:
         return redirect("/staff/lookups")
     return redirect("/app" if _can_use(u) else "/subscribe")
@@ -259,7 +272,11 @@ def dashboard(request: Request):
     cases = cn.execute("SELECT * FROM cases WHERE user_id=? ORDER BY id", (u["id"],)).fetchall()
     flash = request.session.pop("flash", None)
     has_photo = cn.execute("SELECT 1 FROM profile_photos WHERE user_id=?", (u["id"],)).fetchone() is not None
+    from app import notifications
+    profile = notifications.contact(cn, u)
+    needs_phone_verification = bool(profile.get("phone") and not phone_verification.is_verified(cn, u["id"], profile["phone"]))
     return render(request, "dashboard.html", user=u, cases=cases, paid=db.is_paid(u), has_photo=has_photo,
+                  needs_phone_verification=needs_phone_verification,
                   checkout_url=config.SQUARE_CHECKOUT_URL, flash=flash,
                   paused=_paused(cn), admin=is_admin(u), billing_row=billing.enrollment(cn, u["id"]))
 
@@ -305,12 +322,51 @@ def account_settings(request: Request, csrf: str = Form(""),
                 cn.execute("INSERT INTO account_profiles (user_id, contact_enc) VALUES (?, ?) "
                            "ON CONFLICT(user_id) DO UPDATE SET contact_enc=excluded.contact_enc",
                            (user["id"], security.encrypt(json.dumps(contact))))
-                return redirect("/account/settings", "Profile settings saved.", request)
+                destination = "/account/settings" if phone_verification.is_verified(cn, user["id"], contact["phone"]) else "/account/verify-phone"
+                return redirect(destination, "Profile settings saved.", request)
         else:
             contact = previous
         has_photo = cn.execute("SELECT 1 FROM profile_photos WHERE user_id=?", (user["id"],)).fetchone() is not None
         response = render(request, "account_settings.html", user=user, contact=contact,
-                          error=error, has_photo=has_photo, sms_ready=sms.configured(), admin=is_admin(user))
+                          error=error, has_photo=has_photo, sms_ready=sms.configured(), phone_verified=phone_verification.is_verified(cn, user["id"], contact.get("phone", "")), admin=is_admin(user))
+        response.headers["Cache-Control"] = "no-store, private"
+        if error:
+            response.status_code = 422
+        return response
+
+
+@app.get("/account/verify-phone", response_class=HTMLResponse)
+@app.post("/account/verify-phone", response_class=HTMLResponse)
+def verify_phone(request: Request, action: str = Form(""), csrf: str = Form(""),
+                 phone: str = Form(""), code: str = Form("")):
+    from app import notifications
+    with closing(get_db()) as cn:
+        user = current_user(request, cn)
+        if not user:
+            return redirect("/login")
+        profile = notifications.contact(cn, user)
+        message = None
+        error = None
+        if request.method == "POST":
+            if not security.csrf_ok(request.session, csrf):
+                return Response(status_code=403)
+            if action == "send":
+                try:
+                    message = phone_verification.send_code(cn, user, phone, client_ip(request))
+                except ValueError as exc:
+                    error = str(exc)
+                profile = notifications.contact(cn, user)
+            elif action == "confirm":
+                if phone_verification.confirm_code(cn, user, profile.get("phone", ""), code.strip()):
+                    return redirect("/app" if _can_use(user) else "/subscribe", "Phone number verified.", request)
+                error = "The code is incorrect, expired, or has reached its attempt limit. Request a new code if needed."
+            else:
+                return Response(status_code=400)
+        challenge = cn.execute("SELECT code_hash FROM phone_verifications WHERE user_id=?", (user["id"],)).fetchone()
+        response = render(request, "verify_phone.html", user=user, phone=profile.get("phone", ""),
+                          waiting=bool(challenge and challenge["code_hash"]),
+                          verified=phone_verification.is_verified(cn, user["id"], profile.get("phone", "")),
+                          message=message, error=error)
         response.headers["Cache-Control"] = "no-store, private"
         if error:
             response.status_code = 422
@@ -361,6 +417,8 @@ def subscribe(request: Request):
     if _can_use(u):
         return redirect("/app")
     flash = request.session.pop("flash", None)
+    if u["phone_verification_required"]:
+        return redirect("/account/verify-phone")
     return render(request, "subscribe.html", user=u, checkout_url=config.SQUARE_CHECKOUT_URL,
                   lapsed=bool(u["paid_until"]), flash=flash, native=billing.enabled(),
                   billing_row=billing.enrollment(cn, u['id']),
@@ -379,6 +437,8 @@ def native_subscribe(request: Request, csrf: str = Form(''), consent: str = Form
             return JSONResponse({'message': 'Please log in again.'}, status_code=401)
         if not security.csrf_ok(request.session, csrf):
             return JSONResponse({'message': 'Your session expired. Refresh this page and try again.'}, status_code=403)
+        if u["phone_verification_required"]:
+            return JSONResponse({'message': 'Verify your phone number before continuing to payment.'}, status_code=403)
         if not billing.enabled():
             return JSONResponse({'message': 'Card checkout is temporarily unavailable.'}, status_code=503)
         row = billing.enrollment(cn, u['id'])
@@ -447,7 +507,7 @@ def _paused(cn) -> bool:
 
 
 def _can_use(u) -> bool:
-    return db.is_paid(u) or is_admin(u)
+    return not u["phone_verification_required"] and (db.is_paid(u) or is_admin(u))
 
 
 def _client_details(first_name, last_name, dob, phone, email):
@@ -963,7 +1023,7 @@ def staff_ice_save(request: Request, case_id: int, person: int, csrf: str = Form
 
 def _eoir_due(cn, limit=50):
     rows = cn.execute(
-        "SELECT c.*, u.email, u.paid_until FROM cases c JOIN users u ON u.id=c.user_id "
+        "SELECT c.*, u.email, u.paid_until, u.phone_verification_required FROM cases c JOIN users u ON u.id=c.user_id "
         "WHERE c.nationality IS NOT NULL AND (c.eoir_next_at IS NULL OR c.eoir_next_at<=?) "
         "ORDER BY c.eoir_next_at IS NOT NULL, c.eoir_next_at, c.id LIMIT ?",
         (db.iso(db.now()), limit)).fetchall()
@@ -1047,7 +1107,7 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
         return redirect("/login")
     if not config.EOIR_ENABLED:
         return redirect("/admin")
-    c = cn.execute("SELECT c.*, u.email, u.paid_until FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
+    c = cn.execute("SELECT c.*, u.email, u.paid_until, u.phone_verification_required FROM cases c JOIN users u ON u.id=c.user_id WHERE c.id=?",
                    (case_id,)).fetchone()
     if not c or not c["nationality"] or not _can_use(c):
         return redirect("/admin/eoir", "Case not found or ineligible for staff checks.", request)

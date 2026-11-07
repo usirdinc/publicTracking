@@ -14,7 +14,10 @@ CLIENT_DETAILS = {"first_name": "Test", "last_name": "Applicant", "dob": "1990-0
 
 
 @pytest.fixture()
-def client():
+def client(monkeypatch):
+    from app import sms
+    monkeypatch.setattr(sms, "configured", lambda: True)
+    monkeypatch.setattr(sms, "send", lambda *args: True)
     cn = db.connect(); db.init(cn)
     for t in ("jobs", "checks", "cases", "users", "webhook_events", "settings"):
         cn.execute(f"DELETE FROM {t}")
@@ -28,8 +31,12 @@ def csrf(c, path="/signup"):
 
 
 def signup(c, email="a@example.com", pw="correct horse battery"):
-    return c.post("/signup", data={"email": email, "password": pw, "agree": "1", "csrf": csrf(c)},
-                  follow_redirects=False)
+    response = c.post("/signup", data={"email": email, "password": pw, "phone": "2025550142",
+                                     "agree": "1", "csrf": csrf(c)}, follow_redirects=False)
+    cn = db.connect()
+    cn.execute("UPDATE users SET phone_verification_required=0 WHERE email=?", (email,))
+    cn.close()
+    return response
 
 
 def make_paid(email):
@@ -296,7 +303,7 @@ def test_redesigned_login_handles_error_then_authenticated_redirect(client):
 
 def test_signup_goes_to_subscribe_and_app_is_locked_until_paid(client):
     r = signup(client)
-    assert r.headers["location"] == "/subscribe"
+    assert r.headers["location"] == "/account/verify-phone"
     page = client.get("/subscribe")
     assert "a@example.com" in page.text and "Start your subscription" in page.text
     r = client.get("/app", follow_redirects=False)

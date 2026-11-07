@@ -32,6 +32,7 @@
       </div>
       <p class="hint" id="settings-phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</p>
       <p class="hint">Your sign-in email is {{ user.email }}.</p>
+      <p class="hint">{% if phone_verified %}Phone number verified.{% else %}<a href="/account/verify-phone">Verify your phone number</a> to enable text notifications.{% endif %}</p>
       <fieldset class="notification-preferences">
         <legend>Case notifications</legend>
         <label class="check"><input type="checkbox" name="email_enabled" value="1" {{ 'checked' if contact.get('email_enabled', true) else '' }}><span>Email me when a tracked status changes.</span></label>
