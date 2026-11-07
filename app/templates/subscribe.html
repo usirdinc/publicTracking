@@ -1,45 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Start your subscription · USIRD Case Tracker{% endblock %}
+{% block title %}{{ _("Start your subscription · USIRD Case Tracker") }}{% endblock %}
 {% block content %}
 <section class="auth-layout" aria-labelledby="subscribe-heading">
   <div class="auth-intro">
-    <span class="eyebrow">{{ 'Renew' if lapsed else 'Step 2 of 3' }}</span>
-    <h1 id="subscribe-heading">{{ 'Renew your subscription.' if lapsed else 'Start your subscription.' }}</h1>
-    <p class="lead">{{ 'Renew to keep your cases checked every day.' if lapsed else 'Enter your card details to start daily checks.' }}</p>
+    <span class="eyebrow">{{ _('Renew' if lapsed else 'Step 2 of 3') }}</span>
+    <h1 id="subscribe-heading">{{ _('Renew your subscription.' if lapsed else 'Start your subscription.') }}</h1>
+    <p class="lead">{{ _('Renew to keep your cases checked every day.' if lapsed else 'Enter your card details to start daily checks.') }}</p>
     <ol class="onboarding-list">
-      <li class="done"><span>01</span><div><strong>Create your account</strong><p>Done.</p></div></li>
-      <li class="current"><span>02</span><div><strong>Start your monthly subscription</strong><p>{{ price }} per month. Cancel anytime.</p></div></li>
-      <li><span>03</span><div><strong>Add your cases</strong><p>Once payment is confirmed, add the applicant and case details from your dashboard.</p></div></li>
+      <li class="done"><span>01</span><div><strong>{{ _("Create your account") }}</strong><p>{{ _("Done.") }}</p></div></li>
+      <li class="current"><span>02</span><div><strong>{{ _("Start your monthly subscription") }}</strong><p>{{ _("{value0} per month. Cancel anytime.", value0=price) }}</p></div></li>
+      <li><span>03</span><div><strong>{{ _("Add your cases") }}</strong><p>{{ _("Once payment is confirmed, add the applicant and case details from your dashboard.") }}</p></div></li>
     </ol>
-    <p class="hint checkout-note">Your subscription covers USIRD’s tracking service. It does not pay any government filing or asylum fee.</p>
+    <p class="hint checkout-note">{{ _("Your subscription covers USIRD’s tracking service. It does not pay any government filing or asylum fee.") }}</p>
   </div>
   <div class="auth-panel" data-subscribe>
-    <span class="eyebrow">Monthly subscription</span>
+    <span class="eyebrow">{{ _("Monthly subscription") }}</span>
     <div class="plan">
-      <div><strong>USIRD Case Tracker</strong><span>Daily asylum fee and USCIS case checks, with email alerts</span></div>
-      <div class="plan-price">{{ price }}<span>/month</span></div>
+      <div><strong>{{ _("USIRD Case Tracker") }}</strong><span>{{ _("Daily asylum fee and USCIS case checks, with email alerts") }}</span></div>
+      <div class="plan-price">{{ price }}<span>{{ _("/month") }}</span></div>
     </div>
     <div class="pay-email">
-      <span class="pay-email-label">{{ 'Your account' if native else 'Pay with this email' }}</span>
+      <span class="pay-email-label">{{ _('Your account' if native else 'Pay with this email') }}</span>
       <strong>{{ user.email }}</strong>
-      <span class="hint">{{ 'Your payment is connected to this account automatically.' if native else 'Use exactly this address at Square checkout so we can match your payment.' }}</span>
+      <span class="hint">{{ _('Your payment is connected to this account automatically.' if native else 'Use exactly this address at Square checkout so we can match your payment.') }}</span>
     </div>
     {% if native %}
       {% set active_attempt = billing_row and billing_row.state not in ('failed', 'ended') %}
       {% if active_attempt %}
         <div class="payment-pending" role="status">
-          <h2>Confirming your subscription</h2>
-          <p>We’re waiting for Square to confirm payment. Your dashboard will open automatically when it is confirmed.</p>
-          <p class="hint">Please keep this page open. You do not need to start another subscription.</p>
+          <h2>{{ _("Confirming your subscription") }}</h2>
+          <p>{{ _("We’re waiting for Square to confirm payment. Your dashboard will open automatically when it is confirmed.") }}</p>
+          <p class="hint">{{ _("Please keep this page open. You do not need to start another subscription.") }}</p>
         </div>
         {% if billing_row.state in ('uncertain', 'processing') %}
           <form action="/billing/subscribe" method="post" data-square-resume>
             <input type="hidden" name="csrf" value="{{ csrf }}">
-            <button class="btn block" type="submit">Resume confirmation</button>
+            <button class="btn block" type="submit">{{ _("Resume confirmation") }}</button>
           </form>
-          <p class="hint mt">This resumes your original request and does not start a second subscription.</p>
+          <p class="hint mt">{{ _("This resumes your original request and does not start a second subscription.") }}</p>
         {% elif billing_row.subscription_id %}
-          <p class="hint">If your card payment needs attention, <a href="/billing/invoice" target="_blank" rel="noopener">view your existing invoice at Square</a>.</p>
+          <p class="hint">{{ _("If your card payment needs attention,") }} <a href="/billing/invoice" target="_blank" rel="noopener">{{ _("view your existing invoice at Square") }}</a>.</p>
         {% endif %}
         <p class="payment-message" data-payment-message role="status" aria-live="polite"></p>
       {% else %}
@@ -47,36 +47,36 @@
               data-app-id="{{ square_app }}" data-location-id="{{ square_location }}"
               data-sdk-url="{{ square_sdk }}" data-email="{{ user.email }}">
           <input type="hidden" name="csrf" value="{{ csrf }}">
-          <label for="cardholder">Name on card</label>
+          <label for="cardholder">{{ _("Name on card") }}</label>
           <input id="cardholder" name="cardholder" autocomplete="cc-name" maxlength="120" required>
-          <span class="card-field-label" id="card-label">Card details</span>
+          <span class="card-field-label" id="card-label">{{ _("Card details") }}</span>
           <div id="card-container" aria-labelledby="card-label"></div>
-          <p class="hint" data-card-loading role="status">Loading secure card fields…</p>
-          <label class="check"><input type="checkbox" name="consent" value="1" required><span>I authorize USIRD to securely save my card with Square and charge {{ price }} today and every month until I cancel. I can cancel in Account options.</span></label>
+          <p class="hint" data-card-loading role="status">{{ _("Loading secure card fields…") }}</p>
+          <label class="check"><input type="checkbox" name="consent" value="1" required><span>{{ _("I authorize USIRD to securely save my card with Square and charge {value0} today and every month until I cancel. I can cancel in Account options.", value0=price) }}</span></label>
           <p class="payment-message" data-payment-message role="status" aria-live="polite"></p>
-          <button class="btn lg block" type="submit" data-card-submit disabled>Subscribe · {{ price }}/month</button>
+          <button class="btn lg block" type="submit" data-card-submit disabled>{{ _("Subscribe · {value0}/month", value0=price) }}</button>
         </form>
-        <noscript><p>JavaScript is required to load Square’s secure card fields. Please enable it and refresh this page.</p></noscript>
+        <noscript><p>{{ _("JavaScript is required to load Square’s secure card fields. Please enable it and refresh this page.") }}</p></noscript>
       {% endif %}
-      <p class="hint payment-security">{{ icon('shield') }} Secure card payment by Square. USIRD never receives your card number or security code.</p>
+      <p class="hint payment-security">{{ icon('shield') }} {{ _("Secure card payment by Square. USIRD never receives your card number or security code.") }}</p>
       {% if billing_row and billing_row.subscription_id and not billing_row.cancel_scheduled and billing_row.state != 'ended' %}
-        <form action="/billing/cancel" method="post" data-confirm="Cancel monthly renewal? You keep any paid access through the paid period.">
-          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" type="submit">Cancel subscription</button>
+        <form action="/billing/cancel" method="post" data-confirm="{{ _("Cancel monthly renewal? You keep any paid access through the paid period.") }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" type="submit">{{ _("Cancel subscription") }}</button>
         </form>
       {% elif billing_row and billing_row.cancel_scheduled %}
-        <p class="hint">Subscription cancellation requested.</p>
+        <p class="hint">{{ _("Subscription cancellation requested.") }}</p>
       {% endif %}
     {% elif checkout_url %}
-      <a class="btn lg block" href="{{ checkout_url }}" target="_blank" rel="noopener" data-pay>Continue to secure payment {{ icon('arrow') }}</a>
+      <a class="btn lg block" href="{{ checkout_url }}" target="_blank" rel="noopener" data-pay>{{ _("Continue to secure payment") }} {{ icon('arrow') }}</a>
     {% else %}
-      <p class="muted small">Subscription checkout is temporarily unavailable. Please check back shortly.</p>
+      <p class="muted small">{{ _("Subscription checkout is temporarily unavailable. Please check back shortly.") }}</p>
     {% endif %}
-    <div class="waiting" data-waiting hidden><span class="spinner" aria-hidden="true"></span><span>Waiting for payment confirmation. Your dashboard will open automatically.</span></div>
+    <div class="waiting" data-waiting hidden><span class="spinner" aria-hidden="true"></span><span>{{ _("Waiting for payment confirmation. Your dashboard will open automatically.") }}</span></div>
     <div class="subscribe-foot">
-      <form method="post" action="/logout" class="inline"><button class="link" type="submit">Log out</button></form>
-      <form method="post" action="/account/delete" class="inline" data-confirm="Delete your account and all case data? This cannot be undone."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" type="submit">Delete my account</button></form>
+      <form method="post" action="/logout" class="inline"><button class="link" type="submit">{{ _("Log out") }}</button></form>
+      <form method="post" action="/account/delete" class="inline" data-confirm="{{ _("Delete your account and all case data? This cannot be undone.") }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" type="submit">{{ _("Delete my account") }}</button></form>
     </div>
   </div>
 </section>
 {% endblock %}
-{% block scripts %}{% if native %}<script src="/static/checkout.js?v=20261103-native-card3" defer></script>{% endif %}{% endblock %}
+{% block scripts %}{% if native %}<script src="/static/checkout.js?v=20261107-burmese1" defer></script>{% endif %}{% endblock %}

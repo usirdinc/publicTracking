@@ -1,48 +1,48 @@
-{% from "_icons.html" import icon %}
+{% from "_icons.html" import icon with context %}
 <dialog class="tracking-guide-dialog" id="number-guide" aria-labelledby="number-guide-title">
   <div class="guide-heading">
-    <div><h2 id="number-guide-title">Find your A-Number and receipt number</h2><p>Two numbers, two different purposes.</p></div>
-    <button type="button" class="guide-close" data-close-guide aria-label="Close receipt example">×</button>
+    <div><h2 id="number-guide-title">{{ _("Find your A-Number and receipt number") }}</h2><p>{{ _("Two numbers, two different purposes.") }}</p></div>
+    <button type="button" class="guide-close" data-close-guide aria-label="{{ _("Close receipt example") }}">×</button>
   </div>
   <div class="guide-content">
     <figure class="number-example">
-      <img src="/static/examples/receipt-number-guide.webp" width="991" height="273" loading="lazy" alt="Redacted I-797C notice with the Receipt Number field outlined in blue and the Applicant A-Number field outlined in brown. All numbers shown are examples.">
-      <figcaption>Personal details removed. The displayed numbers are illustrative.</figcaption>
+      <img src="/static/examples/receipt-number-guide.webp" width="991" height="273" loading="lazy" alt="{{ _("Redacted I-797C notice with the Receipt Number field outlined in blue and the Applicant A-Number field outlined in brown. All numbers shown are examples.") }}">
+      <figcaption>{{ _("Personal details removed. The displayed numbers are illustrative.") }}</figcaption>
     </figure>
     <dl class="number-definitions">
-      <div><dt><span class="number-key receipt-key"></span>Receipt number</dt><dd>The application’s reference number, printed under “Receipt Number.” It has three letters and ten digits, such as <span class="mono">ABC1234567890</span>.</dd></div>
-      <div><dt><span class="number-key alien-key"></span>A-Number</dt><dd>The person’s immigration identifier. Look beside “Applicant” or “Alien Number.” The example shows <span class="mono">A123 456 789</span>. Enter the digits with the optional A prefix.</dd></div>
+      <div><dt><span class="number-key receipt-key"></span>{{ _("Receipt number") }}</dt><dd>{{ _("The application’s reference number, printed under “Receipt Number.” It has three letters and ten digits, such as") }} <span class="mono">{{ _("ABC1234567890") }}</span>.</dd></div>
+      <div><dt><span class="number-key alien-key"></span>{{ _("A-Number") }}</dt><dd>{{ _("The person’s immigration identifier. Look beside “Applicant” or “Alien Number.” The example shows") }} <span class="mono">{{ _("A123 456 789") }}</span>{{ _(". Enter the digits with the optional A prefix.") }}</dd></div>
     </dl>
-    <p class="hint">For family members on one I-589, enter the primary applicant’s A-Number first. Separate the other A-Numbers with commas.</p>
-    <a class="btn ghost" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">Open full redacted receipt example (PDF)</a>
+    <p class="hint">{{ _("For family members on one I-589, enter the primary applicant’s A-Number first. Separate the other A-Numbers with commas.") }}</p>
+    <a class="btn ghost" href="/static/examples/receipt-notice-redacted.pdf" target="_blank" rel="noopener">{{ _("Open full redacted receipt example (PDF)") }}</a>
   </div>
 </dialog>
 
 <dialog class="tracking-guide-dialog" id="aaf-payment-guide" aria-labelledby="aaf-guide-title">
   <div class="guide-heading">
-    <div><h2 id="aaf-guide-title">How to pay the Annual Asylum Fee</h2><p>Follow the USCIS payment portal for your application.</p></div>
-    <button type="button" class="guide-close" data-close-guide aria-label="Close payment guide">×</button>
+    <div><h2 id="aaf-guide-title">{{ _("How to pay the Annual Asylum Fee") }}</h2><p>{{ _("Follow the USCIS payment portal for your application.") }}</p></div>
+    <button type="button" class="guide-close" data-close-guide aria-label="{{ _("Close payment guide") }}">×</button>
   </div>
   <div class="guide-content">
     <ol class="payment-map">
-      <li><span class="payment-map-step" aria-hidden="true">1</span><div><h3>Open the official payment portal</h3><p>Start on the USCIS Annual Asylum Fee page and review its current instructions.</p><a href="https://my.uscis.gov/accounts/annual-asylum-fee/start/overview" target="_blank" rel="noopener noreferrer">Go to USCIS payment portal {{ icon('arrow') }}</a></div></li>
-      <li><span class="payment-map-step" aria-hidden="true">2</span><div><h3>Identify your application</h3><p>Enter the receipt number and A-Number requested by the portal. Check them against your USCIS notice before continuing.</p><button class="link" type="button" data-open-guide="number-guide" hidden>Show me where to find the numbers</button></div></li>
-      <li><span class="payment-map-step" aria-hidden="true">3</span><div><h3>Check whether payment is available</h3><div class="payment-branches"><div><strong>Payment available</strong><p>Check the applicant, application, and fee amount, then continue to payment.</p></div><div><strong>Payment unavailable</strong><p>Read the portal’s result and the instructions on your notice before taking another step.</p></div></div></div></li>
-      <li><span class="payment-map-step" aria-hidden="true">4</span><div><h3>Enter payment details on the official site</h3><p>Use a payment method offered by the portal. If you choose a card, USIRD suggests having a debit card ready. Enter card details only on the official payment page it opens.</p></div></li>
-      <li><span class="payment-map-step" aria-hidden="true">5</span><div><h3>Review, submit, and save confirmation</h3><p>Review all details before submitting. Save or print the confirmation and any tracking number displayed. Keep it with your records.</p></div></li>
+      <li><span class="payment-map-step" aria-hidden="true">1</span><div><h3>{{ _("Open the official payment portal") }}</h3><p>{{ _("Start on the USCIS Annual Asylum Fee page and review its current instructions.") }}</p><a href="https://my.uscis.gov/accounts/annual-asylum-fee/start/overview" target="_blank" rel="noopener noreferrer">{{ _("Go to USCIS payment portal") }} {{ icon('arrow') }}</a></div></li>
+      <li><span class="payment-map-step" aria-hidden="true">2</span><div><h3>{{ _("Identify your application") }}</h3><p>{{ _("Enter the receipt number and A-Number requested by the portal. Check them against your USCIS notice before continuing.") }}</p><button class="link" type="button" data-open-guide="number-guide" hidden>{{ _("Show me where to find the numbers") }}</button></div></li>
+      <li><span class="payment-map-step" aria-hidden="true">3</span><div><h3>{{ _("Check whether payment is available") }}</h3><div class="payment-branches"><div><strong>{{ _("Payment available") }}</strong><p>{{ _("Check the applicant, application, and fee amount, then continue to payment.") }}</p></div><div><strong>{{ _("Payment unavailable") }}</strong><p>{{ _("Read the portal’s result and the instructions on your notice before taking another step.") }}</p></div></div></div></li>
+      <li><span class="payment-map-step" aria-hidden="true">4</span><div><h3>{{ _("Enter payment details on the official site") }}</h3><p>{{ _("Use a payment method offered by the portal. If you choose a card, USIRD suggests having a debit card ready. Enter card details only on the official payment page it opens.") }}</p></div></li>
+      <li><span class="payment-map-step" aria-hidden="true">5</span><div><h3>{{ _("Review, submit, and save confirmation") }}</h3><p>{{ _("Review all details before submitting. Save or print the confirmation and any tracking number displayed. Keep it with your records.") }}</p></div></li>
     </ol>
     <section class="payment-receipt-note" aria-labelledby="receipt-timing-heading">
-      <h3 id="receipt-timing-heading">The formal receipt notice can arrive later</h3>
-      <p>USIRD’s experience is that a separate USCIS fee-received notice may arrive about one week to one month after payment. This is an estimate. Keep your payment confirmation while waiting, and check your USCIS account or mail for the formal notice.</p>
+      <h3 id="receipt-timing-heading">{{ _("The formal receipt notice can arrive later") }}</h3>
+      <p>{{ _("USIRD’s experience is that a separate USCIS fee-received notice may arrive about one week to one month after payment. This is an estimate. Keep your payment confirmation while waiting, and check your USCIS account or mail for the formal notice.") }}</p>
     </section>
     <section aria-labelledby="notice-example-heading">
-      <h3 id="notice-example-heading">Recognize the two notices</h3>
-      <p class="hint">Historical, redacted examples. These notices show a past $100 fee. Use the amount and instructions on your own current notice and the official portal.</p>
+      <h3 id="notice-example-heading">{{ _("Recognize the two notices") }}</h3>
+      <p class="hint">{{ _("Historical, redacted examples. These notices show a past $100 fee. Use the amount and instructions on your own current notice and the official portal.") }}</p>
       <div class="notice-attachments">
-        <a href="/static/examples/aaf-payment-notice-redacted.pdf" target="_blank" rel="noopener"><img src="/static/examples/aaf-payment-notice-redacted.webp" width="580" height="750" loading="lazy" alt="Redacted example of a notice requesting Annual Asylum Fee payment"><strong>Fee payment notice</strong><span>Requests payment · PDF</span></a>
-        <a href="/static/examples/aaf-receipt-notice-redacted.pdf" target="_blank" rel="noopener"><img src="/static/examples/aaf-receipt-notice-redacted.webp" width="580" height="750" loading="lazy" alt="Redacted example of a notice confirming Annual Asylum Fee receipt"><strong>Fee-received notice</strong><span>Confirms receipt · PDF</span></a>
+        <a href="/static/examples/aaf-payment-notice-redacted.pdf" target="_blank" rel="noopener"><img src="/static/examples/aaf-payment-notice-redacted.webp" width="580" height="750" loading="lazy" alt="{{ _("Redacted example of a notice requesting Annual Asylum Fee payment") }}"><strong>{{ _("Fee payment notice") }}</strong><span>{{ _("Requests payment · PDF") }}</span></a>
+        <a href="/static/examples/aaf-receipt-notice-redacted.pdf" target="_blank" rel="noopener"><img src="/static/examples/aaf-receipt-notice-redacted.webp" width="580" height="750" loading="lazy" alt="{{ _("Redacted example of a notice confirming Annual Asylum Fee receipt") }}"><strong>{{ _("Fee-received notice") }}</strong><span>{{ _("Confirms receipt · PDF") }}</span></a>
       </div>
     </section>
-    <p class="guide-source">Official payment instructions are on the USCIS Annual Asylum Fee page. This guide covers payment through USCIS.</p>
+    <p class="guide-source">{{ _("Official payment instructions are on the USCIS Annual Asylum Fee page. This guide covers payment through USCIS.") }}</p>
   </div>
 </dialog>

@@ -1,5 +1,5 @@
-{% from "_icons.html" import icon %}{% from "_stepper.html" import stepper %}<!doctype html>
-<html lang="en">
+{% from "_icons.html" import icon with context %}{% from "_stepper.html" import stepper with context %}<!doctype html>
+<html lang="{{ locale }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -8,52 +8,58 @@
 <link rel="icon" type="image/png" href="/static/images/usird-logo.png">
 <title>
 {% block title %}
-  USIRD Case Tracker
+  {{ _("USIRD Case Tracker") }}
 {% endblock %}
 </title>
-<meta name="description" content="Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.">
-<link rel="stylesheet" href="/static/site.css?v=20261107-uscis-burgundy">
+<meta name="description" content="{{ _('Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.') }}">
+<link rel="stylesheet" href="/static/site.css?v=20261107-burmese1">
 {% if request.url.path != '/subscribe' %}
 <link rel="stylesheet" href="/static/navigation.css?v=20261106-motion" media="(prefers-reduced-motion: no-preference)">
 {% endif %}
 </head>
 <body{% if user %} class="account-page"{% endif %}>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">{{ _("Skip to content") }}</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="USIRD Case Tracker home"><img class="usird-logo" src="/static/images/usird-logo.png" width="42" height="42" alt=""><span class="name">USIRD <span class="hide-xs">Case </span>Tracker</span></a>
-    <nav aria-label="Main navigation">
+    <a class="brand" href="/" aria-label="{{ _("USIRD Case Tracker home") }}"><img class="usird-logo" src="/static/images/usird-logo.png" width="42" height="42" alt=""><span class="name">{{ _("USIRD") }} <span class="hide-xs">{{ _("Case") }} </span>{{ _("Tracker") }}</span></a>
+    <nav aria-label="{{ _("Main navigation") }}">
+      <form method="post" action="/language" class="language-switch" data-language-switch aria-label="{{ _('Language') }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="next" value="{{ request.url.path }}">
+        <button type="submit" name="language" value="en" lang="en" data-no-translate aria-pressed="{{ 'true' if locale == 'en' else 'false' }}">EN</button>
+        <button type="submit" name="language" value="my" lang="my" data-no-translate aria-pressed="{{ 'true' if locale == 'my' else 'false' }}">မြန်မာ</button>
+      </form>
       {% if user %}
         <a href="/app"
         {% if request.url.path == '/app' %}
           aria-current="page"
         {% endif %}
-        >My cases</a>
+        >{{ _("My cases") }}</a>
         {% if admin %}
           <a class="hide-sm" href="/admin"
           {% if request.url.path.startswith('/admin') %}
             aria-current="page"
           {% endif %}
-          >Admin</a>
+          >{{ _("Admin") }}</a>
         {% endif %}
         <details class="profile-menu">
-          <summary aria-label="Open account menu"><span class="menu-avatar" aria-hidden="true">{{ user.email[0]|upper }}</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
+          <summary aria-label="{{ _("Open account menu") }}"><span class="menu-avatar" aria-hidden="true">{{ user.email[0]|upper }}</span><span class="disclosure-chevron" aria-hidden="true"></span></summary>
           <div class="profile-menu-panel">
-            <p class="hint">Signed in as</p><p class="profile-menu-email">{{ user.email }}</p>
-            <a href="/account/settings">Profile settings</a>
-            <a href="/account/verify-phone">Phone verification</a>
-            <a href="/app#account">Subscription and account</a>
-            <form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>
+            <p class="hint">{{ _("Signed in as") }}</p><p class="profile-menu-email">{{ user.email }}</p>
+            <a href="/account/settings">{{ _("Profile settings") }}</a>
+            <a href="/account/verify-phone">{{ _("Phone verification") }}</a>
+            <a href="/app#account">{{ _("Subscription and account") }}</a>
+            <form method="post" action="/logout"><button class="link" type="submit">{{ _("Log out") }}</button></form>
           </div>
         </details>
       {% else %}
-        <a class="hide-sm" href="/#how">How it works</a>
+        <a class="hide-sm" href="/#how">{{ _("How it works") }}</a>
         <a href="/login"
         {% if request.url.path == '/login' %}
           aria-current="page"
         {% endif %}
-        >Log in</a>
-        <a class="btn small" href="/signup">Get started</a>
+        >{{ _("Log in") }}</a>
+        <a class="btn small" href="/signup">{{ _("Get started") }}</a>
       {% endif %}
     </nav>
   </div>
@@ -61,25 +67,29 @@
 {% if flash %}
   <div class="wrap notice-wrap">
     <div class="toast" role="status">
-      <span>{{ flash }}</span><button type="button" class="notice-close" data-dismiss-notice aria-label="Dismiss notification">×</button>
+      <span>{{ _(flash) }}</span><button type="button" class="notice-close" data-dismiss-notice aria-label="{{ _("Dismiss notification") }}">×</button>
     </div>
   </div>
 {% endif %}
+<span class="sr-only" role="status" aria-live="polite" data-language-status></span>
 <main class="wrap" id="main" tabindex="-1">
+  {% if request.url.path in ('/terms', '/privacy') %}<p class="hint source-language-note">{{ _('The Terms of Service and Privacy Policy are currently available in English.') }}</p>{% endif %}
   {% block content %}
   {% endblock %}
 </main>
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div>
-      <a class="footer-brand" href="/"><img src="/static/images/usird-logo.png" width="28" height="28" alt=""> USIRD Case Tracker</a><p>An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.</p>
+      <a class="footer-brand" href="/"><img src="/static/images/usird-logo.png" width="28" height="28" alt=""> {{ _("USIRD Case Tracker") }}</a><p>{{ _("An independent service by USIRD. Not part of USCIS, EOIR or any government agency. Not a law firm and not legal advice.") }}</p>
     </div>
-    <nav aria-label="Footer navigation">
-      <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a>
+    <nav aria-label="{{ _("Footer navigation") }}">
+      <a href="/terms">{{ _("Terms of Service") }}</a><a href="/privacy">{{ _("Privacy Policy") }}</a>
     </nav>
   </div>
 </footer>
-<script src="/static/app.js?v=20261107-check-feedback" defer></script>
+<script src="/language/catalog.js?v=20261107-my1" defer></script>
+<script src="/static/i18n.js?v=20261107-my1" defer></script>
+<script src="/static/app.js?v=20261107-burmese1" defer></script>
 {% if request.url.path in ('/', '/app', '/cases/new') %}{% include "_tracking_guides.html" %}{% endif %}
 <script src="/static/guides.js?v=20261107" defer></script>
 {% block scripts %}{% endblock %}

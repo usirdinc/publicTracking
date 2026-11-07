@@ -1,6 +1,7 @@
 // Square owns the card iframe. Never log or persist a payment token.
 (function () {
   'use strict';
+  var t = window.USIRDLocale.t;
   var form = document.querySelector('[data-square-checkout]');
   var resume = document.querySelector('[data-square-resume]');
   if (!form && !resume) return;
@@ -16,7 +17,7 @@
     });
     var result = await response.json();
     if (!response.ok) {
-      message.textContent = result.message || 'Payment could not be confirmed. Please try again.';
+      message.textContent = t(result.message) || t('Payment could not be confirmed. Please try again.');
       return false;
     }
     if (result.state === 'paid') location.assign('/app');
@@ -29,7 +30,7 @@
     if (busy || !target.reportValidity()) return;
     busy = true;
     button.disabled = true;
-    message.textContent = 'Please wait while Square confirms your subscription…';
+    message.textContent = t('Please wait while Square confirms your subscription…');
     var submitted = false;
     try {
       var fields = new FormData(target);
@@ -40,7 +41,7 @@
           billingContact: { email: form.dataset.email, givenName: name[0], familyName: name.slice(1).join(' ') }
         });
         if (result.status !== 'OK') {
-          message.textContent = 'Check your card details and complete any card verification, then try again.';
+          message.textContent = t('Check your card details and complete any card verification, then try again.');
           return;
         }
         fields.set('source_id', result.token);

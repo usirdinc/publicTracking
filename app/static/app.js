@@ -1,6 +1,7 @@
 // USIRD Case Tracker front end: confirms, relative times, and the live check progress.
 (function () {
   'use strict';
+  var t = window.USIRDLocale.t;
 
   document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
     button.addEventListener('click', function () {
@@ -8,7 +9,7 @@
       if (!input) return;
       var show = input.type === 'password';
       input.type = show ? 'text' : 'password';
-      button.textContent = show ? 'Hide' : 'Show';
+      button.textContent = show ? t('Hide') : t('Show');
       button.setAttribute('aria-pressed', String(show));
     });
   });
@@ -22,16 +23,16 @@
     f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); });
   });
 
-  // ---- relative times ("5 min ago", "tomorrow")
+  // ---- relative times ("5 min ago", t("tomorrow"))
   function rel(iso) {
-    var t = Date.parse(iso); if (isNaN(t)) return null;
-    var s = (t - Date.now()) / 1000, a = Math.abs(s), past = s < 0;
-    if (a < 60) return past ? 'just now' : 'in a moment';
-    var m = Math.round(a / 60), h = Math.round(a / 3600), d = Math.round(a / 86400);
-    if (a < 3600) return past ? m + ' min ago' : 'in ' + m + ' min';
-    if (a < 86400 * 0.9) return past ? h + (h === 1 ? ' hour ago' : ' hours ago') : 'in ' + h + (h === 1 ? ' hour' : ' hours');
-    if (d === 1) return past ? 'yesterday' : 'tomorrow';
-    return past ? d + ' days ago' : 'in ' + d + ' days';
+    var stamp=Date.parse(iso); if (isNaN(stamp)) return null;
+    var seconds=(stamp-Date.now())/1000, a=Math.abs(seconds), past=seconds<0;
+    if(a<60) return t(past?'just now':'in a moment');
+    var count=Math.round(a/(a<3600?60:a<86400*.9?3600:86400));
+    if(a<3600) return t(past?'{count} min ago':'in {count} min',{count:count});
+    if(a<86400*.9) return t(past?'{count} hours ago':'in {count} hours',{count:count});
+    if(count===1) return t(past?'yesterday':'tomorrow');
+    return t(past?'{count} days ago':'in {count} days',{count:count});
   }
   function paintTimes(root) {
     (root || document).querySelectorAll('time[data-rel]').forEach(function (el) {
@@ -41,10 +42,17 @@
   function paintDates(root) {
     (root || document).querySelectorAll('time[data-date]').forEach(function (el) {
       var v = el.getAttribute('datetime') || '', t = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v + 'T12:00:00' : v);
-      if (!isNaN(t)) el.textContent = new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      if (!isNaN(t)) {
+        var date = new Date(t);
+        var months = ['ဇန်နဝါရီ','ဖေဖော်ဝါရီ','မတ်','ဧပြီ','မေ','ဇွန်','ဇူလိုင်','ဩဂုတ်','စက်တင်ဘာ','အောက်တိုဘာ','နိုဝင်ဘာ','ဒီဇင်ဘာ'];
+        el.textContent = window.USIRDLocale.language()==='my'
+          ? date.getFullYear()+' '+months[date.getMonth()]+' '+date.getDate()
+          : date.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+      }
     });
   }
   paintTimes(); paintDates();
+  document.addEventListener("usird:language",function(){paintTimes();paintDates();});
   setInterval(paintTimes, 30000);
 
   // ---- subscribe page: after the payment tab opens, wait for the webhook to turn the account on
@@ -108,14 +116,14 @@
     if (button) {
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
-      button.querySelector('[data-check-label]').textContent = 'Checking…';
+      button.querySelector('[data-check-label]').textContent = t('Checking…');
     }
     if (!raf) raf = requestAnimationFrame(tick);
   }
 
   function finish(id) {
     var L = live[id]; if (!L || L.finishing) return;
-    L.finishing = true; L.target = 100; L.stage = 'Done';
+    L.finishing = true; L.target = 100; L.stage = t('Done');
     if (!raf) raf = requestAnimationFrame(tick);
   }
 
@@ -123,7 +131,7 @@
     var el = card(id), L = live[id]; if (!el || !L) return;
     var p = Math.min(100, L.shown);
     el.querySelector('[data-pct]').textContent = Math.round(p) + '%';
-    el.querySelector('[data-stage]').textContent = L.stage || 'Checking with USCIS';
+    el.querySelector('[data-stage]').textContent = t(L.stage || 'Checking with USCIS');
     paintStepper(el, p, p >= 99.9);
   }
 
@@ -236,7 +244,7 @@
         e.preventDefault();
         var id = f.closest('[data-case]').dataset.case, btn = f.querySelector('button');
         btn.disabled = true;
-        begin(id, 2, 'Sending your check request');
+        begin(id, 2, t('Sending your check request'));
         live[id].submitting = true;
         fetch(f.action, { method: 'POST', body: new FormData(f), credentials: 'same-origin',
                           headers: { 'Accept': 'application/json' } })
@@ -246,16 +254,16 @@
             if (!d.ok) {
               btn.disabled = false;
               btn.removeAttribute('aria-busy');
-              btn.querySelector('[data-check-label]').textContent = 'Check now';
+              btn.querySelector('[data-check-label]').textContent = t('Check now');
               var el = card(id); if (el) el.classList.remove('busy');
               delete live[id];
-              toast(d.message || 'Could not start a check right now.');
+              toast(t(d.message) || t('Could not start a check right now.'));
             }
             ensurePolling();
           })
           .catch(function () {
             if (live[id]) live[id].submitting = false;
-            toast('Checking whether your request started. Please wait for the case to refresh.');
+            toast(t('Checking whether your request started. Please wait for the case to refresh.'));
             ensurePolling();
           });
       });

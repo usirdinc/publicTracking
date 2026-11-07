@@ -1,4 +1,5 @@
 (() => {
+  const t = window.USIRDLocale.t;
   const date = document.querySelector('[name="dob"]');
   if (!date) return;
 
@@ -10,10 +11,10 @@
   date.max = isoDate(year, now.getMonth() + 1, now.getDate());
 
   const rules = {
-    first_name: value => !value.trim() && 'Enter the applicant’s first name.',
-    last_name: value => !value.trim() && 'Enter the applicant’s last name.',
+    first_name: value => !value.trim() && t('Enter the applicant’s first name.'),
+    last_name: value => !value.trim() && t('Enter the applicant’s last name.'),
     email: value => !/^[^@\s]+@(?:[a-z\d](?:[a-z\d-]*[a-z\d])?\.)+[a-z\d-]+$/i.test(value.trim())
-      && 'Enter an email address like name@example.com.',
+      && t('Enter an email address like name@example.com.'),
     phone: value => {
       const raw = value.trim();
       let digits = raw.replace(/[^0-9]/g, '');
@@ -21,20 +22,20 @@
       return (!/^\+?[0-9(). -]+$/.test(raw) || !/^[1-9][0-9]{7,14}$/.test(digits)
         || (!raw.startsWith('+') && !/^1[0-9]{10}$/.test(digits))
         || (digits.startsWith('1') && !/^1[2-9][0-9]{2}[2-9][0-9]{6}$/.test(digits)))
-        && 'Enter a 10-digit US or Canadian number, or include + and the country code.';
+        && t('Enter a 10-digit US or Canadian number, or include + and the country code.');
     },
     a_numbers: value => {
       const numbers = value.split(/[;,\s]+/).filter(Boolean);
       if (!numbers.length || numbers.some(number => !/^A?(?:[0-9]{8,9}|[0-9]{2,3}-[0-9]{3}-[0-9]{3})$/i.test(number))) {
-        return 'Enter 8 or 9 digits per A-Number, with an optional A prefix.';
+        return t('Enter 8 or 9 digits per A-Number, with an optional A prefix.');
       }
       if (new Set(numbers.map(number => number.replace(/[^0-9]/g, '').padStart(9, '0'))).size > 4) {
-        return 'Enter up to four different A-Numbers.';
+        return t('Enter up to four different A-Numbers.');
       }
       return '';
     },
     receipt: value => !/^[A-Z]{3}[0-9]{10}$/i.test(value.replace(/[\s-]/g, ''))
-      && 'Enter three letters followed by ten digits.',
+      && t('Enter three letters followed by ten digits.'),
   };
   const steps = Array.from(form.querySelectorAll('[data-intake-step]'));
   const back = form.querySelector('[data-intake-back]');
@@ -49,7 +50,7 @@
   const stages = steps.map((step, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = step.dataset.stepLabel;
+    button.textContent = t(step.dataset.stepKey);
     button.addEventListener('click', () => {
       if (index < current) showStep(index, true);
     });
@@ -67,10 +68,10 @@
 
     function validate() {
       field.setCustomValidity('');
-      const error = (rules[field.name] && rules[field.name](field.value)) || field.validationMessage;
+      const error = (rules[field.name] && rules[field.name](field.value)) || (field.validity.valid ? '' : t(field.name==='dob'?'Enter a valid date of birth.':'Please complete this field.'));
       field.setCustomValidity(error || '');
       field.setAttribute('aria-invalid', String(Boolean(error)));
-      feedback.textContent = error || (field.name === 'receipt' || field.name === 'a_numbers' ? 'Format looks right' : '');
+      feedback.textContent = error || (field.name === 'receipt' || field.name === 'a_numbers' ? t('Format looks right') : '');
       return !error;
     }
     validators.set(field, validate);
@@ -86,7 +87,7 @@
   function showStep(index, focus = false) {
     current = index;
     steps.forEach((step, i) => { step.hidden = i !== index; });
-    position.textContent = `Step ${index + 1} of ${steps.length}`;
+    position.textContent = t('Step {current} of {total}', {current:index+1,total:steps.length});
     meter.value = index + 1;
     stages.forEach((button, i) => {
       button.disabled = i >= index;
@@ -94,9 +95,8 @@
       if (i === index) button.setAttribute('aria-current', 'step');
       else button.removeAttribute('aria-current');
     });
-    next.textContent = index + 1 < steps.length
-      ? 'Continue to ' + steps[index + 1].dataset.stepLabel.toLowerCase()
-      : 'Continue';
+    const nextLabel = index+1 < steps.length ? steps[index+1].dataset.stepKey : '';
+    next.textContent = t(nextLabel==='Birthday'?'Continue to birthday':nextLabel==='Case numbers'?'Continue to case numbers':'Continue');
     back.hidden = index === 0;
     if (cancel) cancel.hidden = index !== 0;
     next.hidden = index === steps.length - 1;
@@ -122,6 +122,11 @@
   progress.hidden = false;
   meter.max = steps.length;
   showStep(0);
+  document.addEventListener("usird:language",()=>{
+    stages.forEach((button,index)=>{button.textContent=t(steps[index].dataset.stepKey);});
+    form.querySelectorAll("[data-intake-field]").forEach(field=>field.setCustomValidity(""));
+    showStep(current);
+  });
   next.addEventListener('click', advance);
   back.addEventListener('click', () => showStep(current - 1, true));
   form.addEventListener('submit', event => {

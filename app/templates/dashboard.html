@@ -1,60 +1,60 @@
 {% extends "base.html" %}
 {% block title %}
-  My cases · USIRD Case Tracker
+  {{ _("My cases · USIRD Case Tracker") }}
 {% endblock %}
 {% block content %}
   <div class="page-head workspace-heading">
     <div>
-      <h1>My cases</h1><p>Review your Annual Asylum Fee and USCIS updates in one place.</p>
+      <h1>{{ _("My cases") }}</h1><p>{{ _("Review your Annual Asylum Fee and USCIS updates in one place.") }}</p>
     </div>
     <div class="page-actions">
       {% if paid or admin %}
-        <a class="btn" href="/cases/new">{{ icon('plus') }} Add case</a>
+        <a class="btn" href="/cases/new">{{ icon('plus') }} {{ _("Add case") }}</a>
       {% else %}
-        <span class="badge tone-pending">Subscription needed</span>
+        <span class="badge tone-pending">{{ _("Subscription needed") }}</span>
       {% endif %}
     </div>
   </div>
   <section class="upcoming-tracking" aria-labelledby="eoir-coming-heading">
     {{ icon('clock') }}
-    <div><h2 id="eoir-coming-heading">EOIR court tracking is coming soon</h2><p>Immigration court case updates will be added to your tracking dashboard.</p></div>
+    <div><h2 id="eoir-coming-heading">{{ _("EOIR court tracking is coming soon") }}</h2><p>{{ _("Immigration court case updates will be added to your tracking dashboard.") }}</p></div>
   </section>
   {% if needs_phone_verification %}
-    <section class="subscription-banner" aria-label="Verify your phone number">
-      <div><h2>Confirm your phone number</h2><p>Verify the number saved in your profile to receive text notifications.</p></div>
-      <a class="btn" href="/account/verify-phone">Verify phone</a>
+    <section class="subscription-banner" aria-label="{{ _("Verify your phone number") }}">
+      <div><h2>{{ _("Confirm your phone number") }}</h2><p>{{ _("Verify the number saved in your profile to receive text notifications.") }}</p></div>
+      <a class="btn" href="/account/verify-phone">{{ _("Verify phone") }}</a>
     </section>
   {% endif %}
   {% if paused %}
     <div class="banner" role="status">
-      {{ icon('clock') }} <span>Automatic checks are paused for a short time. Your cases will be checked as soon as they resume.</span>
+      {{ icon('clock') }} <span>{{ _("Automatic checks are paused for a short time. Your cases will be checked as soon as they resume.") }}</span>
     </div>
   {% endif %}
   {% if not paid and not admin %}
     <section class="subscription-banner" aria-labelledby="subscribe-heading">
       <div>
-        <span class="eyebrow">Activate tracking</span><h2 id="subscribe-heading">Start your subscription</h2><p>{{ price }} a month, cancel anytime. Your dashboard unlocks when Square confirms payment.</p>
+        <span class="eyebrow">{{ _("Activate tracking") }}</span><h2 id="subscribe-heading">{{ _("Start your subscription") }}</h2><p>{{ _("{value0} a month, cancel anytime. Your dashboard unlocks when Square confirms payment.", value0=price) }}</p>
       </div>
-      <a class="btn" href="/subscribe">Continue to payment {{ icon('arrow') }}</a>
+      <a class="btn" href="/subscribe">{{ _("Continue to payment") }} {{ icon('arrow') }}</a>
     </section>
   {% endif %}
   <div class="workspace-grid">
     <section class="case-list" aria-labelledby="case-list-heading">
       <div class="workspace-list-heading">
-        <h2 id="case-list-heading">Tracked cases</h2>
-        <span class="case-count">{{ cases|length }} of {{ max_cases }} cases</span>
+        <h2 id="case-list-heading">{{ _("Tracked cases") }}</h2>
+        <span class="case-count">{{ _("{value0} of {value1} cases", value0=cases|length, value1=max_cases) }}</span>
       </div>
       {% if not cases %}
         <div class="empty panel">
-          <span class="empty-icon">{{ icon('doc') }}</span><h2>No cases yet</h2><p>
+          <span class="empty-icon">{{ icon('doc') }}</span><h2>{{ _("No cases yet") }}</h2><p>
           {% if paid or admin %}
-            Add the primary applicant’s details, A-Number, and I-589 receipt number to start both checks.
+            {{ _("Add the primary applicant’s details, A-Number, and I-589 receipt number to start both checks.") }}
           {% else %}
-            Start your subscription, then add your first case.
+            {{ _("Start your subscription, then add your first case.") }}
           {% endif %}
           </p>
           {% if paid or admin %}
-            <a class="btn" href="/cases/new">{{ icon('plus') }} Add your first case</a>
+            <a class="btn" href="/cases/new">{{ icon('plus') }} {{ _("Add your first case") }}</a>
           {% endif %}
         </div>
       {% endif %}
@@ -62,27 +62,27 @@
         {% for c in cases %}
           {% set t = status_text(c.status, c.amount) %}
           {% set b = aaf_badge(c.status) %}
-          <article class="case" aria-label="Case: {{ c.label }}" data-case="{{ c.id }}">
+          <article class="case" aria-label="{{ _('Case: {label}', label=c.label) }}" data-case="{{ c.id }}">
             <div class="case-top">
               <span class="case-mark">{{ icon('doc') }}</span>
               <div>
-                <h2>{{ c.label }}</h2>
+                <h2 data-no-translate>{{ c.label }}</h2>
                 <div class="chips">
-                  <span class="chip">A-Number •••{{ c.a_last3 }}</span><span class="chip">Receipt •••{{ c.receipt_last4 }}</span>
+                  <span class="chip">{{ _("A-Number •••{value0}", value0=c.a_last3) }}</span><span class="chip">{{ _("Receipt •••{value0}", value0=c.receipt_last4) }}</span>
                 </div>
               </div>
             </div>
             <div class="live" aria-live="polite">
               <div class="live-top">
-                <span class="live-stage" data-stage>Getting ready</span><span class="live-pct" data-pct>0%</span>
+                <span class="live-stage" data-stage>{{ _("Getting ready") }}</span><span class="live-pct" data-pct>0%</span>
               </div>
               {{ stepper() }}
-              <p class="live-note">Checking your Annual Asylum Fee. USCIS status is checked separately and may update at a different time.</p>
+              <p class="live-note">{{ _("Checking your Annual Asylum Fee. USCIS status is checked separately and may update at a different time.") }}</p>
             </div>
             {% if cases|length > 1 %}
-              <div class="case-tablist" role="tablist" aria-label="Tracking views for {{ c.label }}" hidden>
+              <div class="case-tablist" role="tablist" aria-label="{{ _('Tracking views for {label}', label=c.label) }}" hidden>
                 {% for key, name in [('aaf', 'AAF'), ('status', 'Case status'), ('description', 'Description'), ('history', 'History')] %}
-                  <button type="button" role="tab" id="tab-{{ c.id }}-{{ key }}" aria-controls="view-{{ c.id }}-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-case-tab="{{ key }}">{{ name }}{% if key == 'aaf' and c.status == 'DUE' %} <span class="case-tab-due">Fee due</span>{% endif %}</button>
+                  <button type="button" role="tab" id="tab-{{ c.id }}-{{ key }}" aria-controls="view-{{ c.id }}-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-case-tab="{{ key }}">{{ _(name) }}{% if key == 'aaf' and c.status == 'DUE' %} <span class="case-tab-due">{{ _("Fee due") }}</span>{% endif %}</button>
                 {% endfor %}
               </div>
             {% endif %}
@@ -90,38 +90,38 @@
               <section class="tracking-view" id="view-{{ c.id }}-aaf" data-case-view="aaf">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('cash') }}</span>
-                  <div><h3>Annual Asylum Fee</h3><p>Fee status and payment</p></div>
+                  <div><h3>{{ _("Annual Asylum Fee") }}</h3><p>{{ _("Fee status and payment") }}</p></div>
                 </header>
                 <div class="result-heading">
-                  <span class="badge tone-{{ b[1] }}">{{ b[0] }}</span>
+                  <span class="badge tone-{{ b[1] }}">{{ _(b[0]) }}</span>
                   {% if c.status == 'DUE' and c.amount %}
                     <strong class="fee-amount">${{ c.amount }}</strong>
                   {% endif %}
                 </div>
                 <div class="tile-value">
-                  {{ "Annual Asylum Fee due" if c.status == 'DUE' and c.amount else t[0] if c.status else "Getting your fee status" }}
+                  {{ _("Annual Asylum Fee due" if c.status == 'DUE' and c.amount else t[0] if c.status else "Getting your fee status") }}
                 </div>
                 <div class="tile-sub">
                   {% if c.checked_at %}
-                    Checked <time data-rel datetime="{{ c.checked_at }}">{{ c.checked_at[:10] }}</time>
+                    {{ _("Checked") }} <time data-rel datetime="{{ c.checked_at }}">{{ c.checked_at[:10] }}</time>
                   {% else %}
-                    First check in progress
+                    {{ _("First check in progress") }}
                   {% endif %}
                 </div>
                 {% if c.status == 'DUE' %}
                   <div class="pay-note">
-                    <strong>Your fee is due.</strong>
-                    <p>Use the official USCIS payment portal for the amount and instructions for your application.</p>
+                    <strong>{{ _("Your fee is due.") }}</strong>
+                    <p>{{ _("Use the official USCIS payment portal for the amount and instructions for your application.") }}</p>
                     <div class="payment-guide-actions">
-                      <button type="button" class="btn small" data-open-guide="aaf-payment-guide" hidden>How to pay the AAF</button>
-                      <a href="https://my.uscis.gov/accounts/annual-asylum-fee/start/overview" rel="noopener noreferrer" target="_blank">Open USCIS payment portal {{ icon('arrow') }}</a>
+                      <button type="button" class="btn small" data-open-guide="aaf-payment-guide" hidden>{{ _("How to pay the AAF") }}</button>
+                      <a href="https://my.uscis.gov/accounts/annual-asylum-fee/start/overview" rel="noopener noreferrer" target="_blank">{{ _("Open USCIS payment portal") }} {{ icon('arrow') }}</a>
                     </div>
                   </div>
                 {% endif %}
                 <div class="tracking-actions">
                   <span class="when">
                   {% if c.next_check_at %}
-                    Next automatic check <time data-rel datetime="{{ c.next_check_at }}">{{ c.next_check_at[:10] }}</time>
+                    {{ _("Next automatic check") }} <time data-rel datetime="{{ c.next_check_at }}">{{ c.next_check_at[:10] }}</time>
                   {% endif %}
                   </span>
                 </div>
@@ -129,91 +129,91 @@
               <section class="tracking-view" id="view-{{ c.id }}-status" data-case-view="status">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('doc') }}</span>
-                  <div><h3>USCIS case status</h3><p>Latest application update</p></div>
+                  <div><h3>{{ _("USCIS case status") }}</h3><p>{{ _("Latest application update") }}</p></div>
                 </header>
                 {% if c.uscis_status and c.uscis_status != 'NOT_FOUND' %}
                   {% set ub = uscis_badge(c.uscis_status) %}
-                  <span class="badge tone-{{ ub }}">{{ c.uscis_form or 'Case status' }}</span>
+                  <span class="badge tone-{{ ub }}">{{ c.uscis_form or _('Case status') }}</span>
                   <div class="tile-value">
-                    {{ c.uscis_status }}
+                    <span lang="en" data-source-text data-no-translate>{{ c.uscis_status }}</span>
                   </div>
                   <div class="tile-sub">
                     {% if c.uscis_modified %}
-                      USCIS updated <time data-date datetime="{{ c.uscis_modified }}">{{ c.uscis_modified[:10] }}</time>
+                      {{ _("USCIS updated") }} <time data-date datetime="{{ c.uscis_modified }}">{{ c.uscis_modified[:10] }}</time>
                     {% else %}
-                      Checked <time data-rel datetime="{{ c.uscis_checked_at }}">{{ c.uscis_checked_at[:10] }}</time>
+                      {{ _("Checked") }} <time data-rel datetime="{{ c.uscis_checked_at }}">{{ c.uscis_checked_at[:10] }}</time>
                     {% endif %}
                   </div>
                 {% elif c.uscis_status == 'NOT_FOUND' %}
-                  <span class="badge tone-warn">Not found</span>
+                  <span class="badge tone-warn">{{ _("Not found") }}</span>
                   <div class="tile-value">
-                    No case found for this receipt
+                    {{ _("No case found for this receipt") }}
                   </div>
                   <div class="tile-sub">
-                    Check the receipt number
+                    {{ _("Check the receipt number") }}
                   </div>
                 {% elif c.uscis_error %}
-                  <span class="badge tone-warn">Retrying</span>
+                  <span class="badge tone-warn">{{ _("Retrying") }}</span>
                   <div class="tile-value">
-                    USCIS is not responding
+                    {{ _("USCIS is not responding") }}
                   </div>
                   <div class="tile-sub">
-                    We'll try again shortly
+                    {{ _("We'll try again shortly") }}
                   </div>
                 {% else %}
-                  <span class="badge tone-pending">Checking</span>
+                  <span class="badge tone-pending">{{ _("Checking") }}</span>
                   <div class="tile-value">
-                    Getting your case status
+                    {{ _("Getting your case status") }}
                   </div>
                   <div class="tile-sub">
-                    Usually a few seconds
+                    {{ _("Usually a few seconds") }}
                   </div>
                 {% endif %}
               </section>
               <section class="tracking-view case-description-view" id="view-{{ c.id }}-description" data-case-view="description">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('doc') }}</span>
-                  <div><h3>Case description</h3><p>Details reported by USCIS</p></div>
+                  <div><h3>{{ _("Case description") }}</h3><p>{{ _("Details reported by USCIS") }}</p><p class="source-language-note">{{ _('USCIS source text is shown in English.') }}</p></div>
                 </header>
                 {% if c.uscis_desc %}
-                  <div class="uscis-description">{{ c.uscis_desc | uscis_description }}</div>
-                  <p class="source-note">Source: USCIS · Information only, not legal advice.</p>
+                  <div class="uscis-description" lang="en" data-source-text data-no-translate>{{ c.uscis_desc | uscis_description }}</div>
+                  <p class="source-note">{{ _("Source: USCIS · Information only, not legal advice.") }}</p>
                 {% else %}
                   <div class="result-empty">
-                    <p class="result-empty-title">Waiting for the USCIS description</p>
-                    <p class="hint">The description will appear here when USCIS provides it.</p>
+                    <p class="result-empty-title">{{ _("Waiting for the USCIS description") }}</p>
+                    <p class="hint">{{ _("The description will appear here when USCIS provides it.") }}</p>
                   </div>
                 {% endif %}
               </section>
               <section class="tracking-view" id="view-{{ c.id }}-history" data-case-view="history">
                 <header class="result-section-header">
                   <span class="result-section-icon" aria-hidden="true">{{ icon('clock') }}</span>
-                  <div><h3>USCIS case history</h3><p>Previous case events</p></div>
+                  <div><h3>{{ _("USCIS case history") }}</h3><p>{{ _("Previous case events") }}</p><p class="source-language-note">{{ _('USCIS source text is shown in English.') }}</p></div>
                 </header>
                 {% set history = case_history(c.uscis_history_enc) %}
                 {% if history %}
-                  <p class="hint">History returned by USCIS. Some earlier events may not be available.</p>
+                  <p class="hint">{{ _("History returned by USCIS. Some earlier events may not be available.") }}</p>
                   <ol class="history-timeline">
                     {% for event in history %}
-                      <li><div class="history-event"><span class="history-date">{{ event.date or 'Date not provided' }}</span><div class="uscis-description">{{ event.text | uscis_description }}</div></div></li>
+                      <li><div class="history-event"><span class="history-date" data-no-translate>{{ event.date or _('Date not provided') }}</span><div class="uscis-description" lang="en" data-source-text data-no-translate>{{ event.text | uscis_description }}</div></div></li>
                     {% endfor %}
                   </ol>
                 {% else %}
                   <div class="result-empty">
-                    <p class="result-empty-title">No history available yet</p>
-                    <p class="hint">Your next USCIS check will request it. USCIS may provide only the current status for some cases.</p>
+                    <p class="result-empty-title">{{ _("No history available yet") }}</p>
+                    <p class="hint">{{ _("Your next USCIS check will request it. USCIS may provide only the current status for some cases.") }}</p>
                   </div>
                 {% endif %}
               </section>
             </div>
             <div class="case-foot case-management workspace-case-actions">
               <div class="acts">
-                <a class="link" href="/cases/{{ c.id }}/details">{{ 'Edit details' if c.client_details_enc else 'Complete details' }}</a>
-                <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="Delete this case and its history?">
-                  <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" aria-label="Delete case {{ c.label }}">Delete</button>
+                <a class="link" href="/cases/{{ c.id }}/details">{{ _('Edit details' if c.client_details_enc else 'Complete details') }}</a>
+                <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="{{ _("Delete this case and its history?") }}">
+                  <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" aria-label="{{ _('Delete case {label}', label=c.label) }}">{{ _("Delete") }}</button>
                 </form>
                   <form method="post" action="/cases/{{ c.id }}/check" class="inline" data-check>
-                    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} <span data-check-label>Check now</span></button>
+                    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small ghost">{{ icon('refresh') }} <span data-check-label>{{ _("Check now") }}</span></button>
                   </form>
               </div>
             </div>
@@ -221,48 +221,48 @@
         {% endfor %}
       </div>
     </section>
-    <aside class="workspace-aside" aria-label="Case and account settings">
+    <aside class="workspace-aside" aria-label="{{ _("Case and account settings") }}">
       <section class="panel account-panel workspace-account" id="account">
-        <h2>Your account</h2>
+        <h2>{{ _("Your account") }}</h2>
         <p class="account-email">{{ user.email }}</p>
-        <a class="profile-settings-link" href="/account/settings">Manage profile {{ icon('arrow') }}</a>
+        <a class="profile-settings-link" href="/account/settings">{{ _("Manage profile") }} {{ icon('arrow') }}</a>
         <dl class="account-facts">
           <div>
-            <dt>Access</dt><dd>
+            <dt>{{ _("Access") }}</dt><dd>
             {% if admin %}
-              Staff access
+              {{ _("Staff access") }}
             {% elif paid %}
-              Active
+              {{ _("Active") }}
             {% else %}
-              Subscription needed
+              {{ _("Subscription needed") }}
             {% endif %}
             </dd>
           </div>
           {% if paid and user.paid_until %}
             <div>
-              <dt>Paid through</dt><dd><time data-date datetime="{{ user.paid_until }}">{{ user.paid_until[:10] }}</time></dd>
+              <dt>{{ _("Paid through") }}</dt><dd><time data-date datetime="{{ user.paid_until }}">{{ user.paid_until[:10] }}</time></dd>
             </div>
           {% endif %}
           <div>
-            <dt>Notifications</dt><dd><a href="/account/settings">Email and SMS settings</a></dd>
+            <dt>{{ _("Notifications") }}</dt><dd><a href="/account/settings">{{ _("Email and SMS settings") }}</a></dd>
           </div>
         </dl>
-        <p class="hint">Case numbers are encrypted and shown only by their last digits.</p>
-        <details class="account-options"><summary>Account options</summary><p class="hint">Deleting your account removes your cases and their history. {% if billing_row and billing_row.subscription_id %}Your Square subscription will also be canceled.{% else %}Manage your subscription through Square.{% endif %}</p>
+        <p class="hint">{{ _("Case numbers are encrypted and shown only by their last digits.") }}</p>
+        <details class="account-options"><summary>{{ _("Account options") }}</summary><p class="hint">{{ _("Deleting your account removes your cases and their history.") }} {% if billing_row and billing_row.subscription_id %}{{ _("Your Square subscription will also be canceled.") }}{% else %}{{ _("Manage your subscription through Square.") }}{% endif %}</p>
         {% if billing_row and billing_row.subscription_id %}
           {% if billing_row.cancel_scheduled or billing_row.state == 'ended' %}
-            <p class="hint">Subscription cancellation requested. Your paid access remains available.</p>
+            <p class="hint">{{ _("Subscription cancellation requested. Your paid access remains available.") }}</p>
           {% else %}
-            <form method="post" action="/billing/cancel" data-confirm="Cancel monthly renewal? You keep access through the paid period.">
-              <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Cancel subscription</button>
+            <form method="post" action="/billing/cancel" data-confirm="{{ _("Cancel monthly renewal? You keep access through the paid period.") }}">
+              <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">{{ _("Cancel subscription") }}</button>
             </form>
           {% endif %}
         {% endif %}
-        <form method="post" action="/account/delete" data-confirm="Delete your account and all case data? This cannot be undone.">
-          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Delete my account</button>
+        <form method="post" action="/account/delete" data-confirm="{{ _("Delete your account and all case data? This cannot be undone.") }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">{{ _("Delete my account") }}</button>
         </form>
         {% if admin %}
-          <a href="/admin">Open admin</a>
+          <a href="/admin">{{ _("Open admin") }}</a>
         {% endif %}
         </details>
       </section>

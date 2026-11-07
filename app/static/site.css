@@ -826,3 +826,23 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .upcoming-tracking > svg { color: var(--primary); margin-top: 2px; }
 .upcoming-tracking h2 { font-size: 16px; margin: 0 0 4px; }
 .upcoming-tracking p { margin: 0; font-size: 14px; color: var(--fg-2); }
+
+/* Burmese Unicode needs its own shaping font and more room between lines. */
+.language-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line,#c9ccd1);border-radius:6px;background:var(--surface,#fff);margin:0}
+.language-switch button{font:inherit;font-size:12px;line-height:1.7;padding:3px 8px;min-height:30px;border:0;border-radius:3px;background:transparent;color:inherit;cursor:pointer;white-space:nowrap}
+.language-switch button[lang=my]{font-family:"Myanmar Text","Myanmar Sangam MN","Noto Serif Myanmar","Noto Sans Myanmar","Padauk",serif}
+.language-switch button[aria-pressed=true]{background:#6a001b;color:#fff}
+.language-switch button:focus-visible{outline:2px solid #6a001b;outline-offset:3px}
+.source-language-note{display:none}
+html[lang=my] .source-language-note{display:block;font-size:13px;font-weight:normal;opacity:.85}
+html[lang=my] body,html[lang=my] button,html[lang=my] input,html[lang=my] select,html[lang=my] textarea{font-family:"Myanmar Text","Myanmar Sangam MN","Noto Serif Myanmar","Noto Sans Myanmar","Padauk","Times New Roman",serif;line-height:1.85}
+html[lang=my] h1,html[lang=my] h2,html[lang=my] h3,html[lang=my] legend{line-height:1.7;letter-spacing:0}
+html[lang=my] .hero h1{font-size:clamp(26px,3.3vw,42px)}
+html[lang=my] .case-tablist{flex-wrap:wrap}
+html[lang=my] .case-tablist button{white-space:normal}
+html[lang=my] .btn{white-space:normal}
+html[lang=my] [data-no-translate],html[lang=my] [data-source-text]{letter-spacing:normal}
+@media(max-width:640px){.top>.wrap{display:grid;grid-template-columns:1fr;gap:6px}.top nav{width:100%;justify-content:flex-end;flex-wrap:wrap;gap:8px}.top .brand{justify-self:start}html[lang=my] .page-head{flex-wrap:wrap}html[lang=my] .st-label{font-size:10px}}
+
+html[lang=my] .brand,html[lang=my] .footer-brand{font-family:"Times New Roman",Times,serif}
+html[lang=my] .intake-form legend{scroll-margin-top:150px}

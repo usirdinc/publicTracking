@@ -1,49 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Profile settings · USIRD Case Tracker{% endblock %}
+{% block title %}{{ _("Profile settings · USIRD Case Tracker") }}{% endblock %}
 {% block content %}
 <div class="intake">
-  <a class="back-link" href="/app">← My cases</a>
-  <div class="page-head"><div><h1>Profile settings</h1><p>Manage your photo and contact details.</p></div></div>
+  <a class="back-link" href="/app">{{ _("← My cases") }}</a>
+  <div class="page-head"><div><h1>{{ _("Profile settings") }}</h1><p>{{ _("Manage your photo and contact details.") }}</p></div></div>
   <section class="panel intake-form">
-    <h2>Profile photo</h2>
+    <h2>{{ _("Profile photo") }}</h2>
         <div class="profile-photo" data-profile-photo data-csrf="{{ csrf }}">
-          <img {% if has_photo %}src="/account/photo"{% endif %} alt="Profile photo" {{ 'hidden' if not has_photo else '' }}>
+          <img {% if has_photo %}src="/account/photo"{% endif %} alt="{{ _("Profile photo") }}" {{ 'hidden' if not has_photo else '' }}>
           <span class="profile-initial" aria-hidden="true" {{ 'hidden' if has_photo else '' }}>{{ user.email[0]|upper }}</span>
-          <canvas width="256" height="256" aria-label="New profile photo preview" role="img" hidden></canvas>
+          <canvas width="256" height="256" aria-label="{{ _("New profile photo preview") }}" role="img" hidden></canvas>
           <div class="profile-actions">
             <p class="account-email">{{ user.email }}</p>
             <input id="profile-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
-            <label class="profile-file-label" for="profile-file">Change photo</label>
-            <button type="button" class="btn small" data-photo-save hidden>Save photo</button>
-            <button type="button" class="link" data-photo-remove {{ 'hidden' if not has_photo else '' }}>Remove photo</button>
+            <label class="profile-file-label" for="profile-file">{{ _("Change photo") }}</label>
+            <button type="button" class="btn small" data-photo-save hidden>{{ _("Save photo") }}</button>
+            <button type="button" class="link" data-photo-remove {{ 'hidden' if not has_photo else '' }}>{{ _("Remove photo") }}</button>
           </div>
           <p class="hint photo-status" role="status"></p>
         </div>
 
   </section>
   <section class="panel intake-form profile-contact">
-    <h2>Contact details</h2>
-    {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
+    <h2>{{ _("Contact details") }}</h2>
+    {% if error %}<p class="banner" role="alert">{{ _(error) }}</p>{% endif %}
     <form method="post" action="/account/settings">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <div class="intake-fields">
-        <label>Contact email <input type="email" name="email" required maxlength="254" autocomplete="email" value="{{ contact.email }}"></label>
-        <label>Phone number <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ contact.phone }}" aria-describedby="settings-phone-hint"></label>
+        <label>{{ _("Contact email") }} <input type="email" name="email" required maxlength="254" autocomplete="email" value="{{ contact.email }}"></label>
+        <label>{{ _("Phone number") }} <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ contact.phone }}" aria-describedby="settings-phone-hint"></label>
       </div>
-      <p class="hint" id="settings-phone-hint">Use 10 digits for US or Canada. For other countries, include + and the country code.</p>
-      <p class="hint">Your sign-in email is {{ user.email }}.</p>
-      <p class="hint">{% if phone_verified %}Phone number verified.{% else %}<a href="/account/verify-phone">Verify your phone number</a> to enable text notifications.{% endif %}</p>
+      <p class="hint" id="settings-phone-hint">{{ _("Use 10 digits for US or Canada. For other countries, include + and the country code.") }}</p>
+      <p class="hint">{{ _("Your sign-in email is {value0}.", value0=user.email) }}</p>
+      <p class="hint">{% if phone_verified %}{{ _("Phone number verified.") }}{% else %}<a href="/account/verify-phone">{{ _("Verify your phone number") }}</a> {{ _("to enable text notifications.") }}{% endif %}</p>
       <fieldset class="notification-preferences">
-        <legend>Case notifications</legend>
-        <label class="check"><input type="checkbox" name="email_enabled" value="1" {{ 'checked' if contact.get('email_enabled', true) else '' }}><span>Email me about status changes and daily reminders while my Annual Asylum Fee remains due.</span></label>
-        <label class="check"><input type="checkbox" name="sms_enabled" value="1" {{ 'checked' if contact.get('sms_enabled', true) else '' }}><span>Text me about status changes and daily reminders while my Annual Asylum Fee remains due.</span></label>
-        <label class="check"><input type="checkbox" name="sms_consent" value="1"><span>I agree to receive automated USIRD case alerts at the phone number above. Includes daily reminders while the fee remains due. Message and data rates may apply. Reply STOP to opt out. Consent is optional.</span></label>
-        <p class="hint">Confirm consent when enabling SMS for a new phone number. You can turn either channel off here.</p>
-        {% if not sms_ready %}<p class="hint">SMS delivery is waiting for the sender connection.</p>{% endif %}
+        <legend>{{ _("Case notifications") }}</legend>
+        <label class="check"><input type="checkbox" name="email_enabled" value="1" {{ 'checked' if contact.get('email_enabled', true) else '' }}><span>{{ _("Email me about status changes and daily reminders while my Annual Asylum Fee remains due.") }}</span></label>
+        <label class="check"><input type="checkbox" name="sms_enabled" value="1" {{ 'checked' if contact.get('sms_enabled', true) else '' }}><span>{{ _("Text me about status changes and daily reminders while my Annual Asylum Fee remains due.") }}</span></label>
+        <label class="check"><input type="checkbox" name="sms_consent" value="1"><span>{{ _("I agree to receive automated USIRD case alerts at the phone number above. Includes daily reminders while the fee remains due. Message and data rates may apply. Reply STOP to opt out. Consent is optional.") }}</span></label>
+        <p class="hint">{{ _("Confirm consent when enabling SMS for a new phone number. You can turn either channel off here.") }}</p>
+        {% if not sms_ready %}<p class="hint">{{ _("SMS delivery is waiting for the sender connection.") }}</p>{% endif %}
       </fieldset>
-      <div class="intake-footer"><button class="btn" type="submit">Save profile</button></div>
+      <div class="intake-footer"><button class="btn" type="submit">{{ _("Save profile") }}</button></div>
     </form>
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/profile.js?v=20261106-photo" defer></script>{% endblock %}
+{% block scripts %}<script src="/static/profile.js?v=20261107-burmese1" defer></script>{% endblock %}

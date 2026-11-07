@@ -1,4 +1,5 @@
 (() => {
+  const t = window.USIRDLocale.t;
   const profile = document.querySelector('[data-profile-photo]');
   if (!profile) return;
   const file = profile.querySelector('input');
@@ -24,7 +25,7 @@
     const selected = file.files[0];
     if (!selected) return;
     if (selected.size > 8 * 1024 * 1024) {
-      status.textContent = 'Choose an image under 8 MB.';
+      status.textContent = t('Choose an image under 8 MB.');
       return;
     }
     try {
@@ -38,12 +39,12 @@
         context.drawImage(bitmap, (bitmap.width - size) / 2, (bitmap.height - size) / 2,
                           size, size, 0, 0, 256, 256);
         showPhoto(true);
-        status.textContent = 'Preview ready. Select Save photo to apply it.';
+        status.textContent = t('Preview ready. Select Save photo to apply it.');
       } finally {
         bitmap.close();
       }
     } catch {
-      if (selection === version) status.textContent = 'Choose a readable JPEG, PNG, or WebP image.';
+      if (selection === version) status.textContent = t('Choose a readable JPEG, PNG, or WebP image.');
     }
   });
 
@@ -65,9 +66,9 @@
       else image.removeAttribute('src');
       file.value = '';
       showPhoto();
-      status.textContent = saved ? 'Profile photo saved.' : 'Profile photo removed.';
+      status.textContent = saved ? t('Profile photo saved.') : t('Profile photo removed.');
     } catch {
-      status.textContent = 'Could not update your profile photo. Please try again.';
+      status.textContent = t('Could not update your profile photo. Please try again.');
     } finally {
       file.disabled = save.disabled = remove.disabled = false;
     }

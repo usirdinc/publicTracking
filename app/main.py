@@ -18,7 +18,7 @@ from fastapi.templating import Jinja2Templates
 from itsdangerous import BadData, URLSafeTimedSerializer
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import billing, config, db, security, square, phone_verification
+from app import billing, config, db, security, square, phone_verification, i18n
 from app.uscis_display import description_html, case_history
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -30,6 +30,7 @@ app.add_middleware(SessionMiddleware, secret_key=config.SECRET_KEY or "dev-only-
                    max_age=60 * 60 * 24 * 14)
 app.mount("/static", StaticFiles(directory=str(config.ROOT / "app" / "static")), name="static")
 templates = Jinja2Templates(directory=str(config.ROOT / "app" / "templates"))
+templates.env.globals["_"] = i18n.template_translate
 
 STATUS_TEXT = {
     None: ("Checking…", "pending"),
@@ -114,6 +115,10 @@ async def security_headers(request: Request, call_next):
         )
     if request.url.path in ('/subscribe', '/app') or request.url.path.startswith('/billing/'):
         resp.headers['Cache-Control'] = 'no-store, private'
+    if resp.headers.get("content-type", "").startswith("text/html"):
+        resp.headers["Content-Language"] = i18n.language(request)
+        resp.headers.setdefault("Cache-Control", "no-store, private")
+        resp.headers.append("Vary", "Cookie")
     return resp
 
 
@@ -138,6 +143,7 @@ def render(request, name, **ctx):
         ctx["flash"] = request.session.pop("flash", None)
     ctx["csrf"] = security.csrf_token(request.session)
     ctx["request"] = request
+    ctx["locale"] = i18n.language(request)
     return templates.TemplateResponse(request, name, ctx)
 
 
@@ -160,6 +166,30 @@ def throttled(ip: str, limit=10, window=900) -> bool:
 
 def client_ip(request: Request) -> str:
     return request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "?")
+
+
+# Language changes affect presentation only, never client records or billing.
+@app.get("/language/catalog.js")
+def language_catalog():
+    return Response("window.USIRDTranslations = " + json.dumps(i18n.CATALOG, ensure_ascii=True) + ";",
+                    media_type="text/javascript", headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.post("/language")
+def set_language(request: Request, language: str = Form(""), csrf: str = Form(""),
+                 next: str = Form("/")):
+    if language not in i18n.LANGUAGES or not security.csrf_ok(request.session, csrf):
+        return JSONResponse({"ok": False}, status_code=400)
+    # Redirect to a local path only; never follow a posted external URL.
+    if (not next.startswith("/") or next.startswith("//") or "\\" in next
+            or any(ord(char) < 32 for char in next)):
+        next = "/"
+    response = (JSONResponse({"ok": True, "language": language})
+                if "application/json" in request.headers.get("accept", "") else redirect(next))
+    response.set_cookie("usird_language", language, max_age=365 * 24 * 60 * 60,
+                        httponly=True, secure=config.BASE_URL.startswith("https"), samesite="lax")
+    response.headers["Cache-Control"] = "no-store, private"
+    return response
 
 
 # ---------------- public pages ----------------

@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Verify phone · USIRD Case Tracker{% endblock %}
+{% block title %}{{ _("Verify phone · USIRD Case Tracker") }}{% endblock %}
 {% block content %}
 <div class="intake">
-  <div class="page-head"><div><h1>Verify your phone number</h1><p>{{ 'Enter the code sent by USIRD to continue.' if waiting else 'We will text you a code to confirm your number.' }}</p></div></div>
+  <div class="page-head"><div><h1>{{ _("Verify your phone number") }}</h1><p>{{ _('Enter the code sent by USIRD to continue.' if waiting else 'We will text you a code to confirm your number.') }}</p></div></div>
   <section class="panel intake-form">
-    {% if error %}<p class="banner" role="alert">{{ error }}</p>{% endif %}
-    {% if message %}<p role="status">{{ message }}</p>{% endif %}
-    {% if verified %}<p>Phone number verified.</p><a class="btn" href="/app">Continue</a>{% endif %}
+    {% if error %}<p class="banner" role="alert">{{ _(error) }}</p>{% endif %}
+    {% if message %}<p role="status">{{ _(message) }}</p>{% endif %}
+    {% if verified %}<p>{{ _("Phone number verified.") }}</p><a class="btn" href="/app">{{ _("Continue") }}</a>{% endif %}
     {% if waiting %}
       <form method="post" action="/account/verify-phone">
         <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="confirm">
-        <p class="hint">Enter the code sent to the number ending {{ phone[-4:] }}.</p>
-        <label>Verification code <input name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required placeholder="6-digit code"></label>
-        <button class="btn block" type="submit">Verify and continue</button>
+        <p class="hint">{{ _("Enter the code sent to the number ending {value0}.", value0=phone[-4:]) }}</p>
+        <label>{{ _("Verification code") }} <input name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required placeholder="{{ _("6-digit code") }}"></label>
+        <button class="btn block" type="submit">{{ _("Verify and continue") }}</button>
       </form>
     {% endif %}
     <form class="phone-send-form" method="post" action="/account/verify-phone">
       <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="send">
-      <label>Phone number <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ phone }}"></label>
-      <p class="hint">Use 10 digits for US or Canada. For other countries, include + and the country code. Codes expire in 10 minutes. Message and data rates may apply.</p>
-      <button class="btn ghost" type="submit">{{ 'Send another code' if waiting else 'Send verification code' }}</button>
+      <label>{{ _("Phone number") }} <input type="tel" name="phone" required maxlength="40" autocomplete="tel" value="{{ phone }}"></label>
+      <p class="hint">{{ _("Use 10 digits for US or Canada. For other countries, include + and the country code. Codes expire in 10 minutes. Message and data rates may apply.") }}</p>
+      <button class="btn ghost" type="submit">{{ _('Send another code' if waiting else 'Send verification code') }}</button>
     </form>
   </section>
 </div>

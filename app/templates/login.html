@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% block title %}
-  Log in · USIRD Case Tracker
+  {{ _("Log in · USIRD Case Tracker") }}
 {% endblock %}
 {% block content %}
   <section class="auth-layout" aria-labelledby="login-heading">
     <div class="auth-intro">
-      <h1 id="login-heading">USIRD Case Tracker</h1>
-      <p class="lead">See your Annual Asylum Fee and USCIS case status in one place.</p>
+      <h1 id="login-heading">{{ _("USIRD Case Tracker") }}</h1>
+      <p class="lead">{{ _("See your Annual Asylum Fee and USCIS case status in one place.") }}</p>
       <ul class="auth-benefits">
-        <li>{{ icon('clock') }} Automatic daily checks</li><li>{{ icon('bell') }} Email when something changes</li><li>{{ icon('lock') }} Encrypted case numbers</li>
+        <li>{{ icon('clock') }} {{ _("Automatic daily checks") }}</li><li>{{ icon('bell') }} {{ _("Email when something changes") }}</li><li>{{ icon('lock') }} {{ _("Encrypted case numbers") }}</li>
       </ul>
-      <p class="auth-note">We never ask for your USCIS account password.</p>
+      <p class="auth-note">{{ _("We never ask for your USCIS account password.") }}</p>
     </div>
     <div class="auth-panel">
-      <h2>Log in</h2>
-      <p class="muted">Log in to view and manage your cases.</p>
+      <h2>{{ _("Log in") }}</h2>
+      <p class="muted">{{ _("Log in to view and manage your cases.") }}</p>
       <form method="post" action="/login">
         <input type="hidden" name="csrf" value="{{ csrf }}">
-        <label for="email">Email address</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
-        <label for="password">Password</label>
+        <label for="email">{{ _("Email address") }}</label><input id="email" type="email" name="email" required autocomplete="email" placeholder="{{ _("you@example.com") }}">
+        <label for="password">{{ _("Password") }}</label>
         <div class="password-field">
-          <input id="password" type="password" name="password" required autocomplete="current-password"><button type="button" class="password-toggle" data-password-toggle aria-controls="password" aria-pressed="false">Show</button>
+          <input id="password" type="password" name="password" required autocomplete="current-password"><button type="button" class="password-toggle" data-password-toggle aria-controls="password" aria-pressed="false">{{ _("Show") }}</button>
         </div>
-        <button class="btn lg block" type="submit">Log in {{ icon('arrow') }}</button>
+        <button class="btn lg block" type="submit">{{ _("Log in") }} {{ icon('arrow') }}</button>
       </form>
-      <p class="auth-switch">New to USIRD Case Tracker? <a href="/signup">Create an account</a></p>
+      <p class="auth-switch">{{ _("New to USIRD Case Tracker?") }} <a href="/signup">{{ _("Create an account") }}</a></p>
     </div>
   </section>
 {% endblock %}
