@@ -607,10 +607,10 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 .intake-stages button[aria-current="step"] { color: var(--primary); background: var(--primary-soft); border-color: var(--line); font-weight: 650; }
 .intake-stages button[data-completed="true"] { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
 .intake-guided fieldset { min-height: 235px; }
-.intake-guided legend { font-size: clamp(24px, 5vw, 29px); line-height: 1.25; margin-bottom: 20px; letter-spacing: -.02em; }
+.intake-guided legend { font-size: 22px; line-height: 1.25; margin-bottom: 20px; letter-spacing: -.02em; }
 .intake-guided legend + .hint { margin-top: -7px; margin-bottom: 20px; max-width: 48ch; }
 .intake-guided .intake-fields { gap: 18px; }
-.intake-guided input[data-intake-field] { min-height: 52px; padding: 12px 14px; font-size: 17px; border-radius: 7px; }
+.intake-guided input[data-intake-field] { min-height: 46px; padding: 10px 12px; font-size: 16px; border-radius: 7px; }
 .intake-guided input::placeholder { font-size: 15px; }
 .intake-guided .intake-footer { padding-top: 20px; margin-top: 24px; gap: 12px; }
 .intake-guided .intake-footer > [data-intake-back] { margin-inline-end: auto; }
@@ -688,9 +688,9 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 [data-case-view="description"] .result-section-header { background: var(--surface-2); }
 [data-case-view="history"] .result-section-header { background: var(--surface-2); }
 .case-list [data-case-view="aaf"] .tile-value,
-.case-list [data-case-view="status"] .tile-value { font-size: clamp(21px, 3vw, 25px); line-height: 1.35; margin-block: 14px; }
+.case-list [data-case-view="status"] .tile-value { font-size: 18px; line-height: 1.35; margin-block: 14px; }
 .case-list .result-heading { margin-bottom: 14px; }
-.case-list .fee-amount { font-size: 36px; }
+.case-list .fee-amount { font-size: 26px; }
 .case-list .tracking-actions { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 18px; }
 .case-description-view .uscis-description { padding-inline: 2px; }
 .case-list .history-timeline { margin-top: 4px; }
@@ -705,11 +705,11 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--surface-2); font-
 /* Formal document typography with compact application controls. */
 body { font-size: 16px; }
 h1, h2, h3 { letter-spacing: -.01em; }
-.uscis-description { font-size: 17px; }
+.uscis-description { font-size: 16px; }
 .btn, .link, nav, input, select, textarea, .badge, .chip, .hint,
 .tile-sub, .when, .history-date, .case-count, .source-note, .intake-progress,
 .intake-stages, .profile-menu-panel { font-family: var(--ui-font); }
-.case-list .result-section-header h3 { font-size: 18px; }
+.case-list .result-section-header h3 { font-size: 16px; }
 .notification-preferences { min-width: 0; padding: 18px 0 0; margin-top: 20px; border: 0; border-top: 1px solid var(--line); }
 .notification-preferences legend { padding-right: 12px; font-weight: 650; }
 .notification-preferences .check { margin-block: 14px; font-family: var(--ui-font); font-size: 13px; }
@@ -729,13 +729,13 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .payment-guide-actions > a svg { width: 14px; height: 14px; }
 .number-help { margin: 0 0 16px; text-decoration: underline; }
 [data-open-guide][hidden] { display: none; }
-.tracking-guide-dialog { width: min(820px, calc(100% - 24px)); max-height: 88dvh; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); overflow-y: auto; }
+.tracking-guide-dialog { width: min(720px, calc(100% - 24px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); overflow-y: auto; }
 .tracking-guide-dialog::backdrop { background: rgb(15 24 35 / .5); }
-.guide-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--line); background: var(--primary-soft); }
-.guide-heading h2 { font-size: 25px; margin: 0 0 6px; }
-.guide-heading p { margin: 0; font-size: 14px; color: var(--fg-2); }
+.guide-heading { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.guide-heading h2 { font-size: 20px; line-height: 1.35; margin: 0 0 4px; }
+.guide-heading p { margin: 0; font-size: 13px; color: var(--fg-2); }
 .guide-close { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); font-size: 24px; cursor: pointer; }
-.guide-content { padding: 24px; }
+.guide-content { padding: 20px; font-size: 15px; line-height: 1.6; }
 .number-example { margin: 0 0 24px; }
 .number-example img { width: 100%; height: auto; display: block; border: 1px solid var(--line); }
 .number-definitions { margin: 0 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
@@ -744,29 +744,29 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 .number-key { width: 14px; height: 14px; border: 3px solid; }
 .receipt-key { color: #315672; }.alien-key { color: #8d5338; }
 .payment-map { list-style: none; margin: 0 0 26px; padding: 0; }
-.payment-map > li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 24px; }
-.payment-map > li:not(:last-child)::before { content: ""; position: absolute; left: 16px; top: 36px; bottom: 4px; width: 1px; background: var(--line-strong); }
-.payment-map-step { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: 16px; font-weight: 650; }
-.payment-map h3 { font-size: 19px; margin: 4px 0 8px; }
+.payment-map > li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 20px; }
+.payment-map > li:not(:last-child)::before { content: ""; position: absolute; left: 12px; top: 30px; bottom: 4px; width: 1px; background: var(--line-strong); }
+.payment-map-step { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); color: var(--fg-2); font-size: 13px; font-weight: 650; }
+.payment-map h3 { font-size: 16px; line-height: 1.4; margin: 1px 0 6px; }
 .payment-map p { margin: 0 0 8px; color: var(--fg-2); }
 .payment-map a { text-decoration: underline; }
 .payment-branches { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-.payment-branches > div { border: 1px solid var(--line); padding: 12px; border-radius: 5px; }
+.payment-branches > div { background: var(--surface-2); padding: 12px; border-radius: 5px; }
 .payment-branches strong { display: block; margin-bottom: 6px; }
 .payment-branches p { font-size: 14px; margin: 0; }
-.payment-receipt-note { margin-bottom: 24px; padding: 18px; background: var(--surface-2); border-radius: 6px; }
-.payment-receipt-note h3 { font-size: 19px; }
+.payment-receipt-note { margin-bottom: 24px; padding: 14px; background: var(--surface-2); border-radius: 6px; }
+.payment-receipt-note h3 { font-size: 16px; margin-bottom: 8px; }
 .payment-receipt-note p { margin: 0; }
 .notice-attachments { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .notice-attachments a { min-width: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; padding-bottom: 12px; }
-.notice-attachments img { width: 100%; height: 200px; object-fit: cover; object-position: top; display: block; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.notice-attachments img { width: 100%; height: 140px; object-fit: cover; object-position: top; display: block; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
 .notice-attachments strong, .notice-attachments span { display: block; margin-inline: 12px; }
 .notice-attachments span { font-size: 13px; color: var(--muted); }
 .guide-source { border-top: 1px solid var(--line); padding-top: 16px; margin: 24px 0 0; color: var(--muted); font-size: 12px; }
 @media (max-width: 620px) {
   .number-definitions, .payment-branches { grid-template-columns: minmax(0,1fr); }
   .guide-heading, .guide-content { padding: 18px; }
-  .guide-heading h2 { font-size: 22px; }
+  .guide-heading h2 { font-size: 19px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .tracking-guide-dialog[open] { animation: detail-enter 160ms ease-out; }
@@ -789,4 +789,20 @@ input[name=code] { font-variant-numeric: tabular-nums; font-size: 24px; letter-s
 }
 @media (max-width: 380px) {
   .brand .usird-logo { width: 36px; height: 36px; }
+}
+
+
+/* Normal reading scale inside the account. */
+.account-page { font-size: 15px; }
+.account-page h1 { font-size: 26px; }
+.account-page h2 { font-size: 20px; }
+.account-page h3 { font-size: 16px; }
+.account-page .intake-guided legend { font-size: 22px; }
+.account-page .uscis-description { line-height: 1.65; }
+.tracking-guide-dialog h3 { font-size: 16px; line-height: 1.4; }
+.tracking-guide-dialog .guide-close { width: 32px; height: 32px; font-size: 20px; }
+.tracking-guide-dialog .number-definitions { font-size: 15px; }
+.tracking-guide-dialog .notice-attachments strong { font-size: 15px; }
+@media (max-width: 580px) {
+  .account-page h1 { font-size: 24px; }
 }
