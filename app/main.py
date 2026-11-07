@@ -78,6 +78,7 @@ templates.env.filters["uscis_description"] = description_html
 templates.env.globals["case_history"] = case_history
 templates.env.globals["price"] = config.PRICE
 templates.env.globals["max_cases"] = config.MAX_CASES_PER_USER
+templates.env.globals["max_people"] = config.MAX_PEOPLE_PER_USER
 
 
 def get_db():
@@ -425,15 +426,22 @@ def add_case(request: Request, label: str = Form(""), a_numbers: str = Form(...)
             return _case_intake(request, u, error=str(e), label=label, a_numbers=a_numbers,
                                 receipt=receipt, first_name=first_name, last_name=last_name,
                                 dob=dob, phone=phone, email=email)
-        total = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=?", (u["id"],)).fetchone()["c"]
-        if total >= config.MAX_CASES_PER_USER:
-            return redirect("/app", f"You can track up to {config.MAX_CASES_PER_USER} cases.", request)
-        since = db.iso(db.now() - timedelta(days=1))
-        today = cn.execute("SELECT COUNT(*) c FROM cases WHERE user_id=? AND created_at>?",
-                           (u["id"], since)).fetchone()["c"]
-        if today >= config.NEW_CASES_PER_DAY:
-            return redirect("/app", "You have added the most cases allowed today. Try again tomorrow.", request)
         with db.tx(cn):
+            cases = cn.execute("SELECT a_numbers_enc, created_at FROM cases WHERE user_id=?",
+                               (u["id"],)).fetchall()
+            if len(cases) >= config.MAX_CASES_PER_USER:
+                return redirect("/app", f"You can track up to {config.MAX_CASES_PER_USER} cases.", request)
+            people = set(anums)
+            for case in cases:
+                people.update(security.decrypt(case["a_numbers_enc"]).split(";"))
+            if len(people) > config.MAX_PEOPLE_PER_USER:
+                return _case_intake(
+                    request, u, error=f"You can track up to {config.MAX_PEOPLE_PER_USER} people across all cases.",
+                    label=label, a_numbers=a_numbers, receipt=receipt, first_name=first_name,
+                    last_name=last_name, dob=dob, phone=phone, email=email)
+            since = db.iso(db.now() - timedelta(days=1))
+            if sum(case["created_at"] > since for case in cases) >= config.NEW_CASES_PER_DAY:
+                return redirect("/app", "You have added the most cases allowed today. Try again tomorrow.", request)
             cur = cn.execute(
                 "INSERT INTO cases(user_id,label,a_numbers_enc,receipt_enc,a_last3,receipt_last4,created_at,nationality,client_details_enc) "
                 "VALUES(?,?,?,?,?,?,?,?,?)",

@@ -40,3 +40,22 @@ def test_case_intake_requires_details_and_encrypts_them(client):
     assert other.get(path).status_code == 404
     assert other.post(path, data={**CLIENT_DETAILS, "csrf": csrf(other, "/app")}).status_code == 404
     assert cn.execute("SELECT client_details_enc FROM cases").fetchone()[0] == case["client_details_enc"]
+
+def test_account_tracking_limits_count_unique_people_across_cases(client, monkeypatch):
+    from app import config
+
+    monkeypatch.setattr(config, "NEW_CASES_PER_DAY", 10)
+    signup(client)
+    make_paid("a@example.com")
+    token = csrf(client, "/cases/new")
+    payload = {**CLIENT_DETAILS, "csrf": token}
+
+    def add(numbers, serial):
+        return client.post("/cases", data={**payload, "a_numbers": numbers,
+                                           "receipt": f"ZAR{serial:010d}"})
+
+    assert "Case added" in add("123456781,123456782,123456783,123456784", 1).text
+    assert add("123456785", 2).status_code == 422
+    for serial in (2, 3, 4):
+        assert "Case added" in add("123456781", serial).text
+    assert "up to 4 cases" in add("123456781", 5).text

@@ -53,7 +53,8 @@ MIN_DELAY = float(get("CHECK_MIN_DELAY", "3"))
 MAX_DELAY = float(get("CHECK_MAX_DELAY", "8"))
 NEW_CASES_PER_DAY = int(get("NEW_CASES_PER_DAY", "3"))
 INSTANT_CHECKS_PER_CASE_PER_DAY = int(get("INSTANT_CHECKS_PER_CASE_PER_DAY", "1"))
-MAX_CASES_PER_USER = int(get("MAX_CASES_PER_USER", "5"))
+MAX_CASES_PER_USER = min(4, int(get("MAX_CASES_PER_USER", "4")))
+MAX_PEOPLE_PER_USER = 4
 
 # Official USCIS Case Status API (same credentials as USIRD v2 admin > USCIS)
 USCIS_CLIENT_ID = get("USCIS_CLIENT_ID")

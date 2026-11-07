@@ -88,9 +88,10 @@ def normalize_a_numbers(raw: str) -> list[str]:
         out.append("A" + d.zfill(9))
     if not out:
         raise ValueError("Enter at least one A-Number.")
-    if len(out) > 6:
-        raise ValueError("At most 6 A-Numbers per case.")
-    return out
+    unique = list(dict.fromkeys(out))
+    if len(unique) > config.MAX_PEOPLE_PER_USER:
+        raise ValueError(f"You can track up to {config.MAX_PEOPLE_PER_USER} people per account.")
+    return unique
 
 
 def normalize_receipt(raw: str) -> str:

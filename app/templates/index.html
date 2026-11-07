@@ -44,7 +44,7 @@
     <div class="card feature"><div class="ico">{{ icon('doc') }}</div><h3>USCIS case status</h3><p>Read the latest USCIS status and description, plus case history when USCIS provides it.</p></div>
     <div class="card feature"><div class="ico">{{ icon('bell') }}</div><h3>Email alerts</h3><p>We email you when something changes. No need to keep checking.</p></div>
     <div class="card feature"><div class="ico">{{ icon('bolt') }}</div><h3>Check anytime</h3><p>Request a fresh check from your dashboard and follow its progress.</p></div>
-    <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to {{ max_cases }} cases on one account.</p></div>
+    <div class="card feature"><div class="ico">{{ icon('users') }}</div><h3>Whole family</h3><p>Track up to {{ max_people }} people across {{ max_cases }} cases on one account.</p></div>
     <div class="card feature"><div class="ico">{{ icon('lock') }}</div><h3>Private and secure</h3><p>Your numbers are encrypted on our server. You can delete your case data anytime.</p></div>
   </div>
 </section>
@@ -57,7 +57,7 @@
       <li>{{ icon('check') }} Daily asylum fee and USCIS case checks</li>
       <li>{{ icon('check') }} Email alerts when anything changes</li>
       <li>{{ icon('check') }} On-demand checks from your dashboard</li>
-      <li>{{ icon('check') }} Up to {{ max_cases }} cases per account</li>
+      <li>{{ icon('check') }} Up to {{ max_people }} people and {{ max_cases }} cases per account</li>
     </ul>
     <a class="btn lg block" href="{{ '/app' if user else '/signup' }}">{{ 'Go to my cases' if user else 'Get started' }}</a>
     <p class="muted small mt">Cancel anytime. Billed securely by Square.</p>
