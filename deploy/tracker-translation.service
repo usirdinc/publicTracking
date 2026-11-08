@@ -1,0 +1,15 @@
+[Unit]
+Description=USIRD Burmese translation queue
+After=network.target
+
+[Service]
+User=tracker
+WorkingDirectory=/home/tracker/publicTracking
+ExecStart=/home/tracker/publicTracking/.venv/bin/python -m worker.translation_run
+Restart=always
+RestartSec=15
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

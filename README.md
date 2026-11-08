@@ -57,3 +57,37 @@ The runner prepares one official lookup at a time and starts the official form's
 Complete the CAPTCHA and any site notices directly in Chrome. Review the official result, then save or defer it
 in the Case Tracker queue. Saving or deferring advances to the next item. If a site rejects the session or changes its form,
 complete the lookup manually in a regular browser or defer it. Keep the workstation attended while the runner is open.
+
+
+### Burmese translations of USCIS responses
+
+The dashboard uses the local `app/locales/uscis-my.json` catalog to translate standard USCIS status titles, description sentences, and history events into Burmese. Strict templates preserve returned dates, form identifiers, and receipt numbers. Translation does not call an external provider or change stored USCIS data, scheduling, notifications, or eligibility logic.
+
+The Burmese view leads with the USIRD translation and retains the sanitized original English underneath. English mode shows the source wording. Unrecognized wording is retained in English with an explicit unavailable/partial-translation notice; it is never classified by a substring such as "approved". Extend the curated catalog and its regression checks when USCIS introduces new wording.
+
+### Google Cloud Translation fallback for Burmese USCIS messages
+
+Reviewed wording in `app/locales/uscis-my.json` is translated locally first. Unknown
+USCIS status, description, and history text queues only on authenticated Burmese
+dashboards belonging to paid users or admins. The web request never calls Google.
+The separate `tracker-translation` service processes the encrypted SQLite cache
+beside the main database. Source case records are not modified. Original English
+always remains visible and is the authoritative source; machine translations are
+labelled with Google Cloud Translation attribution.
+
+Store `GOOGLE_TRANSLATE_API_KEY`, `USCIS_AUTO_TRANSLATE_ENABLED=1`, and
+`USCIS_TRANSLATION_DAILY_CHAR_LIMIT=10000` in the owner-only
+`~/.config/usird/cloud-translation.env`, outside the repository. The daily cap is
+UTC, is atomically reserved before each API attempt, and cannot exceed 10,000
+characters through configuration. All attempts count conservatively. The limit
+only covers this integration, not other Google Cloud usage.
+
+Only sanitized USCIS text nodes reach the queue. A-Numbers, receipt identifiers,
+long numeric identifiers, email addresses, and URL text are replaced by tokens
+before Google calls or cache storage; each viewer's identifiers are restored only
+after validating tokens. Profile fields are never used. The same redacted wording
+shares one cached translation across clients. Cache entries use the existing
+DATA_KEY encryption and owner-only permissions. Failure or quota exhaustion keeps
+English readable. Translation refresh replaces text blocks only, preserving forms
+and tabs. Stop/disable the translation service and set the enable flag to 0 to
+roll back Google usage; AAF and USCIS workers do not depend on this service.

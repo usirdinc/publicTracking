@@ -1,0 +1,19 @@
+{% macro uscis_text(value, compact=false, show_label=true) -%}
+  {% set translation = uscis_translation(value) %}
+  <div data-uscis-source-key="{{ translation.key }}" data-translation-pending="{{ 1 if translation.pending_parts else 0 }}" class="uscis-localized{% if compact %} uscis-localized-status{% endif %}">
+    {% if translation.pending_parts %}<p class="uscis-burmese-view translation-notice" role="status">{{ _('Preparing Burmese translation… Original USCIS text remains available below.') }}</p>{% endif %}
+    {% if translation.has_translation %}
+      <div class="uscis-burmese-view">
+        {% if (show_label and not compact) or translation.machine_parts %}<p class="translation-label">{{ _('Burmese translation · Google Cloud Translation') if translation.machine_parts else _('Burmese translation by USIRD') }}</p>{% endif %}
+        <div class="uscis-description uscis-burmese-copy" lang="my" data-no-translate>{{ translation.burmese }}</div>
+        {% if not translation.complete and not translation.pending_parts %}<p class="translation-notice">{{ _('Some wording has no Burmese translation yet and is shown in English.') }}</p>{% endif %}
+      </div>
+    {% elif not translation.complete and not translation.pending_parts %}
+      <p class="uscis-burmese-view translation-notice">{{ _('Burmese translation is not available for this wording yet. The original USCIS text is below.') }}</p>
+    {% endif %}
+    <div class="uscis-original-view">
+      {% if translation.has_translation or not translation.complete %}<p class="original-language-label">{{ _('Original USCIS text (English)') }}</p>{% endif %}
+      <div class="uscis-description uscis-original-copy" lang="en" data-source-text data-no-translate>{{ translation.original }}</div>
+    </div>
+  </div>
+{%- endmacro %}

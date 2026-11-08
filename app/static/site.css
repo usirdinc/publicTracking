@@ -867,3 +867,20 @@ html[lang="my"] .source-note .source-language-note { display: inline; }
   .case-history-view .result-section-header { flex-wrap: wrap; }
   .history-count { flex-basis: calc(100% - 40px); margin-left: 40px; margin-top: -6px; }
 }
+
+/* USCIS response translations are presentation-only; the English source stays available. */
+.uscis-burmese-view, .original-language-label { display: none; }
+.uscis-original-view .uscis-description { margin: 0; }
+html[lang="my"] .uscis-burmese-view { display: block; }
+html[lang="my"] .original-language-label { display: block; }
+html[lang="my"] .uscis-burmese-view + .uscis-original-view { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+html[lang="my"] .uscis-burmese-copy { font-size: 15px; line-height: 1.9; }
+html[lang="my"] .uscis-burmese-copy .uscis-notice-heading { line-height: 1.85; }
+html[lang="my"] .uscis-original-copy[lang="en"] { font-size: 13px; line-height: 1.7; color: var(--fg-2); }
+.translation-label, .original-language-label { margin: 0 0 7px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.8; }
+.translation-notice { margin: 9px 0 0; font-size: 12px; line-height: 1.85; color: var(--muted); }
+.uscis-untranslated { font-family: var(--font); }
+.uscis-localized-status .uscis-description { font-size: inherit; line-height: 1.6; }
+html[lang="my"] .uscis-localized-status .uscis-burmese-copy { font-size: 18px; }
+.uscis-localized-status .original-language-label { font-size: 10px; font-weight: 400; }
+html[lang="my"] .uscis-localized-status .uscis-original-view { border: 0; padding-top: 0; margin-top: 7px; }

@@ -12,7 +12,7 @@
 {% endblock %}
 </title>
 <meta name="description" content="{{ _('Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.') }}">
-<link rel="stylesheet" href="/static/site.css?v=20261107-case-reading1">
+<link rel="stylesheet" href="/static/site.css?v=20261107-uscis-burmese1">
 {% if request.url.path != '/subscribe' %}
 <link rel="stylesheet" href="/static/navigation.css?v=20261106-motion" media="(prefers-reduced-motion: no-preference)">
 {% endif %}
@@ -87,11 +87,12 @@
     </nav>
   </div>
 </footer>
-<script src="/language/catalog.js?v=20261107-my3" defer></script>
+<script src="/language/catalog.js?v=20261107-google1" defer></script>
 <script src="/static/i18n.js?v=20261107-my1" defer></script>
-<script src="/static/app.js?v=20261107-case-reading1" defer></script>
+<script src="/static/app.js?v=20261107-uscis-burmese1" defer></script>
 {% if request.url.path in ('/', '/app', '/cases/new') %}{% include "_tracking_guides.html" %}{% endif %}
 <script src="/static/guides.js?v=20261107" defer></script>
+<script src="/static/uscis-source.js?v=20261107-google1" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

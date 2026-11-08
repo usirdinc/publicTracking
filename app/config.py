@@ -18,6 +18,7 @@ def _load_dotenv(path: Path) -> None:
 
 ROOT = Path(__file__).resolve().parents[1]
 _load_dotenv(ROOT / ".env")
+_load_dotenv(Path.home() / ".config" / "usird" / "cloud-translation.env")
 
 
 def get(name: str, default: str = "") -> str:
@@ -78,3 +79,9 @@ LOOKUP_MACHINE_TOKEN_SHA256 = get("LOOKUP_MACHINE_TOKEN_SHA256")
 ICE_STAFF_ENABLED = get("ICE_STAFF_ENABLED", "0") == "1"
 EOIR_ENABLED = get("EOIR_ENABLED", "0") == "1"
 AAF_RECHECK_HOURS = float(get("AAF_RECHECK_HOURS", "24"))   # automatic AAF re-check interval
+
+# Server-side Google Translation; separate encrypted cache and conservative daily cap.
+GOOGLE_TRANSLATE_API_KEY = get("GOOGLE_TRANSLATE_API_KEY")
+USCIS_AUTO_TRANSLATE_ENABLED = get("USCIS_AUTO_TRANSLATE_ENABLED", "0") == "1"
+USCIS_TRANSLATION_DAILY_CHAR_LIMIT = max(0, min(10000, int(get("USCIS_TRANSLATION_DAILY_CHAR_LIMIT", "10000"))))
+USCIS_TRANSLATION_CACHE_PATH = get("USCIS_TRANSLATION_CACHE_PATH", str(Path(DB_PATH).with_name("uscis-translation-cache.sqlite3")))

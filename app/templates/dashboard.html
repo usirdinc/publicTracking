@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_uscis_text.html" import uscis_text with context %}
 {% block title %}
   {{ _("My cases · USIRD Case Tracker") }}
 {% endblock %}
@@ -135,7 +136,7 @@
                   {% set ub = uscis_badge(c.uscis_status) %}
                   <span class="badge tone-{{ ub }}">{{ c.uscis_form or _('Case status') }}</span>
                   <div class="tile-value">
-                    <span lang="en" data-source-text data-no-translate>{{ c.uscis_status }}</span>
+                    {{ uscis_text(c.uscis_status, compact=true, show_label=false) }}
                   </div>
                   <div class="tile-sub">
                     {% if c.uscis_modified %}
@@ -176,8 +177,8 @@
                   <div class="result-section-copy"><h3>{{ _("Case description") }}</h3><p>{{ _("Details reported by USCIS") }}</p></div>
                 </header>
                 {% if c.uscis_desc %}
-                  <div class="uscis-description" lang="en" data-source-text data-no-translate>{{ c.uscis_desc | uscis_description }}</div>
-                  <p class="source-note">{{ _("Source: USCIS · Information only, not legal advice.") }} <span class="source-language-note">{{ _('USCIS source text is shown in English.') }}</span></p>
+                  {{ uscis_text(c.uscis_desc) }}
+                  <p class="source-note">{{ _("Source: USCIS · Information only, not legal advice.") }}</p>
                 {% else %}
                   <div class="result-empty">
                     <p class="result-empty-title">{{ _("Waiting for the USCIS description") }}</p>
@@ -200,11 +201,11 @@
                         <div class="history-event-date">
                           {% if event.date %}<time class="history-date" data-date datetime="{{ event.date }}">{{ event.date }}</time>{% else %}<span class="history-date">{{ _('Date not provided') }}</span>{% endif %}
                         </div>
-                        <div class="history-event"><div class="uscis-description" lang="en" data-source-text data-no-translate>{{ event.text | uscis_description }}</div></div>
+                        <div class="history-event">{{ uscis_text(event.text, show_label=false) }}</div>
                       </li>
                     {% endfor %}
                   </ol>
-                  <p class="source-note source-language-note">{{ _('USCIS source text is shown in English.') }}</p>
+                  <p class="source-note uscis-burmese-view">{{ _('Burmese translations are provided by USIRD; the original USCIS text is retained for reference.') }}</p>
                 {% else %}
                   <div class="result-empty">
                     <p class="result-empty-title">{{ _("No history available yet") }}</p>

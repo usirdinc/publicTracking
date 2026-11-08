@@ -479,5 +479,12 @@
   "Case deleted, including its numbers and history.": "အမှုတွဲနှင့်အတူ သက်ဆိုင်သည့် နံပါတ်များနှင့် မှတ်တမ်းများကိုပါ ဖျက်ပြီးပါပြီ။",
   "You can track up to {count} cases.": "အမှုတွဲ {count} ခုအထိ စောင့်ကြည့်နိုင်ပါသည်။",
   "Daily tracking of your Annual Asylum Fee and USCIS case status, with email alerts when anything changes.": "ခိုလှုံခွင့် နှစ်စဉ်ကြေးနှင့် USCIS အမှုတွဲအခြေအနေကို နေ့စဉ် စစ်ဆေးပြီး အပြောင်းအလဲ တွေ့ရှိပါက Email ဖြင့် အသိပေးပါသည်။",
-  "Recorded events: {count}": "မှတ်တမ်း {count} ခု"
+  "Recorded events: {count}": "မှတ်တမ်း {count} ခု",
+  "Burmese translation by USIRD": "USIRD ၏ မြန်မာဘာသာပြန်",
+  "Original USCIS text (English)": "USCIS မူရင်းစာသား (English)",
+  "Some wording has no Burmese translation yet and is shown in English.": "စာသားအချို့အတွက် မြန်မာဘာသာပြန် မရရှိသေးသဖြင့် အင်္ဂလိပ်မူရင်းအတိုင်း ဖော်ပြထားပါသည်။",
+  "Burmese translation is not available for this wording yet. The original USCIS text is below.": "ဤစာသားအတွက် မြန်မာဘာသာပြန် မရရှိသေးပါ။ အောက်တွင် USCIS မူရင်းစာသားကို ဖတ်ရှုနိုင်ပါသည်။",
+  "Burmese translations are provided by USIRD; the original USCIS text is retained for reference.": "မြန်မာစာသားသည် USIRD ၏ ဘာသာပြန်ချက်ဖြစ်ပါသည်။ ကိုးကားနိုင်ရန် USCIS မူရင်းစာသားကိုလည်း ထိန်းသိမ်းဖော်ပြထားပါသည်။",
+  "Burmese translation · Google Cloud Translation": "မြန်မာဘာသာပြန် · Google Cloud Translation",
+  "Preparing Burmese translation… Original USCIS text remains available below.": "မြန်မာဘာသာသို့ ပြန်ဆိုနေပါသည်… မူရင်း USCIS စာသားကို အောက်တွင် ဖတ်ရှုနိုင်ပါသည်။"
 }

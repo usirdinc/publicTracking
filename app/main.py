@@ -15,11 +15,13 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from jinja2 import pass_context
 from itsdangerous import BadData, URLSafeTimedSerializer
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import billing, config, db, security, square, phone_verification, i18n
 from app.uscis_display import description_html, case_history
+from app.uscis_burmese import translate_source
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("web")
@@ -77,6 +79,14 @@ templates.env.globals["aaf_badge"] = aaf_badge
 templates.env.globals["uscis_badge"] = uscis_badge
 templates.env.filters["uscis_description"] = description_html
 templates.env.globals["case_history"] = case_history
+@pass_context
+def localized_uscis_source(context, value):
+    user = context.get("user")
+    automatic = bool(context.get("locale") == "my" and user and (db.is_paid(user) or user["email"] in config.ADMIN_EMAILS))
+    return translate_source(value, automatic=automatic)
+
+
+templates.env.globals["uscis_translation"] = localized_uscis_source
 templates.env.globals["price"] = config.PRICE
 templates.env.globals["max_cases"] = config.MAX_CASES_PER_USER
 templates.env.globals["max_people"] = config.MAX_PEOPLE_PER_USER
