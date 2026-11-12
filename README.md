@@ -91,3 +91,59 @@ DATA_KEY encryption and owner-only permissions. Failure or quota exhaustion keep
 English readable. Translation refresh replaces text blocks only, preserving forms
 and tabs. Stop/disable the translation service and set the enable flag to 0 to
 roll back Google usage; AAF and USCIS workers do not depend on this service.
+
+### Prepared Beacon-4 four-window morning shift
+
+Start manually on Beacon-4's logged-in desktop (no daily timer):
+
+    cd ~/case-tracker-operator
+    .venv/bin/python -m scripts.staff_shift_runner --workers 4 --service both
+
+Staff complete official notices and every CAPTCHA in the ordinary visible Chrome
+windows. The runner uses the existing owner-only `lookup-token` to authenticate
+only to Case Tracker's lookup workspace. It does not require general admin access,
+reuse client passwords, install CAPTCHA-solving extensions, or expose debugging
+ports. It opens up to four windows, tiles them to the desktop, prefills saved
+A-Numbers and country/nationality, waits for verified results, saves recognized
+results, then moves to the next assignment. Use `--service eoir` or `--service ice`
+for a focused pilot. Close windows or press Ctrl+C in the launcher to stop.
+
+Assignments are atomically exclusive, globally capped at four, and expire after
+15 minutes. Active CAPTCHA waits extend assignments every 45 seconds. Recovered
+assignments reject old tokens. Changed identity/nationality, revoked ICE consent,
+ineligible accounts, and expired assignments reject results. Retryable failures
+preserve the prior successful result and timestamp and defer for 15 minutes.
+Successful checks become due after 24 hours. EOIR uses the first saved A-Number
+and its supplied nationality, as the existing queue does; ICE uses each opted-in
+person's saved A-Number and country of birth. Never infer nationality from country
+of birth or automatically opt anyone into ICE searches.
+
+A local coordinator lock prevents staff launching a second four-window shift on
+Beacon-4. Default shift duration is four hours; CAPTCHA wait is ten minutes.
+Idle windows stop after one minute with no unassigned eligible work. Counts are
+lookup jobs, not distinct clients: one person checked in EOIR and ICE is two jobs.
+The old V2 roster is not imported or altered by this runner. Existing AAF/USCIS
+workers, the V2 fleet split, and their schedules stay separate.
+
+**Release readiness:** server queue and result validation are covered by synthetic
+concurrency and authentication tests. Public EOIR/ICE input controls were inspected
+on November 11, 2026. The EOIR nationality selector was corrected for the actual
+`BURMA (MYANMAR) (BM)` option. A live attended pilot is still mandatory: prior
+ACIS sessions sometimes rejected solved CAPTCHAs, and the current ICE result-page
+layout has not been observed after a successful human solve. Unknown ICE layouts
+are deferred, never called no-match. The strict result recognizer must be calibrated
+against that pilot before treating ICE automatic saving as proven. No anti-bot
+bypass or automatic CAPTCHA service is included. The existing manual staff pages
+remain available for cases the official sites reject or the parser cannot recognize.
+
+Beacon-4 preflight found Chrome, Playwright, and its private operator credential;
+its existing virtual environment needs the tested `httpx==0.27.2` dependency from
+`deploy/beacon4-shift-requirements.txt`. Install it only in the operator environment.
+
+Deploy the matching server release and migrate its additive lease/attempt tables
+before installing the workstation package. Back up the database encrypted first.
+No client records should be checked until staff start the shift. The four-hour /
+1,000-client timing is historical operator experience, not a measured guarantee
+for the combined EOIR+ICE workload. This path saves results without initiating
+new customer email/SMS alerts; customer-facing EOIR/ICE presentation is a separate
+release from preparing the operator shift.

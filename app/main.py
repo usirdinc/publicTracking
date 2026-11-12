@@ -1184,3 +1184,44 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
                     f"\nSee details: {config.BASE_URL}/app\n\n"
                     "Always confirm with the court or your attorney. This is not legal advice.\n")
     return redirect("/admin/eoir", f"Saved case {case_id}: {new}", request)
+
+
+# Dedicated workstation shift API; keeps the existing manual queues available.
+@app.get("/staff/lookups/shift")
+def staff_shift_info(request: Request):
+    with closing(get_db()) as cn:
+        user=current_user(request,cn)
+        if not _lookup_authorized(request,user):return Response(status_code=403)
+        return JSONResponse({"csrf":security.csrf_token(request.session),"eoir":config.EOIR_ENABLED,
+                             "ice":config.ICE_STAFF_ENABLED,"max_workers":4},headers={"Cache-Control":"no-store, private"})
+
+
+@app.post("/staff/lookups/shift/claim")
+def staff_shift_claim(request: Request, csrf: str=Form(""),worker: str=Form(""),service: str=Form("both")):
+    from app import staff_queue
+    with closing(get_db()) as cn:
+        if not _lookup_authorized(request,current_user(request,cn)) or not security.csrf_ok(request.session,csrf):
+            return Response(status_code=403)
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,48}",worker) or service not in ("both","ice","eoir"):
+            return Response(status_code=400)
+        job=staff_queue.claim(cn,worker,service)
+        return JSONResponse({"job":job},headers={"Cache-Control":"no-store, private","Referrer-Policy":"no-referrer"})
+
+
+@app.post("/staff/lookups/shift/result")
+def staff_shift_result(request: Request,csrf: str=Form(""),lease_token: str=Form(""),
+                       action: str=Form("save"),page_text: str=Form(""),source_url: str=Form("")):
+    from app import staff_queue
+    with closing(get_db()) as cn:
+        if not _lookup_authorized(request,current_user(request,cn)) or not security.csrf_ok(request.session,csrf):
+            return Response(status_code=403)
+        if action not in ("save","retry","heartbeat") or not re.fullmatch(r"[A-Za-z0-9_-]{40,64}",lease_token):
+            return Response(status_code=400)
+        try:
+            if action=="heartbeat":
+                if not staff_queue.heartbeat(cn,lease_token):return Response(status_code=409)
+                outcome="extended"
+            else:outcome=staff_queue.complete(cn,lease_token,action,page_text,source_url)
+        except ValueError:
+            return JSONResponse({"error":"Result unrecognized or assignment expired. Review or defer it."},status_code=409)
+        return JSONResponse({"outcome":outcome},headers={"Cache-Control":"no-store, private"})

@@ -42,9 +42,14 @@ def prepare_eoir(page, number, nationality):
         boxes.nth(index).fill(digit)
     field = page.locator('input[role="combobox"]:visible, input.p-autocomplete-input:visible')
     field.fill(nationality)
-    option = page.get_by_role("option", name=re.compile(rf"^{re.escape(nationality)}$", re.I))
+    wanted = {"myanmar":"Burma", "burma (myanmar) (bm)":"Burma"}.get(nationality.casefold(),nationality)
+    if wanted != nationality:field.fill(wanted)
+    # ACIS includes official country names and a code: e.g. BURMA (MYANMAR) (BM).
+    option = page.get_by_role("option", name=re.compile(rf"^{re.escape(wanted)}(?:\s*\([^)]*\))*$", re.I))
+    option.first.wait_for(state="visible",timeout=5000)
+    if option.count()!=1:raise ValueError("Select the exact matching nationality in the EOIR form.")
     option.click(timeout=5000)
-    page.get_by_role("button", name="Submit", exact=True).click()
+    page.get_by_role("button", name=re.compile(r"^submit$",re.I)).click()
 
 
 def finish_eoir(page, queue, job):
@@ -66,7 +71,7 @@ def finish_eoir(page, queue, job):
             if area.count() and not area.input_value():
                 area.fill(text[:24000])
             return
-        button = page.get_by_role("button", name="Submit", exact=True)
+        button = page.get_by_role("button", name=re.compile(r"^submit$",re.I))
         if submit_again and _captcha_token(page) and button.count() == 1 and button.is_visible() and button.is_enabled():
             # Give the official callback the first opportunity to finish.
             page.wait_for_timeout(1800)

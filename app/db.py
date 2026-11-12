@@ -95,6 +95,25 @@ CREATE TABLE IF NOT EXISTS ice_staff_checks (
   next_at TEXT,
   PRIMARY KEY (case_id, person)
 );
+CREATE TABLE IF NOT EXISTS staff_lookup_leases (
+  service TEXT NOT NULL CHECK(service IN ('ice','eoir')),
+  case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  person INTEGER NOT NULL DEFAULT 0,
+  token_hash TEXT NOT NULL UNIQUE,
+  worker TEXT NOT NULL,
+  version TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  PRIMARY KEY(service,case_id,person)
+);
+CREATE TABLE IF NOT EXISTS staff_lookup_attempts (
+  id INTEGER PRIMARY KEY,
+  service TEXT NOT NULL,
+  case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  person INTEGER NOT NULL,
+  worker TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  finished_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS jobs (
   id INTEGER PRIMARY KEY,
   case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,

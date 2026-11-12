@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Case Tracker Morning Shift (4 windows)
+Comment=Staff-solved CAPTCHA lookups for EOIR and ICE
+Exec=/home/beacon-4/case-tracker-operator/scripts/start_staff_shift.sh
+Terminal=true
+Icon=web-browser
+Categories=Office;
