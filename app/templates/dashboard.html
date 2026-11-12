@@ -216,6 +216,8 @@
             </div>
             <div class="case-foot case-management workspace-case-actions">
               <div class="acts">
+                {% if c.eoir_status %}<a class="link" href="/cases/{{ c.id }}/court">{{ _('Court information') }}</a>{% endif %}
+                <a class="link" href="/cases/{{ c.id }}/ice">{{ _('ICE lookup settings and results') }}</a>
                 <a class="link" href="/cases/{{ c.id }}/details">{{ _('Edit details' if c.client_details_enc else 'Complete details') }}</a>
                 <form method="post" action="/cases/{{ c.id }}/delete" class="inline" data-confirm="{{ _("Delete this case and its history?") }}">
                   <input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger" aria-label="{{ _('Delete case {label}', label=c.label) }}">{{ _("Delete") }}</button>

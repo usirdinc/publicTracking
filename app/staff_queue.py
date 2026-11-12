@@ -94,6 +94,12 @@ def complete(cn, token, action, text='', source_url=''):
         if not current or current['version']!=row['version']:
             cn.execute('DELETE FROM staff_lookup_leases WHERE token_hash=?',(row['token_hash'],))
             return 'stale'
+        if row['service']=='eoir':
+            previous=cn.execute('SELECT eoir_status,eoir_fields FROM cases WHERE id=?',(row['case_id'],)).fetchone()
+            old={'status':previous['eoir_status'],'fields':json.loads(previous['eoir_fields'] or '{}')} if previous['eoir_status'] else None
+        else:
+            previous=cn.execute('SELECT result_enc FROM ice_staff_checks WHERE case_id=? AND person=?',(row['case_id'],row['person'])).fetchone()
+            old=json.loads(security.decrypt(previous['result_enc'])) if previous['result_enc'] else None
         result=None if action=='retry' else parse_result(row['service'],text,source_url,current['number'])
         if action!='retry' and result is None:raise ValueError('Official result is not unambiguous; defer or review it.')
         now=db.iso(db.now())
@@ -109,6 +115,8 @@ def complete(cn, token, action, text='', source_url=''):
         else:
             cn.execute('UPDATE cases SET eoir_status=?,eoir_fields=?,eoir_checked_at=?,eoir_next_at=? WHERE id=?',
                 (result['status'],json.dumps(result['fields'],sort_keys=True),now,db.in_(days=1),row['case_id']))
+        if result is not None and old is not None and old!=result:
+            cn.execute('INSERT INTO staff_notification_outbox(case_id,kind,next_at) VALUES(?,?,?)',(row['case_id'],row['service'],now))
         cn.execute('DELETE FROM staff_lookup_leases WHERE token_hash=?',(row['token_hash'],))
         cn.execute('INSERT INTO staff_lookup_attempts(service,case_id,person,worker,outcome,finished_at) VALUES(?,?,?,?,?,?)',
             (row['service'],row['case_id'],row['person'],row['worker'],'deferred' if result is None else result['status'],now))

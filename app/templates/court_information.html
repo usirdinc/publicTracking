@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Court information') }} · USIRD Case Tracker{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ _('Court information') }}</h1><p data-no-translate>{{ case.label }}</p></div><a class="btn small ghost" href="/app">{{ _('Back to my cases') }}</a></div>
+<section class="panel">
+  <h2>{{ _('Latest verified EOIR result') }}</h2>
+  {% if summary %}<p lang="en" data-no-translate>{{ summary }}</p>{% else %}<p>{{ _('No verified court result is available yet.') }}</p>{% endif %}
+  {% if case.eoir_checked_at %}<p class="hint">{{ _('Last checked') }}: <time datetime="{{ case.eoir_checked_at }}" data-rel>{{ case.eoir_checked_at }}</time></p>{% endif %}
+  {% if details %}<dl>{% for label,value in details %}<dt>{{ _(label) }}</dt><dd lang="en" data-no-translate>{{ value }}</dd>{% endfor %}</dl>{% endif %}
+  <p class="hint">{{ _('Court information is provided for reference. Confirm official notices with the court or your representative.') }}</p>
+  <a href="https://acis.eoir.justice.gov/en/" target="_blank" rel="noopener noreferrer">{{ _('Open official EOIR case information') }}</a>
+</section>
+{% endblock %}

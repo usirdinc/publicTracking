@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from urllib.parse import urlparse
 
 from cryptography.fernet import InvalidToken
-from fastapi import FastAPI, Form, Request
+from fastapi import BackgroundTasks, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -111,7 +111,7 @@ async def security_headers(request: Request, call_next):
     resp = await call_next(request)
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.headers["Referrer-Policy"] = "same-origin"
+    resp.headers["Referrer-Policy"] = "no-referrer" if request.url.path in ("/reset-password","/forgot-password") else "same-origin"
     resp.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'"
     if request.url.path == '/subscribe' and billing.enabled():
         cdn = 'https://sandbox.web.squarecdn.com' if config.SQUARE_ENV == 'sandbox' else 'https://web.squarecdn.com'
@@ -136,7 +136,11 @@ def current_user(request: Request, cn):
     uid = request.session.get("uid")
     if not uid:
         return None
-    return cn.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+    user=cn.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+    if user and request.session.get("auth_version",0)==user["auth_version"]:
+        return user
+    request.session.clear()
+    return None
 
 
 def is_admin(user) -> bool:
@@ -287,6 +291,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...), c
         return redirect("/login", "Email or password is not correct.", request)
     request.session.clear()
     request.session["uid"] = u["id"]
+    request.session["auth_version"] = u["auth_version"]
     if u["phone_verification_required"]:
         return redirect("/account/verify-phone")
     if u["email"] in config.LOOKUP_STAFF_EMAILS:
@@ -1036,7 +1041,7 @@ def staff_ice_save(request: Request, case_id: int, person: int, csrf: str = Form
         now = db.iso(db.now())
         with db.tx(cn):
             row = cn.execute(
-                """SELECT i.next_at, i.version, u.paid_until FROM ice_staff_checks i
+                """SELECT i.next_at, i.version, i.result_enc, u.paid_until FROM ice_staff_checks i
                    JOIN cases c ON c.id=i.case_id JOIN users u ON u.id=c.user_id
                    WHERE i.case_id=? AND i.person=?""", (case_id, person)
             ).fetchone()
@@ -1052,6 +1057,9 @@ def staff_ice_save(request: Request, case_id: int, person: int, csrf: str = Form
                 cn.execute("""UPDATE ice_staff_checks SET result_enc=?,checked_at=?,next_at=?
                               WHERE case_id=? AND person=?""",
                            (result, now, db.in_(days=1), case_id, person))
+                previous=json.loads(security.decrypt(row["result_enc"])) if row["result_enc"] else None
+                if previous is not None and previous!=json.loads(security.decrypt(result)):
+                    cn.execute("INSERT INTO staff_notification_outbox(case_id,kind,next_at) VALUES(?,'ice',?)",(case_id,now))
         message = "Deferred until tomorrow." if status == "retry" else "ICE result saved."
         return redirect("/staff/lookups", message, request)
 
@@ -1176,13 +1184,8 @@ def admin_eoir_save(request: Request, case_id: int, page_text: str = Form(""), a
     if saved.rowcount != 1:
         return redirect("/admin/eoir", "The lookup changed while you were saving. Reload the queue.", request)
     new = eoir_summary(status, new_json)
-    if old != new:
-        mailer.send(c["email"], f"Immigration court update for {c['label']}",
-                    f"The immigration court (EOIR) information for \"{c['label']}\" "
-                    f"(A-Number ending {c['a_last3']}) {'changed' if old else 'is now available'}.\n\n"
-                    f"Now: {new}\n" + (f"Before: {old}\n" if old else "") +
-                    f"\nSee details: {config.BASE_URL}/app\n\n"
-                    "Always confirm with the court or your attorney. This is not legal advice.\n")
+    if old and old != new:
+        cn.execute("INSERT INTO staff_notification_outbox(case_id,kind,next_at) VALUES(?,'eoir',?)",(case_id,db.iso(db.now())))
     return redirect("/admin/eoir", f"Saved case {case_id}: {new}", request)
 
 
@@ -1225,3 +1228,59 @@ def staff_shift_result(request: Request,csrf: str=Form(""),lease_token: str=Form
         except ValueError:
             return JSONResponse({"error":"Result unrecognized or assignment expired. Review or defer it."},status_code=409)
         return JSONResponse({"outcome":outcome},headers={"Cache-Control":"no-store, private"})
+
+
+@app.get("/forgot-password",response_class=HTMLResponse)
+def forgot_password_form(request: Request):
+    return render(request,"forgot_password.html")
+
+
+@app.post("/forgot-password")
+def forgot_password(request: Request,background_tasks: BackgroundTasks,email: str=Form(""),csrf: str=Form("")):
+    from app import password_reset
+    if not security.csrf_ok(request.session,csrf):return Response(status_code=403)
+    if len(email)<=200 and security.valid_email(email.strip().lower()):
+        with closing(get_db()) as cn:message=password_reset.request_reset(cn,email,client_ip(request))
+        if message:
+            from app import mailer
+            background_tasks.add_task(mailer.send,*message)
+    return redirect("/forgot-password",password_reset.MESSAGE,request)
+
+
+@app.get("/reset-password",response_class=HTMLResponse)
+def reset_password_form(request: Request):
+    response=render(request,"reset_password.html",reset_token="")
+    response.headers["Referrer-Policy"]="no-referrer"
+    return response
+
+
+@app.post("/reset-password")
+def reset_password(request: Request,token: str=Form(""),password: str=Form(""),confirm_password: str=Form(""),csrf: str=Form("")):
+    from app import password_reset
+    if not security.csrf_ok(request.session,csrf):return Response(status_code=403)
+    if throttled("password-reset:"+client_ip(request),limit=10):
+        return redirect("/forgot-password","Too many attempts. Try again in 15 minutes.",request)
+    if password!=confirm_password or not 10<=len(password)<=256:
+        return render(request,"reset_password.html",reset_token=token if len(token)==43 else "",
+            flash="Use matching passwords of 10 to 256 characters.")
+    with closing(get_db()) as cn:success=password_reset.apply_reset(cn,token,password)
+    if not success:return redirect("/forgot-password","This reset link is invalid or expired. Request a new link.",request)
+    request.session.clear()
+    return redirect("/login","Password updated. Please log in with your new password.",request)
+
+
+@app.get("/cases/{case_id}/court",response_class=HTMLResponse)
+def court_information(request: Request,case_id: int):
+    with closing(get_db()) as cn:
+        user=current_user(request,cn)
+        if not user:return redirect("/login")
+        case=_own_case(cn,user,case_id)
+        if not case:return Response(status_code=404)
+        if not _can_use(user):return redirect("/subscribe")
+        fields=json.loads(case["eoir_fields"] or "{}")
+        allowed=[("hearing_date","Hearing date"),("hearing_time","Hearing time"),("hearing_format","Hearing format"),
+                 ("hearing_type","Hearing type"),("hearing","Hearing"),("judge","Judge"),("court_address","Court address"),
+                 ("decision","Decision"),("appeal","Appeal")]
+        return render(request,"court_information.html",user=user,case=case,
+            summary=eoir_summary(case["eoir_status"],case["eoir_fields"]),
+            details=[(label,fields[key]) for key,label in allowed if fields.get(key)])

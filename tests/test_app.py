@@ -213,7 +213,7 @@ def test_eoir_staff_queue(client, monkeypatch):
     assert "Next hearing March 3, 2027" in r.text
     c = db.connect().execute("SELECT * FROM cases").fetchone()
     assert c["eoir_status"] == "CASE_FOUND" and "DOE" not in c["eoir_fields"] and c["eoir_next_at"]
-    assert sent and "Immigration court" in sent[0]
+    assert not sent  # First verified result establishes a baseline; only subsequent changes alert.
     assert "A123456789" not in client.get("/admin/eoir").text   # not due again for 30 days
     assert "Next hearing March 3, 2027" not in client.get("/app").text
 

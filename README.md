@@ -144,6 +144,32 @@ Deploy the matching server release and migrate its additive lease/attempt tables
 before installing the workstation package. Back up the database encrypted first.
 No client records should be checked until staff start the shift. The four-hour /
 1,000-client timing is historical operator experience, not a measured guarantee
-for the combined EOIR+ICE workload. This path saves results without initiating
-new customer email/SMS alerts; customer-facing EOIR/ICE presentation is a separate
-release from preparing the operator shift.
+for the combined EOIR+ICE workload. Verified changes now queue the email/SMS
+alerts described below; the initial result remains a silent baseline.
+
+### Password recovery and verified-result change alerts
+
+The login page links to `/forgot-password`. Recovery uses the registered account
+email, not an editable notification contact. Responses do not reveal whether the
+email exists. Reset links expire in 30 minutes and are single-use; only a SHA-256
+digest is stored. The bearer token is in a URL fragment, then posted in the form
+body, so it is not sent in web/proxy request URLs. Request limits are durable
+(two per email and ten per IP per hour). CSRF and confirmation are required.
+A successful reset increments the user's auth_version, invalidating old login
+sessions while preserving subscriptions, client records, and phone verification.
+SMTP must be configured. Recovery emails are queued after the HTTP response.
+
+EOIR/ICE successful results establish a silent baseline. Subsequent verified
+changes queue durable email/SMS notifications; unchanged checks, pending CAPTCHA,
+errors, and deferred checks do not. Delivery uses the existing account contacts,
+channel preferences, verified phone and matching SMS consent. Generic SMS does
+not disclose detention, court, or identifying details. Email links lead to the
+owner-only `/cases/{id}/court` or existing ICE result page; dashboard links also
+make the saved results reachable. The separate `tracker-notifications` service
+handles durable pending delivery, retries failed channels, and never re-sends
+accepted or uncertain deliveries. It does not perform agency lookups.
+
+The staff queue installation remains manual-start on Beacon-4. Publishing the
+recovery/notification release requires its own approval, encrypted database backup,
+additive schema migration, and graceful web reload. Do not start a client shift
+as part of deployment, and do not send real test messages without instructions.

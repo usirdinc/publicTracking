@@ -16,6 +16,19 @@ CREATE TABLE IF NOT EXISTS users (
   square_customer_id TEXT,
   subscription_status TEXT
 );
+CREATE TABLE IF NOT EXISTS password_resets (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+  id INTEGER PRIMARY KEY,
+  email_key TEXT NOT NULL,
+  ip_key TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS password_reset_ip_rate ON password_reset_requests(ip_key,created_at);
+CREATE INDEX IF NOT EXISTS password_reset_email_rate ON password_reset_requests(email_key,created_at);
 CREATE TABLE IF NOT EXISTS phone_verifications (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   phone_enc TEXT,
@@ -105,6 +118,13 @@ CREATE TABLE IF NOT EXISTS staff_lookup_leases (
   expires_at TEXT NOT NULL,
   PRIMARY KEY(service,case_id,person)
 );
+CREATE TABLE IF NOT EXISTS staff_notification_outbox (
+  id INTEGER PRIMARY KEY,
+  case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK(kind IN ('eoir','ice')),
+  state TEXT NOT NULL DEFAULT 'pending',
+  next_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS staff_lookup_attempts (
   id INTEGER PRIMARY KEY,
   service TEXT NOT NULL,
@@ -178,7 +198,7 @@ def connect(path: str | None = None) -> sqlite3.Connection:
 # Columns added after launch; init() adds any that are missing.
 MIGRATIONS = {
     "notification_deliveries": [("kind", "TEXT NOT NULL DEFAULT ''")],
-    "users": [("phone_verification_required", "INTEGER NOT NULL DEFAULT 0")],
+    "users": [("phone_verification_required", "INTEGER NOT NULL DEFAULT 0"), ("auth_version", "INTEGER NOT NULL DEFAULT 0")],
     "cases": [
         ("uscis_status", "TEXT"), ("uscis_desc", "TEXT"), ("uscis_form", "TEXT"),
         ("uscis_modified", "TEXT"), ("uscis_checked_at", "TEXT"), ("uscis_next_at", "TEXT"),

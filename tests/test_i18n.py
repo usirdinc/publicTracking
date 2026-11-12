@@ -77,7 +77,7 @@ def test_translation_placeholders_match_and_templates_have_catalog_entries():
     placeholders = lambda text: set(re.findall(r"\{(\w+)\}", text))
     for source, target in i18n.CATALOG.items():
         assert placeholders(source) == placeholders(target), source
-    customer_templates = ["base.html","index.html","login.html","signup.html","subscribe.html",
+    customer_templates = ["forgot_password.html","reset_password.html","court_information.html","base.html","index.html","login.html","signup.html","subscribe.html",
                           "dashboard.html","account_settings.html","verify_phone.html","case_new.html",
                           "case_details.html","_client_details_fields.html","_tracking_guides.html","_stepper.html","_uscis_text.html"]
     for name in customer_templates:

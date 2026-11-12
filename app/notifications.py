@@ -28,10 +28,10 @@ def contact(cn, user):
             "email_enabled": True, "sms_enabled": True}
 
 
-def send_update(case, subject, body, kind):
+def send_update(case, subject, body, kind, event_id=None, retry_failed=False):
     with closing(db.connect()) as cn:
         user = cn.execute("SELECT * FROM users WHERE id=?", (case["user_id"],)).fetchone()
-        current = cn.execute("SELECT checked_at, uscis_checked_at FROM cases WHERE id=?", (case["id"],)).fetchone()
+        current = cn.execute("SELECT checked_at, uscis_checked_at, eoir_checked_at FROM cases WHERE id=?", (case["id"],)).fetchone()
         if not user or not current:
             return
         if kind == "aaf_reminder" and not (db.is_paid(user) or user["email"] in config.ADMIN_EMAILS):
@@ -41,7 +41,7 @@ def send_update(case, subject, body, kind):
         except Exception:
             log.error("Case %s: saved notification contacts could not be read", case["id"])
             return
-        checked = current["checked_at" if kind.startswith("aaf") else "uscis_checked_at"]
+        checked = event_id if event_id is not None else current["checked_at" if kind.startswith("aaf") else "uscis_checked_at"]
         event = hashlib.sha256(f"{case['id']}|{kind}|{checked}|{subject}".encode()).hexdigest()
         channels = []
         if profile.get("email_enabled", True):
@@ -67,6 +67,9 @@ def send_update(case, subject, body, kind):
                     "(event_key, channel, kind, user_id, case_id, state, created_at) "
                     "VALUES (?, ?, ?, ?, ?, 'sending', ?)",
                     (event, channel, kind, user["id"], case["id"], db.iso(db.now())))
+                if not claim.rowcount and retry_failed:
+                    claim=cn.execute("UPDATE notification_deliveries SET state='sending',created_at=? WHERE event_key=? AND channel=? AND state='failed'",
+                        (db.iso(db.now()),event,channel))
             if not claim.rowcount:
                 continue
             try:
